@@ -1,0 +1,10 @@
+const express = require('express');
+const router = express.Router();
+const { login, createUser, updateTransactionPassword } = require('../controllers/authController');
+const { authMiddleware, roleMiddleware } = require('../middleware/auth');
+
+router.post('/login', login);
+router.post('/create-user', authMiddleware, roleMiddleware(['SUPERADMIN', 'ADMIN', 'BROKER']), createUser);
+router.post('/change-transaction-password', authMiddleware, updateTransactionPassword);
+
+module.exports = router;

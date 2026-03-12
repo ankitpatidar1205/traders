@@ -1,0 +1,267 @@
+/**
+ * Centralized API Service
+ * All API calls go through this file
+ */
+
+// Use your machine's IP or localhost
+const SERVER_IP = 'localhost'; 
+const PORT = '5000';
+export const BASE_URL = import.meta.env.VITE_API_URL || `http://${SERVER_IP}:${PORT}/api`;
+export const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || `http://${SERVER_IP}:${PORT}`;
+
+const getHeaders = () => ({
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${localStorage.getItem('traders_token') || ''}`,
+});
+
+const handleResponse = async (response) => {
+    if (response.status === 401) {
+        localStorage.clear();
+        window.location.href = '/';
+        throw new Error('Session expired. Please login again.');
+    }
+    if (response.status === 403) {
+        throw new Error('Access Denied. You do not have permission.');
+    }
+    if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.message || 'Something went wrong.');
+    }
+    return response.json();
+};
+
+// ─── AUTH ────────────────────────────────────────────
+export const login = async (username, password) => {
+    const res = await fetch(`${BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+    });
+    return handleResponse(res);
+};
+
+// ─── PASSWORD ────────────────────────────────────────
+export const resetPassword = async (userId) => {
+    const res = await fetch(`${BASE_URL}/users/${userId}/reset-password`, {
+        method: 'POST',
+        headers: getHeaders(),
+    });
+    return handleResponse(res);
+};
+
+export const changePassword = async (newPassword) => {
+    const res = await fetch(`${BASE_URL}/auth/change-password`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ newPassword }),
+    });
+    return handleResponse(res);
+};
+
+export const changeTransactionPassword = async (newPassword) => {
+    const res = await fetch(`${BASE_URL}/auth/change-transaction-password`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ newPassword }),
+    });
+    return handleResponse(res);
+};
+
+// ─── CLIENTS ─────────────────────────────────────────
+export const getClients = async (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    const res = await fetch(`${BASE_URL}/users?${query}`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const getClientById = async (id) => {
+    const res = await fetch(`${BASE_URL}/users/${id}`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const createClient = async (data) => {
+    const res = await fetch(`${BASE_URL}/auth/create-user`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify(data),
+    });
+    return handleResponse(res);
+};
+
+// ─── BROKERS ─────────────────────────────────────────
+export const getBrokerList = async () => {
+    const res = await fetch(`${BASE_URL}/brokers`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const createBroker = async (data) => {
+    const res = await fetch(`${BASE_URL}/brokers`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify(data),
+    });
+    return handleResponse(res);
+};
+
+// ─── POSITIONS ───────────────────────────────────────
+export const getActivePositions = async (filters = {}) => {
+    const query = new URLSearchParams(filters).toString();
+    const res = await fetch(`${BASE_URL}/trades/active?${query}`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const getClosedPositions = async (filters = {}) => {
+    const query = new URLSearchParams(filters).toString();
+    const res = await fetch(`${BASE_URL}/trades/closed?status=CLOSED&${query}`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+// ─── TRADES ──────────────────────────────────────────
+export const getTrades = async (filters = {}) => {
+    const query = new URLSearchParams(filters).toString();
+    const res = await fetch(`${BASE_URL}/trades?${query}`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const createTrade = async (data) => {
+    const res = await fetch(`${BASE_URL}/trades`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify(data),
+    });
+    return handleResponse(res);
+};
+
+// ─── FUNDS ───────────────────────────────────────────
+export const getTraderFunds = async (filters = {}) => {
+    const query = new URLSearchParams(filters).toString();
+    const res = await fetch(`${BASE_URL}/funds?${query}`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const createFund = async (data) => {
+    const res = await fetch(`${BASE_URL}/funds`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify(data),
+    });
+    return handleResponse(res);
+};
+
+// ─── MARGIN ──────────────────────────────────────────
+export const getNetHoldingMargin = async (clientId) => {
+    const res = await fetch(`${BASE_URL}/portfolio/${clientId}/margin`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+// ─── REQUESTS ────────────────────────────────────────
+export const getRequests = async (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    const res = await fetch(`${BASE_URL}/requests?${query}`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const updateRequestStatus = async (requestId, status, remark) => {
+    const res = await fetch(`${BASE_URL}/requests/${requestId}`, {
+        method: 'PUT', // Changed from POST to PUT based on typical REST practices for updates
+        headers: getHeaders(),
+        body: JSON.stringify({ status, remark }),
+    });
+    return handleResponse(res);
+};
+
+export const getDepositRequests = async () => {
+    const res = await fetch(`${BASE_URL}/requests/deposits`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const getWithdrawalRequests = async () => {
+    const res = await fetch(`${BASE_URL}/requests/withdrawals`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const approveRequest = async (requestId, type) => {
+    const res = await fetch(`${BASE_URL}/requests/${requestId}/approve`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ type }),
+    });
+    return handleResponse(res);
+};
+
+export const rejectRequest = async (requestId, type) => {
+    const res = await fetch(`${BASE_URL}/requests/${requestId}/reject`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ type }),
+    });
+    return handleResponse(res);
+};
+
+// ─── IP / SECURITY ───────────────────────────────────
+export const getIpLogins = async () => {
+    const res = await fetch(`${BASE_URL}/security/ip-tracking`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const deleteIpLogin = async (id) => {
+    const res = await fetch(`${BASE_URL}/security/ip-tracking/${id}`, {
+        method: 'DELETE',
+        headers: getHeaders(),
+    });
+    return handleResponse(res);
+};
+
+export const getTradeIpTracking = async () => {
+    const res = await fetch(`${BASE_URL}/security/trade-ip`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+// ─── GLOBAL (SUPERADMIN ONLY) ────────────────────────
+export const getGlobalSettings = async () => {
+    const res = await fetch(`${BASE_URL}/admin/global-settings`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const getActionLedger = async (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    const res = await fetch(`${BASE_URL}/system/audit-log?${query}`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const updateGlobalSettings = async (data) => {
+    const res = await fetch(`${BASE_URL}/admin/global-settings`, {
+        method: 'PUT',
+        headers: getHeaders(),
+        body: JSON.stringify(data),
+    });
+    return handleResponse(res);
+};
+
+export const updateUserStatus = async (userId, status) => {
+    const res = await fetch(`${BASE_URL}/users/${userId}/status`, {
+        method: 'PUT',
+        headers: getHeaders(),
+        body: JSON.stringify({ status }),
+    });
+    return handleResponse(res);
+};
+
+export const deleteUser = async (userId) => {
+    const res = await fetch(`${BASE_URL}/users/${userId}`, {
+        method: 'DELETE',
+        headers: getHeaders(),
+    });
+    return handleResponse(res);
+};
+
+// ─── DASHBOARD / MARKET ─────────────────────────────
+export const getIndices = async () => {
+    const res = await fetch(`${BASE_URL}/dashboard/indices`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const getWatchlist = async () => {
+    const res = await fetch(`${BASE_URL}/dashboard/watchlist`, { headers: getHeaders() });
+    return handleResponse(res);
+};

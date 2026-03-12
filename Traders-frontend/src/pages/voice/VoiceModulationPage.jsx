@@ -1,0 +1,671 @@
+/**
+ * VoiceModulationPage
+ *
+ * Full frontend voice recording + history page.
+ * ─ MediaRecorder API via useVoiceRecorder hook
+ * ─ States: idle | recording | processing | completed | error
+ * ─ History cards: always-visible transcript + AI response (inline, no expand needed)
+ * ─ Processing disables play button + shows spinner
+ * ─ Only one audio plays at a time; all others pause
+ * ─ Proper cleanup on unmount (URLs revoked, tracks stopped)
+ * ─ Theme matches existing dark platform: #1f283e, green accent, same typography
+ */
+
+import React, { useState, useRef, useCallback, useEffect, useReducer } from 'react';
+import {
+    Mic, MicOff, Square, Play, Pause, Clock, FileText,
+    Bot, CheckCircle2, AlertCircle, Loader2, Trash2,
+    RefreshCcw, Radio, Headphones, X
+} from 'lucide-react';
+import useVoiceRecorder from '../../hooks/useVoiceRecorder';
+import { submitVoiceRecording } from '../../services/voiceService';
+
+// ─── Status constants ─────────────────────────────────────────────────────────
+
+const STATUS = {
+    PROCESSING: 'processing',
+    SUCCESS: 'success',
+    FAILED: 'failed',
+};
+
+// ─── History Reducer ──────────────────────────────────────────────────────────
+
+const historyReducer = (state, action) => {
+    switch (action.type) {
+        case 'ADD':
+            return [action.item, ...state];
+        case 'UPDATE':
+            return state.map(item =>
+                item.id === action.id ? { ...item, ...action.patch } : item
+            );
+        case 'REMOVE':
+            return state.filter(item => item.id !== action.id);
+        default:
+            return state;
+    }
+};
+
+// ─── Toast ────────────────────────────────────────────────────────────────────
+
+const Toast = ({ message, type, onClose }) => {
+    useEffect(() => {
+        const t = setTimeout(onClose, 4500);
+        return () => clearTimeout(t);
+    }, [onClose]);
+
+    const styles = {
+        error: 'border-red-500/40 bg-red-500/10 text-red-300',
+        success: 'border-green-500/40 bg-green-500/10 text-green-300',
+        info: 'border-blue-500/40 bg-blue-500/10 text-blue-300',
+    };
+
+    return (
+        <div
+            className={`fixed bottom-6 right-6 z-[9999] flex items-center gap-3 px-5 py-3.5 rounded-xl border backdrop-blur-sm shadow-2xl max-w-sm ${styles[type] || styles.info}`}
+            style={{ animation: 'toastSlideIn 0.28s cubic-bezier(0.16,1,0.3,1) both' }}
+        >
+            {type === 'error'
+                ? <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                : <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+            }
+            <span className="text-[12px] font-bold tracking-wide flex-1">{message}</span>
+            <button
+                onClick={onClose}
+                className="ml-1 text-current opacity-50 hover:opacity-100 transition-opacity flex-shrink-0"
+            >
+                <X className="w-3.5 h-3.5" />
+            </button>
+        </div>
+    );
+};
+
+// ─── Status Badge ─────────────────────────────────────────────────────────────
+
+const StatusBadge = ({ status }) => {
+    const cfg = {
+        [STATUS.PROCESSING]: {
+            label: 'Processing',
+            cls: 'text-amber-400 bg-amber-500/10 border-amber-500/25',
+            dot: 'bg-amber-400 animate-pulse',
+        },
+        [STATUS.SUCCESS]: {
+            label: 'Success',
+            cls: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/25',
+            dot: 'bg-emerald-400',
+        },
+        [STATUS.FAILED]: {
+            label: 'Failed',
+            cls: 'text-red-400 bg-red-500/10 border-red-500/25',
+            dot: 'bg-red-400',
+        },
+    };
+    const c = cfg[status] || cfg[STATUS.PROCESSING];
+
+    return (
+        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[9px] font-black uppercase tracking-widest flex-shrink-0 ${c.cls}`}>
+            <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${c.dot}`} />
+            {c.label}
+        </span>
+    );
+};
+
+// ─── Audio Player Button ──────────────────────────────────────────────────────
+
+const AudioPlayerBtn = ({ url, itemId, isProcessing, activePlayingId, onPlay, onPause, onEnded }) => {
+    const audioRef = useRef(null);
+    const isPlaying = activePlayingId === itemId;
+
+    // Sync play/pause with global active state
+    useEffect(() => {
+        const el = audioRef.current;
+        if (!el) return;
+        if (isPlaying) {
+            el.play().catch(() => onPause(itemId));
+        } else {
+            if (!el.paused) el.pause();
+        }
+    }, [isPlaying]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Attach ended listener
+    useEffect(() => {
+        const el = audioRef.current;
+        if (!el) return;
+        const handle = () => onEnded(itemId);
+        el.addEventListener('ended', handle);
+        return () => el.removeEventListener('ended', handle);
+    }, [itemId, onEnded]);
+
+    // Cleanup on unmount
+    useEffect(() => {
+        return () => {
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current.src = '';
+            }
+        };
+    }, []);
+
+    const toggle = () => {
+        if (isPlaying) onPause(itemId);
+        else onPlay(itemId);
+    };
+
+    // Processing → disabled spinner
+    if (isProcessing) {
+        return (
+            <div className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0" title="Processing…">
+                <Loader2 className="w-4 h-4 text-amber-400 animate-spin" />
+            </div>
+        );
+    }
+
+    return (
+        <div className="flex items-center gap-2 flex-shrink-0">
+            <audio ref={audioRef} src={url} preload="metadata" />
+            <button
+                onClick={toggle}
+                title={isPlaying ? 'Pause' : 'Play recording'}
+                className={`w-9 h-9 rounded-full flex items-center justify-center border transition-all duration-200 flex-shrink-0 ${isPlaying
+                        ? 'bg-green-500/20 border-green-500/40 text-green-400'
+                        : 'bg-white/5 border-white/10 text-slate-400 hover:border-white/25 hover:text-white hover:bg-white/10'
+                    }`}
+            >
+                {isPlaying
+                    ? <Pause className="w-3.5 h-3.5" />
+                    : <Play className="w-3.5 h-3.5 ml-0.5" />
+                }
+            </button>
+            {/* Waveform animation when playing */}
+            {isPlaying && (
+                <span className="flex gap-[3px] items-end h-4">
+                    {[1, 2, 3, 4].map(i => (
+                        <span
+                            key={i}
+                            className="w-[3px] bg-green-400 rounded-full"
+                            style={{
+                                animation: `voiceWave 0.85s ease-in-out ${i * 0.13}s infinite alternate`,
+                                height: '55%',
+                            }}
+                        />
+                    ))}
+                </span>
+            )}
+        </div>
+    );
+};
+
+// ─── History Card ─────────────────────────────────────────────────────────────
+
+const HistoryCard = ({ item, activePlayingId, onPlay, onPause, onEnded, onRemove }) => {
+    const isProcessing = item.status === STATUS.PROCESSING;
+    const isFailed = item.status === STATUS.FAILED;
+
+    // Derived display values
+    const transcriptText = item.transcript
+        ? item.transcript
+        : isProcessing
+            ? null   // show spinner row
+            : 'Transcript unavailable';
+
+    const aiText = item.aiResponse
+        ? item.aiResponse
+        : isProcessing
+            ? null   // show spinner row
+            : 'AI response pending';
+
+    return (
+        <div className="bg-[#1a2235] rounded-2xl border border-white/8 overflow-hidden group transition-all duration-200 hover:border-white/14">
+
+            {/* ── Top row: play + timestamp + status + delete ── */}
+            <div className="flex items-center gap-3 px-5 pt-4 pb-3">
+
+                {/* Play / Pause or spinner */}
+                <AudioPlayerBtn
+                    url={item.audioURL}
+                    itemId={item.id}
+                    isProcessing={isProcessing}
+                    activePlayingId={activePlayingId}
+                    onPlay={onPlay}
+                    onPause={onPause}
+                    onEnded={onEnded}
+                />
+
+                {/* Timestamp */}
+                <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                    <Clock className="w-3 h-3 text-slate-600 flex-shrink-0" />
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider truncate">
+                        {item.timestamp}
+                    </span>
+                </div>
+
+                {/* Status badge */}
+                <StatusBadge status={item.status} />
+
+                {/* Delete (visible on hover) */}
+                <button
+                    onClick={() => onRemove(item.id)}
+                    title="Remove"
+                    className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-700 hover:text-red-400 hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100 flex-shrink-0"
+                >
+                    <Trash2 className="w-3.5 h-3.5" />
+                </button>
+            </div>
+
+            {/* ── Divider ── */}
+            <div className="mx-5 border-t border-white/5" />
+
+            {/* ── Transcript ── */}
+            <div className="px-5 pt-3 pb-2">
+                <div className="flex items-center gap-1.5 mb-1.5">
+                    <FileText className="w-3 h-3 text-blue-400 flex-shrink-0" />
+                    <span className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-500">
+                        Transcript
+                    </span>
+                </div>
+
+                {isProcessing && !item.transcript ? (
+                    <div className="flex items-center gap-2 py-1">
+                        <Loader2 className="w-3 h-3 text-amber-400 animate-spin flex-shrink-0" />
+                        <span className="text-[11px] text-amber-400/80 italic font-medium">Generating…</span>
+                    </div>
+                ) : isFailed && !item.transcript ? (
+                    <p className="text-[11px] text-red-400/70 italic leading-relaxed">
+                        Transcription unavailable
+                    </p>
+                ) : (
+                    <p className="text-[12px] text-slate-300 leading-relaxed">
+                        "{transcriptText}"
+                    </p>
+                )}
+            </div>
+
+            {/* ── AI Response ── */}
+            <div className="px-5 pt-2 pb-4">
+                <div className="flex items-center gap-1.5 mb-1.5">
+                    <Bot className="w-3 h-3 text-green-400 flex-shrink-0" />
+                    <span className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-500">
+                        AI Response
+                    </span>
+                </div>
+
+                {isProcessing && !item.aiResponse ? (
+                    <div className="flex items-center gap-2 py-1">
+                        <Loader2 className="w-3 h-3 text-amber-400 animate-spin flex-shrink-0" />
+                        <span className="text-[11px] text-amber-400/80 italic font-medium">Awaiting result…</span>
+                    </div>
+                ) : isFailed && !item.aiResponse ? (
+                    <p className="text-[11px] text-red-400/70 italic leading-relaxed">
+                        AI response pending
+                    </p>
+                ) : (
+                    <p className="text-[12px] text-slate-300 leading-relaxed">
+                        {aiText}
+                    </p>
+                )}
+            </div>
+        </div>
+    );
+};
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+
+const VoiceModulationPage = () => {
+    const recorder = useVoiceRecorder();
+
+    const [history, dispatch] = useReducer(historyReducer, []);
+    const [activePlayingId, setActivePlayingId] = useState(null);
+    const [toast, setToast] = useState(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // ── Toast helpers ─────────────────────────────────────────────────────────
+
+    const showToast = useCallback((message, type = 'info') => {
+        setToast({ message, type, key: Date.now() });
+    }, []);
+
+    const dismissToast = useCallback(() => setToast(null), []);
+
+    // ── Playback control (single active) ──────────────────────────────────────
+
+    const handlePlay = useCallback((id) => setActivePlayingId(id), []);
+    const handlePause = useCallback(() => setActivePlayingId(null), []);
+    const handleEnded = useCallback(() => setActivePlayingId(null), []);
+
+    // ── Remove ────────────────────────────────────────────────────────────────
+
+    const handleRemove = useCallback((id) => {
+        setActivePlayingId(prev => (prev === id ? null : prev));
+        dispatch({ type: 'REMOVE', id });
+    }, []);
+
+    // ── Submit recording to backend ───────────────────────────────────────────
+
+    const submitRecording = useCallback(async (blob, audioURL) => {
+        if (!blob) return;
+
+        setIsSubmitting(true);
+
+        const itemId = `vr-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+
+        // Build timestamp: 02 Mar 2026 – 12:09 PM
+        const now = new Date();
+        const timestamp = now.toLocaleString('en-IN', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true,
+        }).replace(',', ' –');
+
+        // Add to history immediately with processing state
+        dispatch({
+            type: 'ADD',
+            item: {
+                id: itemId,
+                audioURL,
+                transcript: '',
+                aiResponse: '',
+                status: STATUS.PROCESSING,
+                timestamp,
+            },
+        });
+
+        try {
+            const result = await submitVoiceRecording(blob, { timestamp });
+            dispatch({
+                type: 'UPDATE',
+                id: itemId,
+                patch: {
+                    transcript: result?.transcript || '',
+                    aiResponse: result?.aiResponse || '',
+                    status: STATUS.SUCCESS,
+                },
+            });
+            showToast('Recording processed successfully!', 'success');
+        } catch (err) {
+            dispatch({
+                type: 'UPDATE',
+                id: itemId,
+                patch: { status: STATUS.FAILED },
+            });
+            showToast(err?.message || 'Submission failed. Recording saved locally.', 'error');
+        } finally {
+            setIsSubmitting(false);
+        }
+    }, [showToast]);
+
+    // ── Watch recorder completion → submit ────────────────────────────────────
+
+    useEffect(() => {
+        if (recorder.isCompleted && recorder.audioBlob && recorder.audioURL) {
+            submitRecording(recorder.audioBlob, recorder.audioURL);
+            recorder.reset();
+        }
+    }, [recorder.isCompleted]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // ── Watch for recorder error → toast ──────────────────────────────────────
+
+    useEffect(() => {
+        if (recorder.isError && recorder.errorMessage) {
+            showToast(recorder.errorMessage, 'error');
+        }
+    }, [recorder.isError, recorder.errorMessage, showToast]);
+
+    // ── Mic button handler ────────────────────────────────────────────────────
+
+    const handleMicClick = () => {
+        if (recorder.isRecording) {
+            recorder.stopRecording();
+        } else if (!isSubmitting && !recorder.isProcessing) {
+            recorder.startRecording();
+        }
+    };
+
+    const isMicDisabled = recorder.isProcessing || isSubmitting;
+
+    const getMicLabel = () => {
+        if (recorder.isRecording) return 'Stop Recording';
+        if (isMicDisabled) return 'Processing…';
+        return 'Start Recording';
+    };
+
+    // ─────────────────────────────────────────────────────────────────────────
+
+    return (
+        <div className="flex flex-col gap-8 pb-20 animate-in fade-in duration-700">
+
+            {/* ── Page Header ── */}
+            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
+                <div>
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-green-500/20 rounded-lg border border-green-500/20 shadow-lg">
+                            <Radio className="w-5 h-5 text-green-400" />
+                        </div>
+                        <h1 className="text-3xl font-black text-white uppercase tracking-tighter">
+                            Voice Modulation
+                        </h1>
+                    </div>
+                    <p className="text-slate-400 text-sm font-medium leading-relaxed max-w-xl">
+                        Record voice commands and messages. Up to{' '}
+                        <span className="text-green-400 font-bold">60 seconds</span> per recording.
+                        All recordings are encrypted end-to-end.
+                    </p>
+                </div>
+
+                {/* Live recording indicator */}
+                {recorder.isRecording && (
+                    <div className="flex items-center gap-2.5 px-4 py-2 bg-red-500/10 border border-red-500/20 rounded-xl">
+                        <span className="w-2.5 h-2.5 rounded-full bg-red-400 animate-pulse" />
+                        <span className="text-red-300 text-[11px] font-black uppercase tracking-widest">
+                            Live · {recorder.timerLabel}
+                        </span>
+                    </div>
+                )}
+            </div>
+
+            {/* ── Two-column grid ── */}
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 items-start">
+
+                {/* ──────────── LEFT: Voice Recorder Panel ──────────── */}
+                <div className="xl:col-span-1">
+                    <div className="bg-[#1f283e]/50 backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl overflow-hidden">
+
+                        {/* Panel header */}
+                        <div className="px-8 py-5 border-b border-white/5 bg-gradient-to-r from-white/[0.03] to-transparent">
+                            <h3 className="text-sm font-black text-white uppercase tracking-widest">
+                                Voice Recorder
+                            </h3>
+                            <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest mt-0.5">
+                                {recorder.isRecording ? 'Recording in progress…' : 'Press mic to begin'}
+                            </p>
+                        </div>
+
+                        <div className="p-8 flex flex-col items-center gap-6">
+
+                            {/* Mic button */}
+                            <div className="relative">
+                                {recorder.isRecording && (
+                                    <>
+                                        <span className="absolute inset-0 rounded-full bg-red-500/20 animate-ping" />
+                                        <span className="absolute -inset-3 rounded-full bg-red-500/10 animate-pulse" />
+                                    </>
+                                )}
+                                <button
+                                    id="voice-mic-btn"
+                                    onClick={handleMicClick}
+                                    disabled={isMicDisabled}
+                                    title={getMicLabel()}
+                                    className={`relative w-20 h-20 rounded-full flex items-center justify-center border-2 transition-all duration-300 shadow-xl ${recorder.isRecording
+                                            ? 'bg-red-500/20 border-red-500 text-red-400 hover:bg-red-500/30 scale-110'
+                                            : isMicDisabled
+                                                ? 'bg-white/5 border-white/10 text-slate-600 cursor-not-allowed opacity-60'
+                                                : 'bg-green-500/10 border-green-500/50 text-green-400 hover:bg-green-500/20 hover:border-green-400 hover:scale-105 active:scale-95'
+                                        }`}
+                                >
+                                    {isMicDisabled ? (
+                                        <Loader2 className="w-8 h-8 animate-spin text-amber-400" />
+                                    ) : recorder.isRecording ? (
+                                        <Square className="w-7 h-7 fill-current" />
+                                    ) : (
+                                        <Mic className="w-8 h-8" />
+                                    )}
+                                </button>
+                            </div>
+
+                            {/* State label + timer */}
+                            <div className="text-center">
+                                <p className={`text-[11px] font-black uppercase tracking-widest ${recorder.isRecording ? 'text-red-400'
+                                        : isMicDisabled ? 'text-amber-400'
+                                            : 'text-slate-500'
+                                    }`}>
+                                    {getMicLabel()}
+                                </p>
+                                {recorder.isRecording && (
+                                    <p className="text-2xl font-black text-white mt-1 tabular-nums font-mono">
+                                        {recorder.timerLabel}
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Progress bar */}
+                            {recorder.isRecording && (
+                                <div className="w-full">
+                                    <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full bg-gradient-to-r from-green-500 to-red-500 rounded-full transition-all duration-1000"
+                                            style={{ width: `${recorder.progressPercent}%` }}
+                                        />
+                                    </div>
+                                    <div className="flex justify-between mt-1">
+                                        <span className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">0:00</span>
+                                        <span className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">1:00</span>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Error reset button */}
+                            {recorder.isError && (
+                                <button
+                                    onClick={recorder.reset}
+                                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-400 hover:text-white text-[11px] font-bold uppercase tracking-widest transition-all"
+                                >
+                                    <RefreshCcw className="w-3.5 h-3.5" /> Try Again
+                                </button>
+                            )}
+
+                            {/* Tips (idle only) */}
+                            {recorder.isIdle && (
+                                <div className="w-full space-y-2 pt-2">
+                                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-600 text-center mb-2">
+                                        Quick Tips
+                                    </p>
+                                    {[
+                                        'Speak clearly into your microphone',
+                                        'Max recording length is 60 seconds',
+                                        'Recordings are encrypted and private',
+                                    ].map((tip, i) => (
+                                        <div key={i} className="flex items-start gap-2">
+                                            <span className="w-1 h-1 rounded-full bg-green-500/50 mt-1.5 flex-shrink-0" />
+                                            <p className="text-[10px] text-slate-500 leading-relaxed">{tip}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* ──────────── RIGHT: Recording History Panel ──────────── */}
+                <div className="xl:col-span-2">
+                    <div className="bg-[#1f283e]/50 backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl overflow-hidden">
+
+                        {/* History header */}
+                        <div
+                            className="flex items-center justify-between px-8 py-5 border-b border-white/5"
+                            style={{ background: 'rgba(255,255,255,0.02)' }}
+                        >
+                            <div>
+                                <h3 className="text-sm font-black text-white uppercase tracking-widest">
+                                    Recording History
+                                </h3>
+                                <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest mt-0.5">
+                                    {history.length} recording{history.length !== 1 ? 's' : ''} · Session only
+                                </p>
+                            </div>
+
+                            {/* Now playing indicator */}
+                            {activePlayingId && (
+                                <div className="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 border border-green-500/20 rounded-lg">
+                                    <Headphones className="w-3.5 h-3.5 text-green-400" />
+                                    <span className="text-[10px] font-bold text-green-400 uppercase tracking-widest">
+                                        Playing
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* History body */}
+                        <div className="p-6">
+                            {history.length === 0 ? (
+                                /* ── Empty state ── */
+                                <div className="flex flex-col items-center justify-center py-24 gap-4">
+                                    <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center border border-white/5">
+                                        <Mic className="w-7 h-7 text-slate-700" />
+                                    </div>
+                                    <div className="text-center">
+                                        <p className="text-white font-black uppercase tracking-widest text-sm">
+                                            No Recordings Yet
+                                        </p>
+                                        <p className="text-slate-500 text-[10px] uppercase font-bold tracking-tight mt-1.5">
+                                            Press the mic button to start your first recording
+                                        </p>
+                                    </div>
+                                </div>
+                            ) : (
+                                /* ── Cards list ── */
+                                <div className="space-y-4 max-h-[560px] overflow-y-auto pr-1">
+                                    {history.map((item) => (
+                                        <HistoryCard
+                                            key={item.id}
+                                            item={item}
+                                            activePlayingId={activePlayingId}
+                                            onPlay={handlePlay}
+                                            onPause={handlePause}
+                                            onEnded={handleEnded}
+                                            onRemove={handleRemove}
+                                        />
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* ── Toast ── */}
+            {toast && (
+                <Toast
+                    key={toast.key}
+                    message={toast.message}
+                    type={toast.type}
+                    onClose={dismissToast}
+                />
+            )}
+
+            {/* ── Keyframes ── */}
+            <style>{`
+                @keyframes toastSlideIn {
+                    from { opacity: 0; transform: translateY(10px) scale(0.96); }
+                    to   { opacity: 1; transform: translateY(0)   scale(1);    }
+                }
+                @keyframes voiceWave {
+                    from { transform: scaleY(0.25); }
+                    to   { transform: scaleY(1);    }
+                }
+            `}</style>
+        </div>
+    );
+};
+
+export default VoiceModulationPage;
