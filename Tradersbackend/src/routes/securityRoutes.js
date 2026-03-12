@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { getIpClusters, getTradeIpAudit, getRiskScoring, getIpLogins, deleteIpLogin } = require('../controllers/securityController');
+const { getIpClusters, getTradeIpAudit, getRiskScoring, getIpLogins } = require('../controllers/securityController');
+const { deleteIpLogin } = require('../controllers/securityController');
 const { authMiddleware, roleMiddleware } = require('../middleware/auth');
 
 // Only Superadmins and Admins can access forensic data
@@ -10,3 +11,4 @@ router.get('/ip-tracking', authMiddleware, roleMiddleware(['SUPERADMIN', 'ADMIN'
 router.delete('/ip-tracking/:id', authMiddleware, roleMiddleware(['SUPERADMIN', 'ADMIN']), deleteIpLogin);
 
 module.exports = router;
+// Forensic audit routes finalized

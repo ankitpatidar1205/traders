@@ -211,6 +211,7 @@ export const deleteIpLogin = async (id) => {
     });
     return handleResponse(res);
 };
+// Security API logic updated
 
 export const getTradeIpTracking = async () => {
     const res = await fetch(`${BASE_URL}/security/trade-ip`, { headers: getHeaders() });
