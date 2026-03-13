@@ -1,4 +1,4 @@
-const db = require('../config/db');
+﻿const db = require('../config/db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
@@ -63,7 +63,7 @@ const login = async (req, res) => {
 };
 
 const createUser = async (req, res) => {
-    const { username, password, fullName, email, mobile, role, parentId, creditLimit } = req.body;
+    const { username, password, fullName, mobile, role, parentId } = req.body;
     const creatorRole = req.user.role;
     
     // Enforcement: Hierarchy Check
@@ -81,25 +81,10 @@ const createUser = async (req, res) => {
     }
 
     try {
-        const hashedPassword = await bcrypt.hash(password || '123456', 10);
-        
-        const params = [
-            username || null,
-            hashedPassword,
-            fullName || null,
-            email || null,
-            mobile || null,
-            role || 'TRADER',
-            parentId || req.user.id,
-            creditLimit || 0,
-            'Active'
-        ];
-
-        console.log('Inserting user with params:', params);
-
+        const hashedPassword = await bcrypt.hash(password, 10);
         const [result] = await db.execute(
-            'INSERT INTO users (username, password, full_name, email, mobile, role, parent_id, credit_limit, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-            params
+            'INSERT INTO users (username, password, full_name, mobile, role, parent_id, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [username, hashedPassword, fullName, mobile, role, parentId || req.user.id, 'Active']
         );
         
         res.status(201).json({ message: 'User created successfully', id: result.insertId });
@@ -107,7 +92,7 @@ const createUser = async (req, res) => {
         if (err.code === 'ER_DUP_ENTRY') {
             return res.status(400).json({ message: 'Username already exists' });
         }
-        console.error('Database Error:', err);
+        console.error(err);
         res.status(500).send('Server Error');
     }
 };
@@ -124,16 +109,4 @@ const updateTransactionPassword = async (req, res) => {
     }
 };
 
-const changePassword = async (req, res) => {
-    const { newPassword } = req.body;
-    try {
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
-        await db.execute('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, req.user.id]);
-        res.json({ message: 'Password updated successfully' });
-    } catch (err) {
-        console.error(err);
-        res.status(500).send('Server Error');
-    }
-};
-
-module.exports = { login, createUser, updateTransactionPassword, changePassword };
+module.exports = { login, createUser, updateTransactionPassword };

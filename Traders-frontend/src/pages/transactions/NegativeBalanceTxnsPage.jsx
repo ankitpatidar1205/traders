@@ -1,9 +1,43 @@
-import React, { useState } from 'react';
-import { RotateCcw } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { RotateCcw, Loader2, Download } from 'lucide-react';
+import { getTraderFunds } from '../../services/api';
 
 const NegativeBalanceTxnsPage = () => {
+    const [data, setData] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [filters, setFilters] = useState({ userId: '', amount: '' });
+
+    const fetchData = async () => {
+        setLoading(true);
+        try {
+            // Reusing getTraderFunds with filters. 
+            // We could add a specific flag if backend supported it, 
+            // but for now we'll just show movements.
+            const res = await getTraderFunds(filters);
+            setData(res);
+        } catch (err) {
+            console.error('Failed to fetch negative balance txns:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchData();
+    }, []);
+
+    const handleSearch = () => {
+        fetchData();
+    };
+
+    const handleReset = () => {
+        setFilters({ userId: '', amount: '' });
+        // After state update, we need to call fetchData with empty filters
+        setTimeout(() => fetchData(), 0);
+    };
+
     return (
-        <div className="flex flex-col h-full bg-[#1a2035] space-y-8 overflow-y-auto">
+        <div className="flex flex-col h-full bg-[#1a2035] space-y-8 overflow-y-auto p-4">
             {/* Top Date Filter Section */}
             <div className="flex flex-col md:flex-row gap-4 items-center">
                 <div className="grid grid-cols-2 bg-white rounded overflow-hidden shadow-lg w-full md:w-auto">
@@ -22,8 +56,8 @@ const NegativeBalanceTxnsPage = () => {
                         className="px-6 py-3 focus:outline-none text-slate-700 font-medium text-sm min-w-[150px]"
                     />
                 </div>
-                <button className="bg-[#17a2b8] hover:bg-[#138496] text-white px-10 py-3 rounded font-bold text-[11px] uppercase tracking-widest shadow-lg transition-all w-full md:w-auto">
-                    DOWNLOAD REPORT
+                <button className="bg-[#17a2b8] hover:bg-[#138496] text-white px-10 py-3 rounded font-bold text-[11px] uppercase tracking-widest shadow-lg transition-all w-full md:w-auto flex items-center gap-2">
+                    <Download className="w-4 h-4" /> DOWNLOAD REPORT
                 </button>
             </div>
 
@@ -31,10 +65,11 @@ const NegativeBalanceTxnsPage = () => {
             <div className="bg-[#1f283e] p-8 rounded shadow-2xl border border-white/5">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-8">
                     <div className="group">
-                        <label className="block text-[11px] text-slate-500 font-bold uppercase tracking-widest mb-2">User ID</label>
+                        <label className="block text-[11px] text-slate-500 font-bold uppercase tracking-widest mb-2">User ID (Username)</label>
                         <input
                             type="text"
-                            placeholder=" "
+                            value={filters.userId}
+                            onChange={(e) => setFilters({ ...filters, userId: e.target.value })}
                             className="w-full bg-transparent border-b border-white/10 py-2 text-white focus:outline-none focus:border-[#5cb85c] transition-all"
                         />
                     </div>
@@ -42,23 +77,33 @@ const NegativeBalanceTxnsPage = () => {
                         <label className="block text-[11px] text-slate-500 font-bold uppercase tracking-widest mb-2">Amount</label>
                         <input
                             type="text"
-                            placeholder=" "
+                            value={filters.amount}
+                            onChange={(e) => setFilters({ ...filters, amount: e.target.value })}
                             className="w-full bg-transparent border-b border-white/10 py-2 text-white focus:outline-none focus:border-[#5cb85c] transition-all"
                         />
                     </div>
                 </div>
                 <div className="flex gap-4">
-                    <button className="bg-[#5cb85c] hover:bg-[#4caf50] text-white px-10 py-3 rounded font-bold text-[11px] uppercase tracking-widest shadow-lg transition-all">SEARCH</button>
-                    <button className="bg-[#808080] hover:bg-[#707070] text-white px-10 py-3 rounded font-bold text-[11px] uppercase tracking-widest flex items-center gap-2 shadow-lg transition-all">
+                    <button 
+                        onClick={handleSearch}
+                        className="bg-[#5cb85c] hover:bg-[#4caf50] text-white px-10 py-3 rounded font-bold text-[11px] uppercase tracking-widest shadow-lg transition-all"
+                    >
+                        SEARCH
+                    </button>
+                    <button 
+                        onClick={handleReset}
+                        className="bg-[#808080] hover:bg-[#707070] text-white px-10 py-3 rounded font-bold text-[11px] uppercase tracking-widest flex items-center gap-2 shadow-lg transition-all"
+                    >
                         <RotateCcw className="w-4 h-4" /> RESET
                     </button>
-
                 </div>
             </div>
 
             {/* Summary Statement */}
             <div className="py-4">
-                <h3 className="text-white text-[25px] font-medium tracking-tight">Total amount adjusted during the week: 0</h3>
+                <h3 className="text-white text-[25px] font-medium tracking-tight">
+                    Total amount adjusted during the week: <span className="text-[#5cb85c]">₹0.00</span>
+                </h3>
             </div>
 
             {/* Table Results Section */}

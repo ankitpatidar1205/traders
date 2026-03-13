@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const bcrypt = require('bcryptjs');
 
 const getUsers = async (req, res) => {
     try {
@@ -61,10 +62,28 @@ const updateStatus = async (req, res) => {
 
 const resetPassword = async (req, res) => {
     const { newPassword } = req.body;
-    // Note: Hash this in actual logic
     try {
-        await db.execute('UPDATE users SET password = ? WHERE id = ?', [newPassword, req.params.id]);
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        await db.execute('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, req.params.id]);
         res.json({ message: 'Password reset successfully' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+};
+
+const updatePasswords = async (req, res) => {
+    const { newPassword, transactionPassword } = req.body;
+    try {
+        if (newPassword) {
+            const hashedPassword = await bcrypt.hash(newPassword, 10);
+            await db.execute('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, req.params.id]);
+        }
+        if (transactionPassword) {
+            const hashedTransPassword = await bcrypt.hash(transactionPassword, 10);
+            await db.execute('UPDATE users SET transaction_password = ? WHERE id = ?', [hashedTransPassword, req.params.id]);
+        }
+        res.json({ message: 'Passwords updated successfully' });
     } catch (err) {
         console.error(err);
         res.status(500).send('Server Error');
@@ -81,4 +100,4 @@ const deleteUser = async (req, res) => {
     }
 };
 
-module.exports = { getUsers, getUserProfile, updateStatus, resetPassword, deleteUser };
+module.exports = { getUsers, getUserProfile, updateStatus, resetPassword, deleteUser, updatePasswords };

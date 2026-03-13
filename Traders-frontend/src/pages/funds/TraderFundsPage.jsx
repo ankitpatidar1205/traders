@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getRequests } from '../../services/api';
+import * as api from '../../services/api';
 
 const TraderFundsPage = ({ onNavigate }) => {
     const [filters, setFilters] = useState({
@@ -16,16 +16,17 @@ const TraderFundsPage = ({ onNavigate }) => {
         fetchFunds();
     }, []);
 
-    const fetchFunds = async () => {
+    const fetchFunds = async (params = {}) => {
+        setLoading(true);
         try {
-            const data = await getRequests(); // Fetches all payment requests
+            const data = await api.getTraderFunds(params);
             setFundsData(data.map(f => ({
                 id: f.id,
                 username: f.username,
-                name: 'User',
+                name: f.full_name || '—',
                 amount: f.amount,
                 txnType: f.type,
-                notes: f.admin_remarks || '—',
+                notes: f.remarks || '—',
                 pgTxnId: 'MANUAL',
                 createdAt: new Date(f.created_at).toLocaleString()
             })));
@@ -42,7 +43,10 @@ const TraderFundsPage = ({ onNavigate }) => {
     };
 
     const handleSearch = () => {
-        console.log('Search with filters:', filters);
+        fetchFunds({
+            userId: filters.userId,
+            amount: filters.amount
+        });
     };
 
     const handleReset = () => {

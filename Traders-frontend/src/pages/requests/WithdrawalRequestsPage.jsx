@@ -77,14 +77,17 @@ const DetailModal = ({ req, onClose, onAction }) => {
 
     const handleAction = (type) => setConfirm({ type });
 
-    const doAction = () => {
+    const doAction = async () => {
         setLoading(true);
-        setTimeout(() => {
-            onAction(req.id, confirm.type, { charges, note, rejReason });
-            setLoading(false);
+        try {
+            await onAction(req.id, confirm.type, { charges, note, rejReason });
             setConfirm(null);
             onClose();
-        }, 900);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const TABS = ['client', 'withdrawal', 'action', 'audit'];
@@ -270,12 +273,21 @@ const WithdrawalRequestsPage = () => {
             setData(res.map(r => ({
                 id: r.id,
                 txnId: `TXN-${r.id}`,
-                clientName: r.username,
-                clientId: r.user_id,
+                clientName: r.full_name || r.username,
+                clientId: r.username,
                 amount: parseFloat(r.amount),
+                charges: 0, // Placeholder if not in DB
+                netAmount: parseFloat(r.amount), // Adjusted if charges added
+                availableBalance: parseFloat(r.current_balance || 0),
                 status: r.status,
                 requestDate: new Date(r.created_at).toLocaleString(),
-                // ... other fields as placeholders or from DB
+                requestedFrom: 'App',
+                handledBy: r.admin_remarks ? 'Admin' : '—',
+                updatedAt: r.updated_at ? new Date(r.updated_at).toLocaleString() : '—',
+                bankName: r.bank_name || '—',
+                accountNo: r.account_number || '—',
+                ifsc: r.ifsc_code || '—',
+                upiId: r.upi_id || '—'
             })));
         } catch (err) {
             addToast('Failed to fetch requests', 'error');

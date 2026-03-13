@@ -104,3 +104,12 @@ export const getWithdrawals = async () => {
     });
     return handleResponse(res);
 };
+
+export const changePassword = async (newPassword) => {
+    const res = await fetch(`${BASE_URL}/auth/change-password`, {
+        method: 'POST',
+        headers: await getHeaders(),
+        body: JSON.stringify({ newPassword }),
+    });
+    return handleResponse(res);
+};

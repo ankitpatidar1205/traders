@@ -132,6 +132,23 @@ export const createTrade = async (data) => {
     return handleResponse(res);
 };
 
+export const placeOrder = async (data) => {
+    const res = await fetch(`${BASE_URL}/trades/place`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify(data),
+    });
+    return handleResponse(res);
+};
+
+export const deleteTrade = async (id) => {
+    const res = await fetch(`${BASE_URL}/trades/${id}`, {
+        method: 'DELETE',
+        headers: getHeaders(),
+    });
+    return handleResponse(res);
+};
+
 // ─── FUNDS ───────────────────────────────────────────
 export const getTraderFunds = async (filters = {}) => {
     const query = new URLSearchParams(filters).toString();
@@ -227,6 +244,57 @@ export const getGlobalSettings = async () => {
 export const getActionLedger = async (params = {}) => {
     const query = new URLSearchParams(params).toString();
     const res = await fetch(`${BASE_URL}/system/audit-log?${query}`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const getScrips = async () => {
+    const res = await fetch(`${BASE_URL}/system/scrips`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const getTickers = async () => {
+    const res = await fetch(`${BASE_URL}/system/tickers`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const createTicker = async (data) => {
+    const res = await fetch(`${BASE_URL}/system/tickers`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify(data),
+    });
+    return handleResponse(res);
+};
+
+export const deleteTicker = async (id) => {
+    const res = await fetch(`${BASE_URL}/system/tickers/${id}`, {
+        method: 'DELETE',
+        headers: getHeaders(),
+    });
+    return handleResponse(res);
+};
+
+// ─── BANNED LIMIT ORDERS ────────────────────────────
+export const getBannedOrders = async () => {
+    const res = await fetch(`${BASE_URL}/system/banned-orders`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const createBannedOrder = async (data) => {
+    const res = await fetch(`${BASE_URL}/system/banned-orders`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify(data),
+    });
+    return handleResponse(res);
+};
+
+export const deleteBannedOrders = async (ids) => {
+    const res = await fetch(`${BASE_URL}/system/banned-orders/delete-multiple`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ ids }),
+    });
     return handleResponse(res);
 };
 

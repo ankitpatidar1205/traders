@@ -72,10 +72,20 @@ const getIndices = async (req, res) => {
 };
 
 const getWatchlist = async (req, res) => {
-    res.json([
-        { id: '1', name: 'CRUDEOIL', category: 'MCX Futures', ltp: '5770', high: '5796', low: '5763', open: '5764' },
-        { id: '2', name: 'GOLD', category: 'MCX Futures', ltp: '2045', high: '2060', low: '2040', open: '2050' }
-    ]);
+    const prices = mockEngine.getPrices();
+    const watchlist = Object.keys(prices).map((symbol, index) => ({
+        id: (index + 1).toString(),
+        symbol: symbol,
+        name: symbol,
+        category: symbol.includes('NIFTY') ? 'NSE Futures' : 'MCX Futures',
+        ltp: prices[symbol],
+        bid: (prices[symbol] - 0.5).toFixed(2),
+        ask: (prices[symbol] + 0.5).toFixed(2),
+        high: (prices[symbol] + 10).toFixed(2),
+        low: (prices[symbol] - 10).toFixed(2),
+        change: (Math.random() * 2 - 1).toFixed(2)
+    }));
+    res.json(watchlist);
 };
 
 module.exports = { 

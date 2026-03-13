@@ -15,9 +15,9 @@ const MarketWatchPage = () => {
     useEffect(() => {
         if (watchlist && watchlist.length > 0) {
             setScrips(watchlist.map(s => ({
-                id: s.id,
-                name: s.symbol,
-                symbol: s.symbol,
+                id: s.id || Math.random().toString(),
+                name: s.symbol || s.name || 'Unknown',
+                symbol: s.symbol || s.name || 'Unknown',
                 expiry: s.expiry || 'N/A',
                 bid: s.bid || '0.00',
                 ask: s.ask || '0.00',
@@ -28,10 +28,12 @@ const MarketWatchPage = () => {
                 time: s.time || new Date().toLocaleTimeString()
             })));
         } else {
-            // Keep dummy scrips if watchlist is empty for now, but in production we want it dynamic
+            // Expanded dummy scrips
             setScrips([
-                { id: '1', name: 'ALUMINIUM26FEBFUT', symbol: 'ALUMINIUM26FEBFUT', expiry: '2026-02-27', bid: '309.35', ask: '309.7', ltp: '309.35', change: '0.65', high: '311.2', low: '304', time: '11:10:18' },
-                { id: '2', name: 'COPPER26FEBFUT', symbol: 'COPPER26FEBFUT', expiry: '2026-02-27', bid: '1211.5', ask: '1211.75', ltp: '1211.5', change: '-0.1', high: '1225.4', low: '1181.85' },
+                { id: '1', name: 'CRUDEOIL', symbol: 'CRUDEOIL', expiry: '2026-03-20', bid: '6540.00', ask: '6540.50', ltp: '6540.00', change: '+1.25', high: '6580', low: '6520', time: '11:10:18' },
+                { id: '2', name: 'GOLD', symbol: 'GOLD', expiry: '2026-04-05', bid: '72540', ask: '72545', ltp: '72540', change: '-15.40', high: '72600', low: '72400' },
+                { id: '3', name: 'SILVER', symbol: 'SILVER', expiry: '2026-05-05', bid: '89420', ask: '89425', ltp: '89420', change: '+45.00', high: '89600', low: '89200' },
+                { id: '4', name: 'NIFTY', symbol: 'NIFTY', expiry: '2026-03-27', bid: '22450', ask: '22452', ltp: '22450', change: '-10.50', high: '22500', low: '22400' },
             ]);
         }
     }, [watchlist]);

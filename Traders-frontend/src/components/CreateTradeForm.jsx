@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronDown, X, Check, ArrowLeft, Settings, User, Lock, Key } from 'lucide-react';
+import { ChevronDown, X, Check, ArrowLeft, Settings, User, Lock, Key, Loader2 } from 'lucide-react';
+import * as api from '../services/api';
 
 const InputField = ({ label, type = "text", placeholder, name, value, onChange }) => (
   <div className="flex flex-col gap-1 w-full group">
@@ -59,6 +60,30 @@ const CreateTradeForm = ({ onSave, onBack, onLogout, onNavigate }) => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+  const [scrips, setScrips] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [scripData, userData] = await Promise.all([
+          api.getScrips(),
+          api.getClients({ role: 'TRADER' })
+        ]);
+        setScrips(scripData || []);
+        setUsers(userData || []);
+      } catch (err) {
+        console.error('Failed to fetch form data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
   const [formData, setFormData] = useState({
     scrip: '',
     category: 'Mega',
@@ -66,6 +91,7 @@ const CreateTradeForm = ({ onSave, onBack, onLogout, onNavigate }) => {
     lots: '',
     buyRate: '',
     sellRate: '',
+    type: 'BUY',
     transactionPassword: ''
   });
 
@@ -74,10 +100,32 @@ const CreateTradeForm = ({ onSave, onBack, onLogout, onNavigate }) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (onSave) {
-      onSave(formData);
+    if (!formData.scrip || !formData.userId || !formData.lots || !formData.transactionPassword) {
+      alert('Please fill all required fields');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const payload = {
+        symbol: formData.scrip,
+        userId: formData.userId,
+        qty: parseInt(formData.lots),
+        price: formData.type === 'BUY' ? parseFloat(formData.buyRate) : parseFloat(formData.sellRate),
+        type: formData.type,
+        order_type: 'MARKET',
+        transactionPassword: formData.transactionPassword
+      };
+
+      if (onSave) {
+        await onSave(payload);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -232,9 +280,7 @@ const CreateTradeForm = ({ onSave, onBack, onLogout, onNavigate }) => {
                         placeholder="Select Scrip"
                         value={formData.scrip}
                         onChange={handleChange}
-                        options={[
-                          "360ONE FUTURE", "AARTIIND FUTURE", "ABBOTINDIA FUTURE", "ABCAPITAL FUTURE", "ADANIENT FUTURE", "GOLD26APRFUT", "CRUDEOIL20MARFUT"
-                        ]}
+                        options={scrips.map(s => ({ value: s.symbol, label: s.symbol }))}
                       />
                       <div className="mt-4">
                         <WhiteSelectField
@@ -254,6 +300,14 @@ const CreateTradeForm = ({ onSave, onBack, onLogout, onNavigate }) => {
                       placeholder=""
                     />
 
+                    <WhiteSelectField
+                      label="Type"
+                      name="type"
+                      value={formData.type}
+                      onChange={handleChange}
+                      options={[{ value: 'BUY', label: 'BUY' }, { value: 'SELL', label: 'SELL' }]}
+                    />
+
                     <InputField
                       label="Sell Rate"
                       name="sellRate"
@@ -271,9 +325,7 @@ const CreateTradeForm = ({ onSave, onBack, onLogout, onNavigate }) => {
                       placeholder="Select User"
                       value={formData.userId}
                       onChange={handleChange}
-                      options={[
-                        "3761 : demo001", "3705 : demo0174", "4424 : SHRE043"
-                      ]}
+                      options={users.map(u => ({ value: u.id, label: `${u.id} : ${u.username}` }))}
                     />
 
                     <InputField
@@ -299,10 +351,11 @@ const CreateTradeForm = ({ onSave, onBack, onLogout, onNavigate }) => {
                 <div className="px-4 mt-12 pb-6">
                   <button
                     type="submit"
-                    className="text-white px-10 py-2.5 rounded shadow-lg font-bold text-[13px] uppercase tracking-wider transition-all active:scale-95"
+                    disabled={submitting}
+                    className="text-white px-10 py-2.5 rounded shadow-lg font-bold text-[13px] uppercase tracking-wider transition-all active:scale-95 flex items-center gap-2"
                     style={{ background: 'linear-gradient(60deg, rgb(40, 140, 108), rgb(78, 167, 82))' }}
                   >
-                    SAVE
+                    {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'SAVE'}
                   </button>
                 </div>
               </form>

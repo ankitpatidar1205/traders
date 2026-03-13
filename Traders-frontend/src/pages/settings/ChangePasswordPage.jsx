@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { Lock, CheckCircle } from 'lucide-react';
+import { Lock, CheckCircle, Loader2 } from 'lucide-react';
+import * as api from '../../services/api';
 
 const ChangePasswordPage = () => {
     const [formData, setFormData] = useState({ newPassword: '', confirmPassword: '' });
     const [errors, setErrors] = useState({});
+    const [loading, setLoading] = useState(false);
     const [toast, setToast] = useState({ show: false, type: '', text: '' });
 
     const showToast = (text, type = 'success') => {
@@ -26,13 +28,22 @@ const ChangePasswordPage = () => {
         return newErrors;
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         const validationErrors = validate();
         if (Object.keys(validationErrors).length > 0) { setErrors(validationErrors); return; }
-        showToast('Password changed successfully!', 'success');
-        setFormData({ newPassword: '', confirmPassword: '' });
-        setErrors({});
+        
+        setLoading(true);
+        try {
+            await api.changePassword(formData.newPassword);
+            showToast('Password changed successfully!', 'success');
+            setFormData({ newPassword: '', confirmPassword: '' });
+            setErrors({});
+        } catch (err) {
+            showToast(err.message || 'Failed to change password', 'error');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -70,8 +81,8 @@ const ChangePasswordPage = () => {
                                 </div>
                             </div>
                             <div className="mt-8">
-                                <button type="submit" className="btn-success-gradient text-white font-bold py-2.5 px-8 rounded uppercase text-[11px] tracking-widest min-w-[160px] h-[40px]">
-                                    SAVE PASSWORD
+                                <button type="submit" disabled={loading} className="btn-success-gradient text-white font-bold py-2.5 px-8 rounded uppercase text-[11px] tracking-widest min-w-[160px] h-[40px] flex items-center justify-center gap-2 disabled:opacity-50">
+                                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'SAVE PASSWORD'}
                                 </button>
                             </div>
                         </form>

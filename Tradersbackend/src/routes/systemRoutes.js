@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const { getActionLedger, globalBatchUpdate } = require('../controllers/systemController');
-const { getAllScrips, updateScrip, getTickers, updateTicker } = require('../controllers/scripController');
+const { getAllScrips, updateScrip, getTickers, createTicker, updateTicker, deleteTicker } = require('../controllers/scripController');
+const { getBannedOrders, createBannedOrder, deleteBannedOrder, deleteMultipleBannedOrders } = require('../controllers/bannedController');
 const { authMiddleware, roleMiddleware } = require('../middleware/auth');
 
 router.get('/audit-log', authMiddleware, roleMiddleware(['SUPERADMIN']), getActionLedger);
@@ -11,6 +12,14 @@ router.post('/global-update', authMiddleware, roleMiddleware(['SUPERADMIN']), gl
 router.get('/scrips', authMiddleware, getAllScrips);
 router.put('/scrips', authMiddleware, roleMiddleware(['SUPERADMIN']), updateScrip);
 router.get('/tickers', authMiddleware, getTickers);
-router.put('/tickers/:id', authMiddleware, roleMiddleware(['SUPERADMIN']), updateTicker);
+router.post('/tickers', authMiddleware, roleMiddleware(['SUPERADMIN', 'ADMIN']), createTicker);
+router.put('/tickers/:id', authMiddleware, roleMiddleware(['SUPERADMIN', 'ADMIN']), updateTicker);
+router.delete('/tickers/:id', authMiddleware, roleMiddleware(['SUPERADMIN', 'ADMIN']), deleteTicker);
+
+// Banned Limit Orders
+router.get('/banned-orders', authMiddleware, getBannedOrders);
+router.post('/banned-orders', authMiddleware, roleMiddleware(['SUPERADMIN', 'ADMIN']), createBannedOrder);
+router.delete('/banned-orders/:id', authMiddleware, roleMiddleware(['SUPERADMIN', 'ADMIN']), deleteBannedOrder);
+router.post('/banned-orders/delete-multiple', authMiddleware, roleMiddleware(['SUPERADMIN', 'ADMIN']), deleteMultipleBannedOrders);
 
 module.exports = router;

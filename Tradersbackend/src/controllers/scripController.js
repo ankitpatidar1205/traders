@@ -26,7 +26,7 @@ const updateScrip = async (req, res) => {
 
 const getTickers = async (req, res) => {
     try {
-        const [rows] = await db.execute('SELECT * FROM tickers WHERE is_active = 1');
+        const [rows] = await db.execute('SELECT * FROM tickers ORDER BY id DESC');
         res.json(rows);
     } catch (err) {
         console.error(err);
@@ -34,12 +34,26 @@ const getTickers = async (req, res) => {
     }
 };
 
-const updateTicker = async (req, res) => {
-    const { text, speed, is_active } = req.body;
+const createTicker = async (req, res) => {
+    const { text, start_time, end_time } = req.body;
     try {
         await db.execute(
-            'UPDATE tickers SET text = ?, speed = ?, is_active = ? WHERE id = ?',
-            [text, speed, is_active, req.params.id]
+            'INSERT INTO tickers (text, start_time, end_time, is_active) VALUES (?, ?, ?, ?)',
+            [text, start_time, end_time, 1]
+        );
+        res.json({ message: 'Ticker created successfully' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+};
+
+const updateTicker = async (req, res) => {
+    const { text, speed, is_active, start_time, end_time } = req.body;
+    try {
+        await db.execute(
+            'UPDATE tickers SET text = ?, speed = ?, is_active = ?, start_time = ?, end_time = ? WHERE id = ?',
+            [text, speed || 10, is_active ?? 1, start_time, end_time, req.params.id]
         );
         res.json({ message: 'Ticker updated' });
     } catch (err) {
@@ -48,4 +62,14 @@ const updateTicker = async (req, res) => {
     }
 };
 
-module.exports = { getAllScrips, updateScrip, getTickers, updateTicker };
+const deleteTicker = async (req, res) => {
+    try {
+        await db.execute('DELETE FROM tickers WHERE id = ?', [req.params.id]);
+        res.json({ message: 'Ticker deleted successfully' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+};
+
+module.exports = { getAllScrips, updateScrip, getTickers, createTicker, updateTicker, deleteTicker };

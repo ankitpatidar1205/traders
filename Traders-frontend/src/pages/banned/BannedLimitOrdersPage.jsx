@@ -1,17 +1,67 @@
-import React, { useState } from 'react';
-import { Trash2, ChevronUp } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Trash2, ChevronUp, CheckCircle, AlertCircle, Loader2, X } from 'lucide-react';
+import * as api from '../../services/api';
 
 const BannedLimitOrdersPage = () => {
   const [view, setView] = useState('list');
   const [selectedItems, setSelectedItems] = useState([]);
-  const [bannedItems, setBannedItems] = useState([
-    { id: 35, scripId: 'CUB24DECFUT', startTime: '2024-12-16 17:16:00', endTime: '2024-12-16 17:17:00' },
-    { id: 36, scripId: 'GOLD24JANFUT', startTime: '2024-12-17 09:00:00', endTime: '2024-12-17 10:00:00' },
-    { id: 37, scripId: 'SILVER24FEBFUT', startTime: '2024-12-18 11:30:00', endTime: '2024-12-18 12:30:00' },
-    { id: 38, scripId: 'CRUDE24MARFUT', startTime: '2024-12-19 14:00:00', endTime: '2024-12-19 15:00:00' }
-  ]);
+  const [bannedItems, setBannedItems] = useState([]);
+  const [scrips, setScrips] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [toast, setToast] = useState({ show: false, text: '', type: '' });
 
-  const toggleView = () => setView(view === 'list' ? 'add' : 'list');
+  const [formData, setFormData] = useState({
+    scripId: '',
+    startDate: '',
+    startHour: '00',
+    startMin: '00',
+    endDate: '',
+    endHour: '00',
+    endMin: '00',
+    password: ''
+  });
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const [banData, scripData] = await Promise.all([
+        api.getBannedOrders(),
+        api.getScrips()
+      ]);
+      setBannedItems(banData);
+      setScrips(scripData);
+    } catch (err) {
+      showToast(err.message || 'Failed to fetch data', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const showToast = (text, type = 'success') => {
+    setToast({ show: true, text, type });
+    setTimeout(() => setToast({ show: false, text: '', type: '' }), 3000);
+  };
+
+  const toggleView = () => {
+    if (view === 'add') {
+      setFormData({
+        scripId: '',
+        startDate: '',
+        startHour: '00',
+        startMin: '00',
+        endDate: '',
+        endHour: '00',
+        endMin: '00',
+        password: ''
+      });
+    }
+    setView(view === 'list' ? 'add' : 'list');
+  };
 
   const toggleItemSelection = (itemId) => {
     setSelectedItems(prev =>
@@ -21,16 +71,58 @@ const BannedLimitOrdersPage = () => {
     );
   };
 
-  const handleRemoveFromBan = () => {
-    if (selectedItems.length > 0) {
-      const count = selectedItems.length;
-      setBannedItems(prev => prev.filter(item => !selectedItems.includes(item.id)));
-      setSelectedItems([]);
+  const handleRemoveFromBan = async () => {
+    if (selectedItems.length === 0) return;
+    
+    if (!window.confirm(`Are you sure you want to remove ${selectedItems.length} items from ban?`)) return;
 
-      // Success notification
-      alert(`Successfully removed ${count} item${count > 1 ? 's' : ''} from ban list!`);
+    setSubmitting(true);
+    try {
+      await api.deleteBannedOrders(selectedItems);
+      showToast('Items removed from ban successfully', 'success');
+      setSelectedItems([]);
+      fetchData();
+    } catch (err) {
+      showToast(err.message || 'Failed to remove items', 'error');
+    } finally {
+      setSubmitting(false);
     }
   };
+
+  const handleAddBan = async () => {
+    if (!formData.scripId || !formData.startDate || !formData.endDate) {
+      showToast('Please fill all required fields', 'error');
+      return;
+    }
+
+    const startTime = `${formData.startDate} ${formData.startHour}:${formData.startMin}:00`;
+    const endTime = `${formData.endDate} ${formData.endHour}:${formData.endMin}:00`;
+
+    setSubmitting(true);
+    try {
+      await api.createBannedOrder({
+        scripId: formData.scripId,
+        startTime,
+        endTime
+      });
+      showToast('Scrip added to ban list', 'success');
+      setView('list');
+      fetchData();
+    } catch (err) {
+      showToast(err.message || 'Failed to add ban', 'error');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  // Helper for time options
+  const hours = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
+  const minutes = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0'));
 
   const MobileBannedItemCard = ({ item, isSelected, onToggle }) => (
     <div
@@ -57,15 +149,15 @@ const BannedLimitOrdersPage = () => {
       <div className="space-y-2">
         <div className="flex justify-between">
           <span className="text-slate-500 text-[10px] uppercase font-bold tracking-wider">Scrip ID</span>
-          <span className="text-white font-bold text-sm">{item.scripId}</span>
+          <span className="text-white font-bold text-sm">{item.scrip_id}</span>
         </div>
         <div className="flex justify-between">
           <span className="text-slate-500 text-[10px] uppercase font-bold tracking-wider">Start Time</span>
-          <span className="text-slate-300 text-xs">{item.startTime}</span>
+          <span className="text-slate-300 text-xs">{new Date(item.start_time).toLocaleString()}</span>
         </div>
         <div className="flex justify-between">
           <span className="text-slate-500 text-[10px] uppercase font-bold tracking-wider">End Time</span>
-          <span className="text-slate-300 text-xs">{item.endTime}</span>
+          <span className="text-slate-300 text-xs">{new Date(item.end_time).toLocaleString()}</span>
         </div>
       </div>
     </div>
@@ -89,13 +181,13 @@ const BannedLimitOrdersPage = () => {
           </button>
           <button
             onClick={handleRemoveFromBan}
-            disabled={selectedItems.length === 0}
-            className={`font-bold py-2.5 px-8 rounded uppercase tracking-wider text-[11px] flex-1 md:flex-initial transition-all ${selectedItems.length > 0
+            disabled={selectedItems.length === 0 || submitting}
+            className={`font-bold py-2.5 px-8 rounded uppercase tracking-wider text-[11px] flex-1 md:flex-initial transition-all flex items-center justify-center gap-2 ${selectedItems.length > 0
               ? 'bg-[#4CAF50] text-white cursor-pointer shadow-md'
               : 'bg-[#1a2035] text-slate-500 cursor-not-allowed border border-white/5'
               }`}
           >
-            REMOVE FROM BAN {selectedItems.length > 0 && `(${selectedItems.length})`}
+            {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <>REMOVE FROM BAN {selectedItems.length > 0 && `(${selectedItems.length})`}</>}
           </button>
         </div>
       </div>
@@ -106,63 +198,84 @@ const BannedLimitOrdersPage = () => {
           <thead>
             <tr className="text-white text-[11px] font-bold border-b border-white/10 uppercase tracking-widest bg-[#1a2035]">
               <th className="px-6 py-6 w-16"></th>
-              <th className="px-6 py-6">
-                <div className="flex items-center gap-1 cursor-pointer">
-                  ID <ChevronUp className="w-3 h-3 text-[#01B4EA]" />
-                </div>
-              </th>
-              <th className="px-6 py-6">SCRIP ID</th>
-              <th className="px-6 py-6 text-[#01B4EA]">START TIME</th>
-              <th className="px-6 py-6">END TIME</th>
+              <th className="px-6 py-6 font-bold">ID ↑</th>
+              <th className="px-6 py-6 font-bold">SCRIP ID</th>
+              <th className="px-6 py-6 font-bold text-[#01B4EA]">START TIME</th>
+              <th className="px-6 py-6 font-bold">END TIME</th>
             </tr>
           </thead>
-          <tbody className="text-[11px] text-slate-700">
-            {bannedItems.map((item) => (
-              <tr
-                key={item.id}
-                onClick={() => toggleItemSelection(item.id)}
-                className={`border-b border-white/5 transition-all cursor-pointer ${selectedItems.includes(item.id)
-                  ? 'bg-green-500/10'
-                  : 'hover:bg-white/5'
-                  }`}
-              >
-                <td className="px-6 py-5">
-                  <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${selectedItems.includes(item.id)
-                    ? 'bg-[#01B4EA] border-[#01B4EA]'
-                    : 'bg-transparent border-white/20 shadow-sm'
-                    }`}>
-                    {selectedItems.includes(item.id) && (
-                      <svg className="w-3 h-3 text-white" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" viewBox="0 0 24 24" stroke="currentColor">
-                        <path d="M5 13l4 4L19 7"></path>
-                      </svg>
-                    )}
+          <tbody className="text-[11px] text-slate-300">
+            {loading ? (
+              <tr>
+                <td colSpan="5" className="px-6 py-10 text-center">
+                  <div className="flex flex-col items-center gap-2">
+                    <Loader2 className="w-8 h-8 animate-spin text-[#01B4EA]" />
+                    <span className="text-slate-500 tracking-widest uppercase">Loading banned orders...</span>
                   </div>
                 </td>
-                <td className="px-6 py-5 text-white font-medium">{item.id}</td>
-                <td className="px-6 py-5 text-slate-300 uppercase">{item.scripId}</td>
-                <td className="px-6 py-5 text-slate-300">{item.startTime}</td>
-                <td className="px-6 py-5 text-slate-300">{item.endTime}</td>
               </tr>
-            ))}
+            ) : bannedItems.length > 0 ? (
+              bannedItems.map((item) => (
+                <tr
+                  key={item.id}
+                  onClick={() => toggleItemSelection(item.id)}
+                  className={`border-b border-white/5 transition-all cursor-pointer ${selectedItems.includes(item.id)
+                    ? 'bg-green-500/10'
+                    : 'hover:bg-white/5'
+                    }`}
+                >
+                  <td className="px-6 py-5">
+                    <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${selectedItems.includes(item.id)
+                      ? 'bg-[#01B4EA] border-[#01B4EA]'
+                      : 'bg-transparent border-white/20 shadow-sm'
+                      }`}>
+                      {selectedItems.includes(item.id) && (
+                        <svg className="w-3 h-3 text-white" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" viewBox="0 0 24 24" stroke="currentColor">
+                          <path d="M5 13l4 4L19 7"></path>
+                        </svg>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-6 py-5 text-white font-medium">{item.id}</td>
+                  <td className="px-6 py-5 text-[#00BCD4] uppercase font-bold">{item.scrip_id}</td>
+                  <td className="px-6 py-5 text-slate-300 font-medium">{new Date(item.start_time).toLocaleString()}</td>
+                  <td className="px-6 py-5 text-slate-300 font-medium">{new Date(item.end_time).toLocaleString()}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="5" className="px-6 py-10 text-center text-slate-500 uppercase tracking-widest font-medium">
+                  No banned limit orders found.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
-        <div className="px-6 py-4 bg-[#1a2035]/50 border-t border-white/10">
-          <span className="text-[#01B4EA] text-[13px] font-bold">1</span>
-        </div>
+        {bannedItems.length > 0 && (
+          <div className="px-6 py-4 bg-[#1a2035]/50 border-t border-white/10">
+            <span className="text-[#01B4EA] text-[13px] font-bold">1</span>
+          </div>
+        )}
       </div>
 
       {/* Mobile Card View */}
       <div className="md:hidden">
-        {bannedItems.map((item) => (
-          <MobileBannedItemCard
-            key={item.id}
-            item={item}
-            isSelected={selectedItems.includes(item.id)}
-            onToggle={() => toggleItemSelection(item.id)}
-          />
-        ))}
-        {bannedItems.length === 0 && (
-          <div className="text-center text-slate-500 py-8">No banned limit orders found.</div>
+        {loading ? (
+             <div className="flex flex-col items-center gap-2 py-10">
+             <Loader2 className="w-8 h-8 animate-spin text-[#01B4EA]" />
+             <span className="text-slate-500 tracking-widest uppercase text-xs">Loading...</span>
+           </div>
+        ) : bannedItems.length > 0 ? (
+          bannedItems.map((item) => (
+            <MobileBannedItemCard
+              key={item.id}
+              item={item}
+              isSelected={selectedItems.includes(item.id)}
+              onToggle={() => toggleItemSelection(item.id)}
+            />
+          ))
+        ) : (
+          <div className="text-center text-slate-500 py-8 uppercase tracking-widest text-xs">No banned limit orders found.</div>
         )}
       </div>
     </div>
@@ -171,7 +284,10 @@ const BannedLimitOrdersPage = () => {
   const AddFormView = () => (
     <div className="bg-[#202940] rounded-lg border border-white/10 overflow-hidden max-w-4xl mx-auto w-full shadow-2xl">
       <div className="p-4 border-b border-white/10 flex items-center justify-between bg-[#1a2035]/50">
-        <h3 className="text-white font-bold uppercase tracking-wider text-sm">Add New Ban</h3>
+        <h3 className="text-white font-bold uppercase tracking-wider text-sm flex items-center gap-2">
+            <X className="w-4 h-4 text-red-500" />
+            Add New Ban
+        </h3>
         <button onClick={toggleView} className="text-slate-400 hover:text-white text-xs uppercase font-bold transition-colors">Cancel</button>
       </div>
 
@@ -180,17 +296,29 @@ const BannedLimitOrdersPage = () => {
           <label className="text-xs text-slate-500 uppercase font-bold tracking-wider">Start Time</label>
           <div className="flex items-center gap-2">
             <input
-              type="text"
-              placeholder="Start Date"
+              type="date"
+              name="startDate"
+              value={formData.startDate}
+              onChange={handleInputChange}
               className="bg-transparent border-b border-white/20 focus:border-[#4caf50] text-white p-2 w-full text-sm focus:outline-none transition-colors"
             />
             <div className="flex items-center gap-1">
-              <select className="bg-[#1a2035] border border-white/10 text-white p-2 rounded text-sm focus:outline-none focus:border-[#4caf50]">
-                <option>00</option>
+              <select 
+                name="startHour"
+                value={formData.startHour}
+                onChange={handleInputChange}
+                className="bg-[#1a2035] border border-white/10 text-white p-2 rounded text-sm focus:outline-none focus:border-[#4caf50]"
+              >
+                {hours.map(h => <option key={h}>{h}</option>)}
               </select>
               <span className="text-white font-bold">:</span>
-              <select className="bg-[#1a2035] border border-white/10 text-white p-2 rounded text-sm focus:outline-none focus:border-[#4caf50]">
-                <option>00</option>
+              <select 
+                name="startMin"
+                value={formData.startMin}
+                onChange={handleInputChange}
+                className="bg-[#1a2035] border border-white/10 text-white p-2 rounded text-sm focus:outline-none focus:border-[#4caf50]"
+              >
+                {minutes.map(m => <option key={m}>{m}</option>)}
               </select>
             </div>
           </div>
@@ -200,17 +328,29 @@ const BannedLimitOrdersPage = () => {
           <label className="text-xs text-slate-500 uppercase font-bold tracking-wider">End Time</label>
           <div className="flex items-center gap-2">
             <input
-              type="text"
-              placeholder="End Date"
+              type="date"
+              name="endDate"
+              value={formData.endDate}
+              onChange={handleInputChange}
               className="bg-transparent border-b border-white/20 focus:border-[#4caf50] text-white p-2 w-full text-sm focus:outline-none transition-colors"
             />
             <div className="flex items-center gap-1">
-              <select className="bg-[#1a2035] border border-white/10 text-white p-2 rounded text-sm focus:outline-none focus:border-[#4caf50]">
-                <option>00</option>
+              <select 
+                name="endHour"
+                value={formData.endHour}
+                onChange={handleInputChange}
+                className="bg-[#1a2035] border border-white/10 text-white p-2 rounded text-sm focus:outline-none focus:border-[#4caf50]"
+              >
+                {hours.map(h => <option key={h}>{h}</option>)}
               </select>
               <span className="text-white font-bold">:</span>
-              <select className="bg-[#1a2035] border border-white/10 text-white p-2 rounded text-sm focus:outline-none focus:border-[#4caf50]">
-                <option>00</option>
+              <select 
+                name="endMin"
+                value={formData.endMin}
+                onChange={handleInputChange}
+                className="bg-[#1a2035] border border-white/10 text-white p-2 rounded text-sm focus:outline-none focus:border-[#4caf50]"
+              >
+                {minutes.map(m => <option key={m}>{m}</option>)}
               </select>
             </div>
           </div>
@@ -218,8 +358,14 @@ const BannedLimitOrdersPage = () => {
 
         <div className="flex flex-col gap-2">
           <label className="text-xs text-slate-500 uppercase font-bold tracking-wider">Scrip</label>
-          <select className="bg-[#1a2035] border border-white/10 text-white p-3 rounded text-sm focus:outline-none focus:border-[#4caf50] w-full">
-            <option>Select Scrip</option>
+          <select 
+            name="scripId"
+            value={formData.scripId}
+            onChange={handleInputChange}
+            className="bg-[#1a2035] border border-white/10 text-white p-3 rounded text-sm focus:outline-none focus:border-[#4caf50] w-full"
+          >
+            <option value="">Select Scrip</option>
+            {scrips.map(s => <option key={s.id} value={s.symbol}>{s.symbol}</option>)}
           </select>
         </div>
 
@@ -228,6 +374,9 @@ const BannedLimitOrdersPage = () => {
           <div className="border-b border-white/20 relative">
             <input
               type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleInputChange}
               placeholder="Transaction Password"
               className="bg-transparent text-white p-2 w-full text-sm focus:outline-none focus:border-[#4caf50] transition-colors placeholder:text-slate-600"
             />
@@ -236,10 +385,11 @@ const BannedLimitOrdersPage = () => {
 
         <div className="md:col-span-2 pt-4">
           <button
-            onClick={toggleView}
-            className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-12 rounded uppercase tracking-wider text-xs w-full transition-all"
+            onClick={handleAddBan}
+            disabled={submitting}
+            className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-12 rounded uppercase tracking-wider text-xs w-full transition-all flex items-center justify-center gap-2 active:scale-[0.99] shadow-lg shadow-green-500/20"
           >
-            Add to Ban
+            {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Add to Ban'}
           </button>
         </div>
       </div>
@@ -247,10 +397,20 @@ const BannedLimitOrdersPage = () => {
   );
 
   return (
-    <div className="p-4 bg-[#1a2035] h-full overflow-y-auto">
+    <div className="p-4 bg-[#1a2035] min-h-screen overflow-y-auto relative">
+       {/* Toast */}
+       {toast.show && (
+            <div className={`fixed top-6 right-6 z-[100] flex items-center gap-3 px-6 py-4 rounded shadow-2xl transition-all border animate-in fade-in slide-in-from-top-4 ${
+                toast.type === 'success' ? 'bg-[#1b2a21] border-green-500/30 text-green-400' : 'bg-[#2a1b1b] border-red-500/30 text-red-400'
+            }`}>
+                {toast.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+                <p className="text-[14px] font-medium tracking-wide">{toast.text}</p>
+            </div>
+        )}
+
       {view === 'list' ? <ListView /> : <AddFormView />}
     </div>
   );
 };
 
-export default BannedLimitOrdersPage;
+export default BannedLimitOrdersPage;

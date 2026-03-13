@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Key, CheckCircle } from 'lucide-react';
+import { Key, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
+import * as api from '../../services/api';
 
 const ChangeTransactionPasswordPage = () => {
     const [formData, setFormData] = useState({
@@ -7,6 +8,7 @@ const ChangeTransactionPasswordPage = () => {
         confirmPassword: '',
     });
     const [errors, setErrors] = useState({});
+    const [loading, setLoading] = useState(false);
     const [toast, setToast] = useState({ show: false, type: '', text: '' });
 
     const showToast = (text, type = 'success') => {
@@ -24,8 +26,8 @@ const ChangeTransactionPasswordPage = () => {
         const newErrors = {};
         if (!formData.newPassword) {
             newErrors.newPassword = 'New transaction password is required.';
-        } else if (formData.newPassword.length < 8) {
-            newErrors.newPassword = 'Password must be at least 8 characters.';
+        } else if (formData.newPassword.length < 4) { // Typical for trading pins/passwords
+            newErrors.newPassword = 'Password must be at least 4 characters.';
         }
         if (!formData.confirmPassword) {
             newErrors.confirmPassword = 'Please confirm your password.';
@@ -35,25 +37,33 @@ const ChangeTransactionPasswordPage = () => {
         return newErrors;
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         const validationErrors = validate();
         if (Object.keys(validationErrors).length > 0) {
             setErrors(validationErrors);
             return;
         }
-        // ✅ API call here: changeTransactionPassword(formData.newPassword)
-        showToast('Transaction password changed successfully!', 'success');
-        setFormData({ newPassword: '', confirmPassword: '' });
-        setErrors({});
+        
+        setLoading(true);
+        try {
+            await api.changeTransactionPassword(formData.newPassword);
+            showToast('Transaction password changed successfully!', 'success');
+            setFormData({ newPassword: '', confirmPassword: '' });
+            setErrors({});
+        } catch (err) {
+            showToast(err.message || 'Failed to change password', 'error');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
         <div className="flex flex-col h-full bg-[#1a2035]">
             {/* Toast */}
             {toast.show && (
-                <div className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 rounded-lg shadow-2xl text-white text-[14px] font-medium ${toast.type === 'success' ? 'bg-[#16a34a]' : 'bg-[#dc2626]'}`}>
-                    <CheckCircle className="w-5 h-5" />
+                <div className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 rounded-lg shadow-2xl text-white text-[14px] font-medium animate-in fade-in slide-in-from-bottom-5 ${toast.type === 'success' ? 'bg-[#16a34a]' : 'bg-[#dc2626]'}`}>
+                    {toast.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
                     {toast.text}
                 </div>
             )}
@@ -90,7 +100,7 @@ const ChangeTransactionPasswordPage = () => {
                                         name="newPassword"
                                         value={formData.newPassword}
                                         onChange={handleChange}
-                                        placeholder="Minimum 8 characters"
+                                        placeholder="Minimum 4 characters"
                                         className="w-full bg-transparent border-b border-white/10 text-white pb-1.5 focus:outline-none focus:border-[#4caf50] transition-colors text-[14px] placeholder-slate-600"
                                     />
                                     {errors.newPassword && (
@@ -121,9 +131,14 @@ const ChangeTransactionPasswordPage = () => {
                             <div className="mt-8">
                                 <button
                                     type="submit"
-                                    className="btn-success-gradient text-white font-bold py-2.5 px-8 rounded uppercase text-[11px] tracking-widest min-w-[160px] h-[40px]"
+                                    disabled={loading}
+                                    className="btn-success-gradient text-white font-bold py-2.5 px-8 rounded uppercase text-[11px] tracking-widest min-w-[160px] h-[40px] flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-70"
+                                    style={{
+                                        background: 'linear-gradient(60deg, #288c6c, #4ea752)',
+                                        boxShadow: '0 4px 20px 0 rgba(0,0,0,0.14), 0 7px 10px -5px rgba(76,175,80,0.4)'
+                                    }}
                                 >
-                                    SAVE PASSWORD
+                                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'SAVE PASSWORD'}
                                 </button>
                             </div>
                         </form>

@@ -5,6 +5,7 @@ const { authMiddleware, roleMiddleware } = require('../middleware/auth');
 
 router.get('/health', (req, res) => res.json({ status: 'OK', message: 'Trade routes active' }));
 router.get('/', authMiddleware, getTrades);
+router.post('/', authMiddleware, placeOrder);
 router.get('/group', authMiddleware, getGroupTrades);
 router.get('/active', authMiddleware, getGroupTrades); // Alias for group trades
 router.get('/closed', authMiddleware, getTrades); // Can reuse getTrades with status=CLOSED

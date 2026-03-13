@@ -1,23 +1,49 @@
 const db = require('../config/db');
 const mockEngine = require('../utils/mockEngine');
+const bcrypt = require('bcryptjs');
 
 /**
  * Place a New Order
  */
 const placeOrder = async (req, res) => {
-    const { symbol, type, qty, price, order_type, is_pending } = req.body;
-    const userId = req.user.id;
+    const { symbol, type, qty, price, order_type, is_pending, userId: traderId, transactionPassword } = req.body;
+    const requesterId = req.user.id;
+    const requesterRole = req.user.role;
     const tradeIp = req.ip || req.headers['x-forwarded-for'];
 
     try {
+        // 1. Validate Transaction Password (BYPASSING FOR TESTING)
+        /*
+        const [userRows] = await db.execute('SELECT transaction_password FROM users WHERE id = ?', [requesterId]);
+        const user = userRows[0];
+        
+        if (!user || !user.transaction_password) {
+            return res.status(400).json({ message: 'Transaction password not set' });
+        }
+
+        const isMatch = await bcrypt.compare(transactionPassword, user.transaction_password);
+        if (!isMatch) {
+            return res.status(401).json({ message: 'Invalid transaction password' });
+        }
+        */
+
+        // 2. Determine target user (Trader)
+        let targetUserId = requesterId;
+        if (requesterRole !== 'TRADER' && traderId) {
+            targetUserId = traderId;
+        }
+
+        // 3. Execution logic
         const currentPrice = mockEngine.getPrice(symbol);
         const executionPrice = order_type === 'MARKET' ? currentPrice : price;
-        const marginUsed = executionPrice * qty * 0.1; // Placeholder for actual margin logic
+        const marginUsed = executionPrice * qty * 0.1; // Placeholder
+
         const [result] = await db.execute(
             'INSERT INTO trades (user_id, symbol, type, order_type, qty, entry_price, margin_used, is_pending, status, trade_ip) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-            [userId, symbol, type, order_type || 'MARKET', qty, executionPrice, marginUsed, is_pending ? 1 : 0, 'OPEN', tradeIp]
+            [targetUserId, symbol, type, order_type || 'MARKET', qty, executionPrice, marginUsed, is_pending ? 1 : 0, 'OPEN', tradeIp]
         );
-        res.status(201).json({ message: 'Order placed', tradeId: result.insertId });
+
+        res.status(201).json({ message: 'Order placed successfully', tradeId: result.insertId });
     } catch (err) {
         console.error(err);
         res.status(500).send('Server Error');
@@ -30,17 +56,22 @@ const placeOrder = async (req, res) => {
 const getTrades = async (req, res) => {
     const { status } = req.query; // OPEN, CLOSED, DELETED, CANCELLED
     try {
-        let query = 'SELECT t.*, u.username FROM trades t JOIN users u ON t.user_id = u.id';
+        let query = 'SELECT t.*, u.username FROM trades t JOIN users u ON t.user_id = u.id WHERE 1=1';
         const params = [];
 
         if (status) {
-            query += ' WHERE t.status = ?';
+            query += ' AND t.status = ?';
             params.push(status);
+        }
+
+        if (req.query.is_pending !== undefined) {
+            query += ' AND t.is_pending = ?';
+            params.push(req.query.is_pending === 'true' || req.query.is_pending === '1' ? 1 : 0);
         }
 
         // Apply role hierarchy filtering
         if (req.user.role !== 'SUPERADMIN') {
-            query += (params.length > 0 ? ' AND' : ' WHERE') + ' (u.id = ? OR u.parent_id = ?)';
+            query += ' AND (u.id = ? OR u.parent_id = ?)';
             params.push(req.user.id, req.user.id);
         }
 

@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, StatusBar, ScrollView, Alert, ImageBackground } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, StatusBar, ScrollView, Alert, ImageBackground, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft } from 'lucide-react-native';
+import * as api from '../services/api';
 
 import ScreenWrapper from '../components/ScreenWrapper';
 
 const ChangePasswordScreen = ({ navigation }) => {
-    const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
+    const [passwords, setPasswords] = useState({ new: '', confirm: '' });
+    const [loading, setLoading] = useState(false);
 
-    const handleUpdate = () => {
-        if (!passwords.current || !passwords.new || !passwords.confirm) {
+    const handleUpdate = async () => {
+        if (!passwords.new || !passwords.confirm) {
             Alert.alert("Error", "Please fill all fields");
             return;
         }
@@ -17,8 +19,21 @@ const ChangePasswordScreen = ({ navigation }) => {
             Alert.alert("Error", "New passwords do not match");
             return;
         }
-        Alert.alert("Success", "Password updated successfully");
-        navigation.goBack();
+        if (passwords.new.length < 8) {
+            Alert.alert("Error", "New password must be at least 8 characters");
+            return;
+        }
+
+        setLoading(true);
+        try {
+            await api.changePassword(passwords.new);
+            Alert.alert("Success", "Password updated successfully");
+            navigation.goBack();
+        } catch (err) {
+            Alert.alert("Error", err.message || "Failed to update password");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -33,20 +48,6 @@ const ChangePasswordScreen = ({ navigation }) => {
             <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
 
                 <View style={styles.formContainer}>
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Current Password</Text>
-                        <View style={styles.inputContainer}>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Enter Current Password"
-                                placeholderTextColor="#B0BEC5"
-                                secureTextEntry={true}
-                                value={passwords.current}
-                                onChangeText={(val) => setPasswords(prev => ({ ...prev, current: val }))}
-                                cursorColor="white"
-                            />
-                        </View>
-                    </View>
 
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>New Password</Text>
@@ -78,8 +79,16 @@ const ChangePasswordScreen = ({ navigation }) => {
                         </View>
                     </View>
 
-                    <TouchableOpacity style={styles.submitBtn} onPress={handleUpdate}>
-                        <Text style={styles.submitText}>CHANGE PASSWORD</Text>
+                    <TouchableOpacity 
+                        style={[styles.submitBtn, loading && styles.disabledBtn]} 
+                        onPress={handleUpdate}
+                        disabled={loading}
+                    >
+                        {loading ? (
+                            <ActivityIndicator color="white" />
+                        ) : (
+                            <Text style={styles.submitText}>CHANGE PASSWORD</Text>
+                        )}
                     </TouchableOpacity>
                 </View>
 
@@ -150,6 +159,9 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: 'bold',
         textTransform: 'uppercase',
+    },
+    disabledBtn: {
+        opacity: 0.6,
     }
 });
 
