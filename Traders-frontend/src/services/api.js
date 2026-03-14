@@ -503,3 +503,18 @@ export const toggleBankStatus = async (id) => {
     });
     return handleResponse(res);
 };
+
+// ─── NEW CLIENT BANK (Payment Details for Deposits) ──
+export const getNewClientBank = async () => {
+    const res = await fetch(`${BASE_URL}/new-client-bank`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const updateNewClientBank = async (data) => {
+    const res = await fetch(`${BASE_URL}/new-client-bank`, {
+        method: 'PUT',
+        headers: getHeaders(),
+        body: JSON.stringify(data),
+    });
+    return handleResponse(res);
+};

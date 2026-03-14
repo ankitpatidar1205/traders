@@ -221,31 +221,33 @@ function App() {
                 <Route path="/notifications" element={<NotificationsPage />} />
                 <Route path="/closed-positions" element={<ClosedPositionsPage />} />
                 
-                <Route path="/users" element={<TradingClientsPage
+                <Route path="/trading-clients" element={<ProtectedRoute viewId="trading-clients"><TradingClientsPage
                     onLogout={handleLogout}
                     onNavigate={setView}
                     onDepositClick={handleDeposit}
                     onWithdrawClick={handleWithdraw}
-                />} />
+                /></ProtectedRoute>} />
 
                 <Route path="/create-client" element={<SimpleTraderForm onBack={() => setView('trading-clients')} onSave={() => handleAddClient('trading-clients')} />} />
                 <Route path="/create-admin" element={<SimpleAddUserForm role="Admin" onBack={() => setView('admins')} onSave={() => handleAddClient('admins')} />} />
                 <Route path="/create-broker" element={<AddBrokerForm onBack={() => setView('brokers')} onSave={() => handleAddClient('brokers')} />} />
                 <Route path="/broker-accounts" element={<ProtectedRoute viewId="broker-accounts"><BrokerAccountsPage /></ProtectedRoute>} />
-                
-                <Route path="/create-fund-deposit" element={<CreateFundForm onBack={() => setView('users')} onSave={(data) => { console.log('Deposit Saved:', data); setView('users'); }} mode="deposit" initialUser={selectedClient} />} />
-                <Route path="/create-fund-withdraw" element={<CreateFundForm onBack={() => setView('users')} onSave={(data) => { console.log('Withdraw Saved:', data); setView('users'); }} mode="withdraw" initialUser={selectedClient} />} />
-                
+
+                <Route path="/create-fund-deposit" element={<CreateFundForm onBack={() => setView('trading-clients')} onSave={(data) => { console.log('Deposit Saved:', data); setView('trading-clients'); }} mode="deposit" initialUser={selectedClient} />} />
+                <Route path="/create-fund-withdraw" element={<CreateFundForm onBack={() => setView('trading-clients')} onSave={(data) => { console.log('Withdraw Saved:', data); setView('trading-clients'); }} mode="withdraw" initialUser={selectedClient} />} />
+
                 <Route path="/client-details" element={<ClientDetailPage
                     client={selectedClient}
-                    onClose={() => setView('users')}
+                    onClose={() => setView('trading-clients')}
                     onNavigate={setView}
                     onLogout={handleLogout}
                 />} />
 
                 <Route path="/admins" element={<ProtectedRoute viewId="admins"><UsersPage onNavigate={(v, row) => { if (row) setSelectedClient(row); setView(v); }} roleFilter="ADMIN" /></ProtectedRoute>} />
-                <Route path="/brokers" element={<ProtectedRoute viewId="users"><UsersPage onNavigate={(v, row) => { if (row) setSelectedClient(row); setView(v); }} roleFilter="BROKER" /></ProtectedRoute>} />
-                <Route path="/trading-clients" element={<ProtectedRoute viewId="trading-clients"><UsersPage onNavigate={(v, row) => { if (row) setSelectedClient(row); setView(v); }} roleFilter="BROKER" /></ProtectedRoute>} />
+                <Route path="/brokers" element={<ProtectedRoute viewId="brokers"><UsersPage onNavigate={(v, row) => { if (row) setSelectedClient(row); setView(v); }} roleFilter="BROKER" /></ProtectedRoute>} />
+
+                {/* Redirect old /users to /trading-clients */}
+                <Route path="/users" element={<Navigate to="/trading-clients" replace />} />
                 <Route path="/new-client-bank" element={<ProtectedRoute viewId="new-client-bank"><NewClientBankDetailsPage /></ProtectedRoute>} />
                 <Route path="/create-trade" element={<CreateTradeForm onSave={handleAddTrade} onBack={() => setView('trades')} onLogout={handleLogout} onNavigate={setView} />} />
                 <Route path="/change-password" element={<ChangePasswordPage />} />

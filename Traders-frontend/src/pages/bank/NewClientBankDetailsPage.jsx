@@ -1,32 +1,90 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import * as api from '../../services/api';
 
 const NewClientBankDetailsPage = () => {
   const [formData, setFormData] = useState({
-    accountHolder: "SHRISHREENATHJI TRADERS",
-    accountNumber: "50200012345678",
-    bankName: "HDFC Bank",
-    ifsc: "HDFC0001234",
-    phonePe: "9876543210",
-    googlePay: "9876543210",
-    paytm: "9876543210",
-    upiId: "shreenathji@okaxis"
+    accountHolder: '',
+    accountNumber: '',
+    bankName: '',
+    ifsc: '',
+    phonePe: '',
+    googlePay: '',
+    paytm: '',
+    upiId: ''
   });
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState({ show: false, type: '', text: '' });
+
+  const showToast = (text, type = 'success') => {
+    setToast({ show: true, type, text });
+    setTimeout(() => setToast({ show: false, type: '', text: '' }), 3000);
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const data = await api.getNewClientBank();
+        setFormData({
+          accountHolder: data.account_holder || '',
+          accountNumber: data.account_number || '',
+          bankName: data.bank_name || '',
+          ifsc: data.ifsc || '',
+          phonePe: data.phone_pe || '',
+          googlePay: data.google_pay || '',
+          paytm: data.paytm || '',
+          upiId: data.upi_id || ''
+        });
+      } catch (err) {
+        showToast(err.message || 'Failed to load details', 'error');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleUpdate = () => {
-    alert('Bank Details Updated Successfully!');
-    console.log('Updated Form Data:', formData);
+  const handleUpdate = async () => {
+    setSaving(true);
+    try {
+      await api.updateNewClientBank(formData);
+      showToast('Bank details updated successfully!', 'success');
+    } catch (err) {
+      showToast(err.message || 'Failed to update', 'error');
+    } finally {
+      setSaving(false);
+    }
   };
+
+  const fields = [
+    { name: 'accountHolder', label: 'Account Holder' },
+    { name: 'accountNumber', label: 'Account Number' },
+    { name: 'bankName', label: 'Bank Name' },
+    { name: 'ifsc', label: 'IFSC' },
+    { name: 'phonePe', label: 'PhonePe' },
+    { name: 'googlePay', label: 'Google Pay' },
+    { name: 'paytm', label: 'Paytm' },
+    { name: 'upiId', label: 'UPI ID' },
+  ];
 
   return (
     <div className="flex flex-col h-full bg-[#1a2035] space-y-8 overflow-y-auto">
+
+      {/* Toast */}
+      {toast.show && (
+        <div className={`fixed top-6 right-6 z-[200] flex items-center gap-3 px-5 py-3.5 rounded shadow-2xl text-white text-[14px] font-medium ${toast.type === 'success' ? 'bg-[#16a34a]' : 'bg-[#dc2626]'}`}>
+          {toast.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+          {toast.text}
+        </div>
+      )}
+
       {/* Header */}
       <div className="mb-8">
         <div className="inline-block bg-[#4CAF50] text-white px-4 py-2 rounded-md shadow-sm">
@@ -34,116 +92,38 @@ const NewClientBankDetailsPage = () => {
         </div>
       </div>
 
-      {/* Form Section */}
-      <div className="flex-1 bg-[#202940] p-8 rounded-lg border border-[#2d3748] shadow-xl">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
-          {/* Account Holder */}
-          <div className="space-y-2">
-            <label className="block text-slate-400 text-sm">Account Holder</label>
-            <input
-              type="text"
-              name="accountHolder"
-              value={formData.accountHolder}
-              onChange={handleChange}
-              className="w-full bg-transparent border-b border-slate-700 text-white py-1 focus:outline-none focus:border-[#4CAF50] transition-colors"
-            />
+      {loading ? (
+        <div className="flex justify-center items-center p-12">
+          <Loader2 className="w-8 h-8 animate-spin text-[#4CAF50]" />
+        </div>
+      ) : (
+        <div className="flex-1 bg-[#202940] p-8 rounded-lg border border-[#2d3748] shadow-xl">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+            {fields.map(field => (
+              <div key={field.name} className="space-y-2">
+                <label className="block text-slate-400 text-sm">{field.label}</label>
+                <input
+                  type="text"
+                  name={field.name}
+                  value={formData[field.name]}
+                  onChange={handleChange}
+                  className="w-full bg-transparent border-b border-slate-700 text-white py-1 focus:outline-none focus:border-[#4CAF50] transition-colors"
+                />
+              </div>
+            ))}
           </div>
 
-          {/* Account Number */}
-          <div className="space-y-2">
-            <label className="block text-slate-400 text-sm">Account Number</label>
-            <input
-              type="text"
-              name="accountNumber"
-              value={formData.accountNumber}
-              onChange={handleChange}
-              className="w-full bg-transparent border-b border-slate-700 text-white py-1 focus:outline-none focus:border-[#4CAF50] transition-colors"
-            />
-          </div>
-
-          {/* Bank Name */}
-          <div className="space-y-2">
-            <label className="block text-slate-400 text-sm">Bank Name</label>
-            <input
-              type="text"
-              name="bankName"
-              value={formData.bankName}
-              onChange={handleChange}
-              className="w-full bg-transparent border-b border-slate-700 text-white py-1 focus:outline-none focus:border-[#4CAF50] transition-colors"
-            />
-          </div>
-
-          {/* IFSC */}
-          <div className="space-y-2">
-            <label className="block text-slate-400 text-sm">IFSC</label>
-            <input
-              type="text"
-              name="ifsc"
-              value={formData.ifsc}
-              onChange={handleChange}
-              className="w-full bg-transparent border-b border-slate-700 text-white py-1 focus:outline-none focus:border-[#4CAF50] transition-colors"
-            />
-          </div>
-
-          {/* PhonePe */}
-          <div className="space-y-2">
-            <label className="block text-slate-400 text-sm">PhonePe</label>
-            <input
-              type="text"
-              name="phonePe"
-              value={formData.phonePe}
-              onChange={handleChange}
-              className="w-full bg-transparent border-b border-slate-700 text-white py-1 focus:outline-none focus:border-[#4CAF50] transition-colors"
-            />
-          </div>
-
-          {/* Google Pay */}
-          <div className="space-y-2">
-            <label className="block text-slate-400 text-sm">Google Pay</label>
-            <input
-              type="text"
-              name="googlePay"
-              value={formData.googlePay}
-              onChange={handleChange}
-              className="w-full bg-transparent border-b border-slate-700 text-white py-1 focus:outline-none focus:border-[#4CAF50] transition-colors"
-            />
-          </div>
-
-          {/* Paytm */}
-          <div className="space-y-2">
-            <label className="block text-slate-400 text-sm">Paytm</label>
-            <input
-              type="text"
-              name="paytm"
-              value={formData.paytm}
-              onChange={handleChange}
-              className="w-full bg-transparent border-b border-slate-700 text-white py-1 focus:outline-none focus:border-[#4CAF50] transition-colors"
-            />
-          </div>
-
-          {/* UPI ID */}
-          <div className="space-y-2">
-            <label className="block text-slate-400 text-sm">UPI ID</label>
-            <input
-              type="text"
-              name="upiId"
-              value={formData.upiId}
-              onChange={handleChange}
-              className="w-full bg-transparent border-b border-slate-700 text-white py-1 focus:outline-none focus:border-[#4CAF50] transition-colors"
-            />
+          <div className="mt-12">
+            <button
+              onClick={handleUpdate}
+              disabled={saving}
+              className="bg-[#4CAF50] hover:bg-green-600 text-white font-medium py-2 px-6 rounded transition-all uppercase text-xs tracking-wider flex items-center gap-2 disabled:opacity-70"
+            >
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'UPDATE DETAILS'}
+            </button>
           </div>
         </div>
-
-        {/* Update Button */}
-        <div className="mt-12">
-          <button
-            onClick={handleUpdate}
-            className="bg-[#4CAF50] hover:bg-green-600 text-white font-medium py-2 px-6 rounded transition-all uppercase text-xs tracking-wider"
-          >
-            UPDATE DETAILS
-          </button>
-        </div>
-      </div>
+      )}
     </div>
   );
 };

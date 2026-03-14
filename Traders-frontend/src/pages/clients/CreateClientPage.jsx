@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Save, ArrowLeft, Info, Check, Lock, Key, Settings, User, ChevronDown, FileUp, ShieldCheck } from 'lucide-react';
+import { X, Save, ArrowLeft, Info, Check, Lock, Key, Settings, User, ChevronDown, FileUp, ShieldCheck, FileText } from 'lucide-react';
 import * as api from '../../services/api';
 
 const ScripField = ({ label, value, onChange, hint, name }) => (
@@ -217,7 +217,7 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
 
         // 7. Other
         notes: '',
-        broker: client?.broker || '3761 : demo001',
+        broker: client?.broker || '',
         transactionPassword: '',
 
         // 8. Kyc / Documents
@@ -233,15 +233,21 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
 
     const [loading, setLoading] = useState(false);
     const [saveError, setSaveError] = useState('');
-    const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString());
     const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+    const [brokers, setBrokers] = useState([]);
     const profileRef = useRef(null);
 
+    // Fetch brokers for dropdown
     useEffect(() => {
-        const timer = setInterval(() => {
-            setCurrentTime(new Date().toLocaleTimeString());
-        }, 1000);
-        return () => clearInterval(timer);
+        const fetchBrokers = async () => {
+            try {
+                const data = await api.getClients({ role: 'BROKER' });
+                setBrokers(data || []);
+            } catch (err) {
+                console.error('Failed to fetch brokers:', err);
+            }
+        };
+        fetchBrokers();
     }, []);
 
     // Close dropdown when clicking outside
@@ -289,7 +295,7 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
         setLoading(true);
         setSaveError('');
         try {
-            // Step 1: Create user
+            // Step 1: Create user with basic fields
             const result = await api.createClient({
                 fullName: formData.fullName,
                 username: formData.username,
@@ -301,7 +307,19 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
             });
             const userId = result.id;
 
-            // Step 2: Save all settings + full config as JSON
+            // Step 2: Update user profile with extra fields
+            await api.updateUser(userId, {
+                isDemo: formData.isDemoAccount,
+                status: formData.accountStatus || 'Active',
+                exposureMultiplier: 1
+            });
+
+            // Step 3: Save client settings + ALL config as JSON (MCX, Equity, Options, Expiry, etc.)
+            const configToSave = { ...formData };
+            // Remove files from config (they go to documents endpoint)
+            delete configToSave.documents;
+            delete configToSave.password;
+
             await api.updateClientSettings(userId, {
                 allowFreshEntry: formData.allowFreshEntry,
                 allowOrdersBetweenHL: formData.allowOrdersBetweenHL,
@@ -310,8 +328,30 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                 notifyPct: formData.notifyPercentage,
                 minProfitTime: formData.minTimeToBookProfit,
                 scalpingSlEnabled: formData.scalpingStopLoss,
-                config: formData
+                config: configToSave
             });
+
+            // Step 4: Set transaction password if provided
+            if (formData.transactionPassword) {
+                await api.updateUserPasswords(userId, {
+                    transactionPassword: formData.transactionPassword
+                });
+            }
+
+            // Step 5: Upload KYC documents if any files selected
+            const docs = formData.documents;
+            if (docs.panCard || docs.aadhaarFront || docs.aadhaarBack || docs.bankStatement) {
+                const docFormData = new FormData();
+                if (docs.panCard)      docFormData.append('panScreenshot', docs.panCard);
+                if (docs.aadhaarFront) docFormData.append('aadharFront', docs.aadhaarFront);
+                if (docs.aadhaarBack)  docFormData.append('aadharBack', docs.aadhaarBack);
+                if (docs.bankStatement) docFormData.append('bankProof', docs.bankStatement);
+                docFormData.append('kycStatus', 'PENDING');
+                await api.updateDocuments(userId, docFormData);
+            }
+
+            // Step 6: Assign broker if selected
+            // Broker info is stored in config_json already
 
             onSave(formData);
         } catch (err) {
@@ -444,7 +484,7 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                 </div>
                                 <span className="truncate">{item.label}</span>
                             </div>
-                            {item.label === 'Market Watch' && <span className="text-[10px] opacity-60" style={{ color: '#bcc0cf' }}>{currentTime}</span>}
+                            {item.label === 'Market Watch' && <span className="text-[10px] opacity-60" style={{ color: '#bcc0cf' }}>{new Date().toLocaleTimeString()}</span>}
                         </div>
                     ))}
                     <div className="mt-auto px-4 py-4 mt-2 border-t border-white/10 bg-black/20 rounded-md">
@@ -868,118 +908,56 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-2">
-                                            {/* PAN Card */}
-                                            <div className="space-y-3">
-                                                <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">PAN Card Image</label>
-                                                <div className="relative group cursor-pointer">
-                                                    <input
-                                                        type="file"
-                                                        className="hidden"
-                                                        id="doc-pan"
-                                                        onChange={(e) => handleNestedChange('documents', 'panCard', e.target.files[0])}
-                                                    />
-                                                    <label htmlFor="doc-pan" className="flex flex-col items-center justify-center h-48 rounded-2xl bg-black/40 border-2 border-dashed border-white/10 hover:border-green-500/50 hover:bg-black/60 transition-all group overflow-hidden cursor-pointer">
-                                                        {formData.documents.panCard ? (
-                                                            <div className="w-full h-full flex flex-col items-center justify-center gap-3">
-                                                                <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center">
-                                                                    <Check className="w-6 h-6 text-green-400" />
-                                                                </div>
-                                                                <span className="text-[10px] font-black text-green-400">UPLOADED: {formData.documents.panCard.name}</span>
-                                                            </div>
-                                                        ) : (
-                                                            <>
-                                                                <FileUp className="w-10 h-10 text-slate-600 group-hover:text-green-500 transition-colors mb-4" />
-                                                                <span className="text-[11px] font-black text-slate-500 group-hover:text-green-500 uppercase tracking-[0.2em]">Select Document</span>
-                                                            </>
-                                                        )}
-                                                    </label>
-                                                </div>
-                                            </div>
-
-                                            {/* Aadhaar Front */}
-                                            <div className="space-y-3">
-                                                <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Aadhaar Front Image</label>
-                                                <div className="relative group cursor-pointer">
-                                                    <input
-                                                        type="file"
-                                                        className="hidden"
-                                                        id="doc-aadhaar-f"
-                                                        onChange={(e) => handleNestedChange('documents', 'aadhaarFront', e.target.files[0])}
-                                                    />
-                                                    <label htmlFor="doc-aadhaar-f" className="flex flex-col items-center justify-center h-48 rounded-2xl bg-black/40 border-2 border-dashed border-white/10 hover:border-green-500/50 hover:bg-black/60 transition-all group overflow-hidden cursor-pointer">
-                                                        {formData.documents.aadhaarFront ? (
-                                                            <div className="w-full h-full flex flex-col items-center justify-center gap-3">
-                                                                <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center">
-                                                                    <Check className="w-6 h-6 text-green-400" />
-                                                                </div>
-                                                                <span className="text-[10px] font-black text-green-400">UPLOADED: {formData.documents.aadhaarFront.name}</span>
-                                                            </div>
-                                                        ) : (
-                                                            <>
-                                                                <FileUp className="w-10 h-10 text-slate-600 group-hover:text-green-500 transition-colors mb-4" />
-                                                                <span className="text-[11px] font-black text-slate-500 group-hover:text-green-500 uppercase tracking-[0.2em]">Select Document</span>
-                                                            </>
-                                                        )}
-                                                    </label>
-                                                </div>
-                                            </div>
-
-                                            {/* Aadhaar Back */}
-                                            <div className="space-y-3">
-                                                <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Aadhaar Back Image</label>
-                                                <div className="relative group cursor-pointer">
-                                                    <input
-                                                        type="file"
-                                                        className="hidden"
-                                                        id="doc-aadhaar-b"
-                                                        onChange={(e) => handleNestedChange('documents', 'aadhaarBack', e.target.files[0])}
-                                                    />
-                                                    <label htmlFor="doc-aadhaar-b" className="flex flex-col items-center justify-center h-48 rounded-2xl bg-black/40 border-2 border-dashed border-white/10 hover:border-green-500/50 hover:bg-black/60 transition-all group overflow-hidden cursor-pointer">
-                                                        {formData.documents.aadhaarBack ? (
-                                                            <div className="w-full h-full flex flex-col items-center justify-center gap-3">
-                                                                <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center">
-                                                                    <Check className="w-6 h-6 text-green-400" />
-                                                                </div>
-                                                                <span className="text-[10px] font-black text-green-400">UPLOADED: {formData.documents.aadhaarBack.name}</span>
-                                                            </div>
-                                                        ) : (
-                                                            <>
-                                                                <FileUp className="w-10 h-10 text-slate-600 group-hover:text-green-500 transition-colors mb-4" />
-                                                                <span className="text-[11px] font-black text-slate-500 group-hover:text-green-500 uppercase tracking-[0.2em]">Select Document</span>
-                                                            </>
-                                                        )}
-                                                    </label>
-                                                </div>
-                                            </div>
-
-                                            {/* Bank Statement */}
-                                            <div className="space-y-3">
-                                                <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Bank Statement / Cheque</label>
-                                                <div className="relative group cursor-pointer">
-                                                    <input
-                                                        type="file"
-                                                        className="hidden"
-                                                        id="doc-bank"
-                                                        onChange={(e) => handleNestedChange('documents', 'bankStatement', e.target.files[0])}
-                                                    />
-                                                    <label htmlFor="doc-bank" className="flex flex-col items-center justify-center h-48 rounded-2xl bg-black/40 border-2 border-dashed border-white/10 hover:border-green-500/50 hover:bg-black/60 transition-all group overflow-hidden cursor-pointer">
-                                                        {formData.documents.bankStatement ? (
-                                                            <div className="w-full h-full flex flex-col items-center justify-center gap-3">
-                                                                <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center">
-                                                                    <Check className="w-6 h-6 text-green-400" />
-                                                                </div>
-                                                                <span className="text-[10px] font-black text-green-400">UPLOADED: {formData.documents.bankStatement.name}</span>
-                                                            </div>
-                                                        ) : (
-                                                            <>
-                                                                <FileUp className="w-10 h-10 text-slate-600 group-hover:text-green-500 transition-colors mb-4" />
-                                                                <span className="text-[11px] font-black text-slate-500 group-hover:text-green-500 uppercase tracking-[0.2em]">Select Document</span>
-                                                            </>
-                                                        )}
-                                                    </label>
-                                                </div>
-                                            </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 px-2">
+                                            {[
+                                                { key: 'panCard', label: 'PAN Card', id: 'doc-pan' },
+                                                { key: 'aadhaarFront', label: 'Aadhaar Front', id: 'doc-aadhaar-f' },
+                                                { key: 'aadhaarBack', label: 'Aadhaar Back', id: 'doc-aadhaar-b' },
+                                                { key: 'bankStatement', label: 'Bank Proof / Cheque', id: 'doc-bank' }
+                                            ].map(doc => {
+                                                const file = formData.documents[doc.key];
+                                                const hasFile = file instanceof File;
+                                                const isPdf = hasFile && file.type === 'application/pdf';
+                                                return (
+                                                    <div key={doc.key} className="space-y-3">
+                                                        <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">{doc.label}</label>
+                                                        <div className="relative group cursor-pointer">
+                                                            <input
+                                                                type="file"
+                                                                className="hidden"
+                                                                id={doc.id}
+                                                                accept="image/*,.pdf"
+                                                                onChange={(e) => handleNestedChange('documents', doc.key, e.target.files[0])}
+                                                            />
+                                                            <label htmlFor={doc.id} className="flex flex-col items-center justify-center h-48 rounded-2xl bg-black/40 border-2 border-dashed border-white/10 hover:border-green-500/50 hover:bg-black/60 transition-all group overflow-hidden cursor-pointer">
+                                                                {hasFile ? (
+                                                                    <div className="w-full h-full relative flex flex-col items-center justify-center gap-2">
+                                                                        {isPdf ? (
+                                                                            <div className="absolute inset-0 w-full h-full flex items-center justify-center bg-red-900/20 rounded-2xl">
+                                                                                <FileText className="w-16 h-16 text-red-400 opacity-50" />
+                                                                            </div>
+                                                                        ) : file.type?.startsWith('image/') ? (
+                                                                            <img src={URL.createObjectURL(file)} alt={doc.label} className="absolute inset-0 w-full h-full object-cover rounded-2xl opacity-70" />
+                                                                        ) : null}
+                                                                        <div className="relative z-10 flex flex-col items-center gap-2">
+                                                                            <div className="w-10 h-10 rounded-full bg-green-500/30 backdrop-blur flex items-center justify-center">
+                                                                                <Check className="w-5 h-5 text-green-400" />
+                                                                            </div>
+                                                                            <span className="text-[9px] font-black text-green-300 bg-black/60 px-2 py-1 rounded max-w-[120px] truncate">{file.name}</span>
+                                                                            <span className="text-[8px] text-slate-400">Click to change</span>
+                                                                        </div>
+                                                                    </div>
+                                                                ) : (
+                                                                    <>
+                                                                        <FileUp className="w-10 h-10 text-slate-600 group-hover:text-green-500 transition-colors mb-4" />
+                                                                        <span className="text-[11px] font-black text-slate-500 group-hover:text-green-500 uppercase tracking-[0.2em]">Select Document</span>
+                                                                    </>
+                                                                )}
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
 
                                         <div className="mt-12 space-y-8 bg-black/20 p-8 rounded-2xl border border-white/5">
@@ -1003,9 +981,12 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                                         onChange={handleChange}
                                                         className="w-full bg-white border border-slate-200 py-2.5 px-3 text-black font-bold outline-none rounded-sm text-sm"
                                                     >
-                                                        <option value="">Select User</option>
-                                                        <option value="3761 : demo001">3761 : demo001</option>
-                                                        <option value="3762 : demo002">3762 : demo002</option>
+                                                        <option value="">Select Broker</option>
+                                                        {brokers.map(b => (
+                                                            <option key={b.id} value={`${b.id} : ${b.username}`}>
+                                                                {b.id} : {b.username} ({b.full_name || b.fullName || ''})
+                                                            </option>
+                                                        ))}
                                                     </select>
                                                 </div>
                                             </div>

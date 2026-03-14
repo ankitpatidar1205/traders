@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, User, ChevronDown, Settings, Lock, Key } from 'lucide-react';
+import { X, User, ChevronDown, Settings, Lock, Key, Eye, FileText } from 'lucide-react';
+import * as api from '../../services/api';
 
 const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, onDuplicate, onChangePassword, onDelete, onLogout, onNavigate }) => {
     const [showDetails, setShowDetails] = useState(false);
@@ -7,6 +8,16 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
     const [showProfileDropdown, setShowProfileDropdown] = useState(false);
     const profileRef = useRef(null);
     const [kycStatus, setKycStatus] = useState(client?.kycStatus || 'Pending');
+    const [documents, setDocuments] = useState({});
+    const [docsLoaded, setDocsLoaded] = useState(false);
+
+    useEffect(() => {
+        if (!client?.id) return;
+        api.getDocuments(client.id).then(docs => {
+            setDocuments(docs || {});
+            setDocsLoaded(true);
+        }).catch(() => setDocsLoaded(true));
+    }, [client?.id]);
 
     const handleApproveKYC = () => {
         setKycStatus('Approved');
@@ -409,7 +420,7 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
                                         </div>
                                     </div>
 
-                                    <div className="flex gap-4">
+                                    <div className="flex gap-4 mb-6">
                                         <button
                                             onClick={handleApproveKYC}
                                             className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded text-[11px] uppercase tracking-widest transition-all shadow-lg shadow-green-900/10"
@@ -423,6 +434,57 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
                                             REJECT KYC
                                         </button>
                                     </div>
+
+                                    {/* Document Preview Section */}
+                                    {docsLoaded && (
+                                        <div>
+                                            <h4 className="text-white text-[14px] font-bold uppercase tracking-widest mb-4">Uploaded Documents</h4>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                                {[
+                                                    { key: 'pan_screenshot', label: 'PAN Card', info: documents.pan_number ? `PAN: ${documents.pan_number}` : null },
+                                                    { key: 'aadhar_front', label: 'Aadhaar Front', info: documents.aadhar_number ? `Aadhaar: ${documents.aadhar_number}` : null },
+                                                    { key: 'aadhar_back', label: 'Aadhaar Back' },
+                                                    { key: 'bank_proof', label: 'Bank Proof' }
+                                                ].map(doc => {
+                                                    const url = documents[doc.key];
+                                                    const isPdf = url && (url.toLowerCase().endsWith('.pdf') || url.includes('/pdf'));
+                                                    return (
+                                                        <div key={doc.key} className="bg-black/30 rounded-xl border border-white/10 overflow-hidden">
+                                                            <div className="h-40 relative flex items-center justify-center bg-black/20">
+                                                                {url ? (
+                                                                    isPdf ? (
+                                                                        <div className="flex flex-col items-center gap-2">
+                                                                            <FileText className="w-12 h-12 text-red-400" />
+                                                                            <span className="text-[10px] text-red-300 font-bold">PDF Document</span>
+                                                                        </div>
+                                                                    ) : (
+                                                                        <img src={url} alt={doc.label} crossOrigin="anonymous" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; e.target.parentNode.innerHTML = '<span class="text-slate-500 text-xs">Failed to load</span>'; }} />
+                                                                    )
+                                                                ) : (
+                                                                    <span className="text-slate-600 text-[11px] font-bold uppercase">Not Uploaded</span>
+                                                                )}
+                                                            </div>
+                                                            <div className="p-3 flex items-center justify-between">
+                                                                <div>
+                                                                    <p className="text-[11px] text-white font-bold">{doc.label}</p>
+                                                                    {doc.info && <p className="text-[9px] text-slate-400 mt-0.5">{doc.info}</p>}
+                                                                </div>
+                                                                {url && (
+                                                                    <button
+                                                                        onClick={() => window.open(url, '_blank')}
+                                                                        className="w-8 h-8 rounded-full bg-blue-600/80 hover:bg-blue-500 flex items-center justify-center transition-all"
+                                                                        title="View Document"
+                                                                    >
+                                                                        <Eye className="w-4 h-4 text-white" />
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 

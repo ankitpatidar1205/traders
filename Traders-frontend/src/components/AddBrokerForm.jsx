@@ -8,6 +8,8 @@ const AddBrokerForm = ({ onBack, onSave }) => {
         // Personal Details
         firstName: '',
         lastName: '',
+        email: '',
+        mobile: '',
         username: '',
         password: '',
         transactionPasswordSet: '',
@@ -131,6 +133,8 @@ const AddBrokerForm = ({ onBack, onSave }) => {
             // Step 1: Create broker user
             const result = await api.createClient({
                 fullName: `${formData.firstName} ${formData.lastName}`.trim(),
+                email: formData.email,
+                mobile: formData.mobile,
                 username: formData.username,
                 password: formData.password,
                 role: 'BROKER'
@@ -138,7 +142,19 @@ const AddBrokerForm = ({ onBack, onSave }) => {
 
             const userId = result.id;
 
-            // Step 2: Save broker shares + permissions + segments
+            // Step 2: Update user profile (status)
+            await api.updateUser(userId, {
+                status: formData.accountStatus
+            });
+
+            // Step 3: Set transaction password if provided
+            if (formData.transactionPasswordSet) {
+                await api.updateUserPasswords(userId, {
+                    transactionPassword: formData.transactionPasswordSet
+                });
+            }
+
+            // Step 4: Save broker shares + permissions + segments + MCX config
             await api.updateBrokerShares(userId, {
                 sharePL: formData.sharePL,
                 shareBrokerage: formData.shareBrokerage,
@@ -290,6 +306,17 @@ const AddBrokerForm = ({ onBack, onSave }) => {
         <div className="min-h-screen bg-[#1b2236] font-sans flex flex-col items-center px-4">
             <div className="w-full max-w-7xl">
 
+                {/* Back Button */}
+                {onBack && (
+                    <button
+                        onClick={onBack}
+                        className="mt-4 mb-2 flex items-center gap-2 text-white hover:text-green-400 transition-colors"
+                    >
+                        <i className="fa-solid fa-arrow-left"></i>
+                        <span className="text-sm font-bold uppercase tracking-wider">Back</span>
+                    </button>
+                )}
+
                 {/* Main Card Wrapper with Floating Header */}
                 <div className="relative bg-[#202940] w-full p-8 lg:p-12 rounded-sm shadow-2xl border border-white/5 mt-16 animate-fadeIn">
 
@@ -301,7 +328,7 @@ const AddBrokerForm = ({ onBack, onSave }) => {
                             style={{ background: 'linear-gradient(60deg, rgb(40, 140, 108), rgb(78, 167, 82))' }}
                         >
                             <h2 className="text-white text-[20px] font-bold m-0 tracking-wide">
-                                {window.location.hash.includes('admin') ? 'Add Admin:' : 'Add Broker:'}
+                                Add Broker:
                             </h2>
                         </div>
                         {/* Shadow Fold/Tail Piece (The small green square behind) */}
@@ -321,6 +348,8 @@ const AddBrokerForm = ({ onBack, onSave }) => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 mt-4 px-4">
                                 <InputGroup label="First Name" subtext="Insert Real name of the broker. Will be visible in website" name="firstName" value={formData.firstName} onChange={handleChange} />
                                 <InputGroup label="Last Name" subtext="Insert Real name of the broker. Will be visible in website" name="lastName" value={formData.lastName} onChange={handleChange} />
+                                <InputGroup label="Email" name="email" type="email" value={formData.email} onChange={handleChange} placeholder="email@example.com" />
+                                <InputGroup label="Mobile" name="mobile" value={formData.mobile} onChange={handleChange} placeholder="10-digit mobile number" />
                                 <InputGroup label="Username" subtext="username for loggin-in with, is not case sensitive. must be unique for every trader. should not contain symbols." name="username" value={formData.username} onChange={handleChange} />
                                 <InputGroup label="Password" subtext="password for loggin-in with, is case sensitive." name="password" type="password" value={formData.password} onChange={handleChange} />
                                 <InputGroup label="Transaction Password to set" name="transactionPasswordSet" type="password" value={formData.transactionPasswordSet} onChange={handleChange} />
