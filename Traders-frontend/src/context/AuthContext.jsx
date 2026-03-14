@@ -13,18 +13,18 @@ export const ROLES = {
 // Menu items allowed per role
 export const ROLE_MENU_ACCESS = {
     SUPERADMIN: [
-        'live-m2m', 'market-watch', 'notifications', 'action-ledger',
+        'live-m2m', 'kite-dashboard', 'market-watch', 'notifications', 'action-ledger',
         'active-positions', 'closed-positions', 'users', 'trades',
         'group-trades', 'closed-trades', 'deleted-trades', 'pending-orders',
         'funds', 'trading-clients', 'tickers', 'banned', 'bank',
         'new-client-bank', 'accounts', 'broker-accounts', 'ip-logins',
         'trade-ip-tracking', 'global-updation', 'change-password',
         'change-transaction-password', 'withdrawal-requests',
-        'deposit-requests', 'negative-balance',
+        'deposit-requests', 'negative-balance', 'admins',
         'learning', 'support', 'voice-modulation', 'signal-admin', 'signals'
     ],
     ADMIN: [
-        'live-m2m', 'market-watch', 'notifications', 'active-positions', 
+        'live-m2m', 'kite-dashboard', 'market-watch', 'notifications', 'active-positions',
         'closed-positions', 'trading-clients', 'users', 'trades',
         'group-trades', 'closed-trades', 'deleted-trades', 'pending-orders',
         'funds', 'tickers', 'banned', 'new-client-bank',

@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
+import * as api from '../services/api';
 
 const AddBrokerForm = ({ onBack, onSave }) => {
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
     const [formData, setFormData] = useState({
         // Personal Details
         firstName: '',
@@ -120,15 +123,39 @@ const AddBrokerForm = ({ onBack, onSave }) => {
         }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // Prepare data for unified create-user endpoint
-        const submissionData = {
-            ...formData,
-            role: 'BROKER',
-            fullName: `${formData.firstName} ${formData.lastName}`.trim()
-        };
-        onSave(submissionData);
+        setLoading(true);
+        setError('');
+        try {
+            // Step 1: Create broker user
+            const result = await api.createClient({
+                fullName: `${formData.firstName} ${formData.lastName}`.trim(),
+                username: formData.username,
+                password: formData.password,
+                role: 'BROKER'
+            });
+
+            const userId = result.id;
+
+            // Step 2: Save broker shares + permissions + segments
+            await api.updateBrokerShares(userId, {
+                sharePL: formData.sharePL,
+                shareBrokerage: formData.shareBrokerage,
+                shareSwap: formData.shareSwap,
+                brokerageType: formData.brokerageShareType,
+                tradingClientsLimit: formData.tradingClientsLimit,
+                subBrokersLimit: formData.subBrokersLimit,
+                permissions: formData.permissions,
+                segments: { segmentConfig: formData.segments, mcxMargins: formData.mcxMargins, mcxBrokerage: formData.mcxBrokerage }
+            });
+
+            if (onSave) onSave(result);
+        } catch (err) {
+            setError(err.message || 'Failed to create broker');
+        } finally {
+            setLoading(false);
+        }
     };
 
     // Components - MATCHING THE SCREENSHOT EXACTLY
@@ -282,6 +309,11 @@ const AddBrokerForm = ({ onBack, onSave }) => {
                     </div>
 
                     <form onSubmit={handleSubmit}>
+                        {error && (
+                            <div className="mb-6 bg-red-500/10 border border-red-500/30 text-red-400 rounded px-4 py-3 text-sm">
+                                {error}
+                            </div>
+                        )}
 
                         {/* 1. PERSONAL DETAILS */}
                         <div className="mb-6">
@@ -449,9 +481,10 @@ const AddBrokerForm = ({ onBack, onSave }) => {
                         <div className="flex justify-start px-8 mt-12 pb-10">
                             <button
                                 type="submit"
-                                className="bg-[#4caf50] hover:bg-[#43a047] text-white px-12 py-3 rounded shadow-lg shadow-green-900/40 font-bold text-xs tracking-widest uppercase transition-all"
+                                disabled={loading}
+                                className="bg-[#4caf50] hover:bg-[#43a047] text-white px-12 py-3 rounded shadow-lg shadow-green-900/40 font-bold text-xs tracking-widest uppercase transition-all disabled:opacity-60"
                             >
-                                CREATE SUB BROKER
+                                {loading ? 'CREATING...' : 'CREATE SUB BROKER'}
                             </button>
                         </div>
                     </form>

@@ -67,9 +67,7 @@ const createUser = async (req, res) => {
     const creatorRole = req.user.role;
     
     // Enforcement: Hierarchy Check
-    if (creatorRole === 'SUPERADMIN' && role !== 'ADMIN') {
-        return res.status(403).json({ message: 'Superadmin can only create Admins' });
-    }
+    // SUPERADMIN can create ADMIN, BROKER, or TRADER
     if (creatorRole === 'ADMIN' && (role === 'SUPERADMIN' || role === 'ADMIN')) {
         return res.status(403).json({ message: 'Admins cannot create other Admins or Superadmins' });
     }
@@ -101,8 +99,33 @@ const createUser = async (req, res) => {
             'INSERT INTO users (username, password, full_name, email, mobile, role, parent_id, credit_limit, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
             params
         );
-        
-        res.status(201).json({ message: 'User created successfully', id: result.insertId });
+
+        const newUserId = result.insertId;
+
+        // Auto-create client_settings (all roles)
+        try {
+            await db.execute('INSERT IGNORE INTO client_settings (user_id) VALUES (?)', [newUserId]);
+        } catch (e) { console.error('client_settings auto-create failed:', e.message); }
+
+        // Auto-create broker_shares (BROKER and ADMIN)
+        if (['BROKER', 'ADMIN'].includes(role || 'TRADER')) {
+            try {
+                await db.execute('INSERT IGNORE INTO broker_shares (user_id) VALUES (?)', [newUserId]);
+            } catch (e) { console.error('broker_shares auto-create failed:', e.message); }
+        }
+
+        // Auto-create user_segments (6 rows, all disabled by default)
+        const segments = ['MCX', 'EQUITY', 'OPTIONS', 'COMEX', 'FOREX', 'CRYPTO'];
+        for (const segment of segments) {
+            try {
+                await db.execute(
+                    'INSERT IGNORE INTO user_segments (user_id, segment) VALUES (?, ?)',
+                    [newUserId, segment]
+                );
+            } catch (e) { console.error(`user_segments auto-create failed for ${segment}:`, e.message); }
+        }
+
+        res.status(201).json({ message: 'User created successfully', id: newUserId });
     } catch (err) {
         if (err.code === 'ER_DUP_ENTRY') {
             return res.status(400).json({ message: 'Username already exists' });

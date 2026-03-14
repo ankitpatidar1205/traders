@@ -26,11 +26,11 @@ const WhiteSelectField = ({ label, name, options, value, onChange, placeholder }
         name={name}
         value={value}
         onChange={onChange}
-        className="w-full bg-white text-slate-800 py-2.5 px-3 pr-10 outline-none text-sm rounded shadow-sm appearance-none font-bold"
+        className="w-full bg-white border border-slate-200 py-2.5 px-4 text-black font-extrabold outline-none rounded shadow-sm appearance-none focus:ring-2 focus:ring-[#4caf50]/20 transition-all text-sm uppercase tracking-wider cursor-pointer"
       >
         {placeholder && <option value="">{placeholder}</option>}
         {options.map((opt) => (
-          <option key={opt.value || opt} value={opt.value || opt}>{opt.label || opt}</option>
+          <option key={opt.value || opt} value={opt.value || opt} className="bg-white text-black font-bold">{opt.label || opt}</option>
         ))}
       </select>
       <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">

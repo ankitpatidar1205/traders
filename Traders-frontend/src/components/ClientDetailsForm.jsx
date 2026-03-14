@@ -73,13 +73,15 @@ const SelectField = ({ label, name, options, value, onChange, disabled }) => (
         value={value}
         onChange={onChange}
         disabled={disabled}
-        className="bg-[#0b111e]/50 border-b border-[#2d3748] text-slate-100 py-1.5 px-0 rounded-none w-full appearance-none text-sm focus:outline-none focus:border-[#4CAF50] disabled:cursor-not-allowed transition-all"
+        className="w-full bg-white border border-slate-200 py-1.5 px-3 text-black font-extrabold outline-none rounded shadow-sm appearance-none focus:ring-2 focus:ring-[#4caf50]/20 transition-all text-xs uppercase tracking-wider cursor-pointer disabled:cursor-not-allowed"
       >
         {options.map((opt) => (
-          <option key={opt} value={opt} className="bg-[#1a2236]">{opt}</option>
+          <option key={opt.value || opt} value={opt.value || opt} className="bg-white text-black font-bold">
+            {opt.label || opt}
+          </option>
         ))}
       </select>
-      <div className="absolute inset-y-0 right-0 flex items-center pointer-events-none text-slate-500">
+      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
         <ChevronDown className="w-3 h-3" />
       </div>
     </div>
@@ -116,6 +118,90 @@ const FileField = ({ label, onChange, fileName, progress, error }) => (
     {error && <p className="text-[9px] text-red-400 font-bold uppercase tracking-tight">{error}</p>}
   </div>
 );
+
+const SegmentFields = ({ segmentKey, label, formData, onChange, handleSegmentChange, toggleSection, openSections, errors }) => {
+  const config = formData.segments[segmentKey];
+  return (
+    <CollapsibleSection
+      title={label}
+      isOpen={openSections[segmentKey]}
+      onToggle={() => toggleSection(segmentKey)}
+    >
+      <div className="col-span-1 md:col-span-2 lg:col-span-3 pb-4 mb-4 border-b border-[#2d3748]/50">
+        <ToggleSwitch
+          label={`Enable ${label} Segment`}
+          name={`${segmentKey}_enabled`}
+          checked={config.enabled}
+          onChange={(e) => handleSegmentChange(segmentKey, 'enabled', e.target.checked)}
+        />
+      </div>
+
+      <SelectField
+        label="Brokerage Type"
+        options={["Per Lot Basis", "Per Crore Basis"]}
+        value={config.brokerageType}
+        disabled={!config.enabled}
+        onChange={(e) => handleSegmentChange(segmentKey, 'brokerageType', e.target.value)}
+      />
+      <InputField
+        label="Brokerage Value"
+        value={config.brokerageValue}
+        disabled={!config.enabled}
+        onChange={(e) => handleSegmentChange(segmentKey, 'brokerageValue', e.target.value)}
+        errors={errors}
+      />
+      <InputField
+        label="Leverage (Multiplier)"
+        value={config.leverage}
+        disabled={!config.enabled}
+        onChange={(e) => handleSegmentChange(segmentKey, 'leverage', e.target.value)}
+        errors={errors}
+      />
+      <InputField
+        label="Max Lot Per Scrip"
+        value={config.maxLot}
+        disabled={!config.enabled}
+        onChange={(e) => handleSegmentChange(segmentKey, 'maxLot', e.target.value)}
+        errors={errors}
+      />
+      <SelectField
+        label="Margin Type"
+        options={["Per Lot Basis", "Percentage", "Fixed"]}
+        value={config.marginType}
+        disabled={!config.enabled}
+        onChange={(e) => handleSegmentChange(segmentKey, 'marginType', e.target.value)}
+      />
+      <InputField
+        label="Exposure Multiplier"
+        value={config.exposureMultiplier}
+        disabled={!config.enabled}
+        onChange={(e) => handleSegmentChange(segmentKey, 'exposureMultiplier', e.target.value)}
+        errors={errors}
+      />
+
+      <div className="col-span-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 items-end border-t border-[#2d3748]/30 pt-6 mt-2">
+          <ToggleSwitch
+            label="Auto Square Off"
+            checked={config.autoSquareOff}
+            disabled={!config.enabled}
+            onChange={(e) => handleSegmentChange(segmentKey, 'autoSquareOff', e.target.checked)}
+          />
+          {config.autoSquareOff && (
+            <InputField
+              label="Square Off Time"
+              type="time"
+              value={config.squareOffTime}
+              disabled={!config.enabled}
+              onChange={(e) => handleSegmentChange(segmentKey, 'squareOffTime', e.target.value)}
+              errors={errors}
+            />
+          )}
+        </div>
+      </div>
+    </CollapsibleSection>
+  );
+};
 
 const ClientDetailsForm = ({ onBack, onSave, mode = 'edit' }) => {
   const [openSections, setOpenSections] = useState({
@@ -248,89 +334,6 @@ const ClientDetailsForm = ({ onBack, onSave, mode = 'edit' }) => {
     }));
   };
 
-  const SegmentFields = ({ segmentKey, label }) => {
-    const config = formData.segments[segmentKey];
-    return (
-      <CollapsibleSection
-        title={label}
-        isOpen={openSections[segmentKey]}
-        onToggle={() => toggleSection(segmentKey)}
-      >
-        <div className="col-span-1 md:col-span-2 lg:col-span-3 pb-4 mb-4 border-b border-[#2d3748]/50">
-          <ToggleSwitch
-            label={`Enable ${label} Segment`}
-            name={`${segmentKey}_enabled`}
-            checked={config.enabled}
-            onChange={(e) => handleSegmentChange(segmentKey, 'enabled', e.target.checked)}
-          />
-        </div>
-
-        <SelectField
-          label="Brokerage Type"
-          options={["Per Lot Basis", "Per Crore Basis"]}
-          value={config.brokerageType}
-          disabled={!config.enabled}
-          onChange={(e) => handleSegmentChange(segmentKey, 'brokerageType', e.target.value)}
-        />
-        <InputField
-          label="Brokerage Value"
-          value={config.brokerageValue}
-          disabled={!config.enabled}
-          onChange={(e) => handleSegmentChange(segmentKey, 'brokerageValue', e.target.value)}
-          errors={errors}
-        />
-        <InputField
-          label="Leverage (Multiplier)"
-          value={config.leverage}
-          disabled={!config.enabled}
-          onChange={(e) => handleSegmentChange(segmentKey, 'leverage', e.target.value)}
-          errors={errors}
-        />
-        <InputField
-          label="Max Lot Per Scrip"
-          value={config.maxLot}
-          disabled={!config.enabled}
-          onChange={(e) => handleSegmentChange(segmentKey, 'maxLot', e.target.value)}
-          errors={errors}
-        />
-        <SelectField
-          label="Margin Type"
-          options={["Per Lot Basis", "Percentage", "Fixed"]}
-          value={config.marginType}
-          disabled={!config.enabled}
-          onChange={(e) => handleSegmentChange(segmentKey, 'marginType', e.target.value)}
-        />
-        <InputField
-          label="Exposure Multiplier"
-          value={config.exposureMultiplier}
-          disabled={!config.enabled}
-          onChange={(e) => handleSegmentChange(segmentKey, 'exposureMultiplier', e.target.value)}
-          errors={errors}
-        />
-
-        <div className="col-span-full">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 items-end border-t border-[#2d3748]/30 pt-6 mt-2">
-            <ToggleSwitch
-              label="Auto Square Off"
-              checked={config.autoSquareOff}
-              disabled={!config.enabled}
-              onChange={(e) => handleSegmentChange(segmentKey, 'autoSquareOff', e.target.checked)}
-            />
-            {config.autoSquareOff && (
-              <InputField
-                label="Square Off Time"
-                type="time"
-                value={config.squareOffTime}
-                disabled={!config.enabled}
-                onChange={(e) => handleSegmentChange(segmentKey, 'squareOffTime', e.target.value)}
-              />
-            )}
-          </div>
-        </div>
-      </CollapsibleSection>
-    );
-  };
-
   return (
     <div className="bg-[#151c2c] rounded-lg border border-[#2d3748] flex flex-col h-full overflow-hidden shadow-2xl animate-fade-in">
       {/* Header */}
@@ -426,12 +429,12 @@ const ClientDetailsForm = ({ onBack, onSave, mode = 'edit' }) => {
           </CollapsibleSection>
 
           {/* Segments */}
-          <SegmentFields segmentKey="mcx" label="MCX Futures" />
-          <SegmentFields segmentKey="equity" label="Equity Futures" />
-          <SegmentFields segmentKey="options" label="Options Config" />
-          <SegmentFields segmentKey="comex" label="Comex" />
-          <SegmentFields segmentKey="forex" label="Forex" />
-          <SegmentFields segmentKey="crypto" label="Crypto (Bitcoin etc.)" />
+          <SegmentFields segmentKey="mcx" label="MCX Futures" formData={formData} onChange={handleChange} handleSegmentChange={handleSegmentChange} toggleSection={toggleSection} openSections={openSections} errors={errors} />
+          <SegmentFields segmentKey="equity" label="Equity Futures" formData={formData} onChange={handleChange} handleSegmentChange={handleSegmentChange} toggleSection={toggleSection} openSections={openSections} errors={errors} />
+          <SegmentFields segmentKey="options" label="Options Config" formData={formData} onChange={handleChange} handleSegmentChange={handleSegmentChange} toggleSection={toggleSection} openSections={openSections} errors={errors} />
+          <SegmentFields segmentKey="comex" label="Comex" formData={formData} onChange={handleChange} handleSegmentChange={handleSegmentChange} toggleSection={toggleSection} openSections={openSections} errors={errors} />
+          <SegmentFields segmentKey="forex" label="Forex" formData={formData} onChange={handleChange} handleSegmentChange={handleSegmentChange} toggleSection={toggleSection} openSections={openSections} errors={errors} />
+          <SegmentFields segmentKey="crypto" label="Crypto (Bitcoin etc.)" formData={formData} onChange={handleChange} handleSegmentChange={handleSegmentChange} toggleSection={toggleSection} openSections={openSections} errors={errors} />
 
           {/* Action Button */}
           <div className="pt-10 pb-6">
@@ -449,4 +452,3 @@ const ClientDetailsForm = ({ onBack, onSave, mode = 'edit' }) => {
 };
 
 export default ClientDetailsForm;
-

@@ -28,12 +28,17 @@ const accountRoutes = require('./routes/accountRoutes');
 const portfolioRoutes = require('./routes/portfolioRoutes');
 const supportRoutes = require('./routes/supportRoutes');
 const aiRoutes = require('./routes/aiRoutes');
+const kiteRoutes = require('./routes/kiteRoutes');
 const { logIp } = require('./middleware/logger');
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use(logIp); // Log IP for every authenticated request
+
+// Serve uploaded files statically
+const path = require('path');
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -49,6 +54,7 @@ app.use('/api/accounts', accountRoutes);
 app.use('/api/portfolio', portfolioRoutes);
 app.use('/api/support', supportRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/kite', kiteRoutes);
 
 // Routes Placeholder
 app.get('/', (req, res) => {

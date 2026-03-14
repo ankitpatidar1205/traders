@@ -6,7 +6,7 @@ import ConfirmModal from '../../components/modals/ConfirmModal';
 import Toast from '../../components/common/Toast';
 import * as api from '../../services/api';
 
-const UsersPage = ({ onNavigate }) => {
+const UsersPage = ({ onNavigate, roleFilter }) => {
     const { user, isSuperAdmin, isAdmin, isBroker } = useAuth();
     const [filters, setFilters] = useState({ username: '', status: '' });
     const [resetModal, setResetModal] = useState({ open: false, user: null });
@@ -18,12 +18,12 @@ const UsersPage = ({ onNavigate }) => {
 
     useEffect(() => {
         fetchUsers();
-    }, []);
+    }, [roleFilter]);
 
     const fetchUsers = async () => {
         setLoading(true);
         try {
-            const data = await api.getClients();
+            const data = await api.getClients({ role: roleFilter });
             setUsersData(data || []);
         } catch (err) {
             console.error('Failed to fetch users:', err);
@@ -37,8 +37,6 @@ const UsersPage = ({ onNavigate }) => {
     };
 
     const handleSearch = () => {
-        // Search is handled by filtering the usersData in the render or refetching
-        // For now, let's keep it simple as the user requested "search bhi chalna chahiye"
         fetchUsers(); 
     };
 
@@ -67,7 +65,7 @@ const UsersPage = ({ onNavigate }) => {
     const handleDeleteUser = async () => {
         try {
             await api.deleteUser(deleteModal.user?.id);
-            setToast({ message: `User ${deleteModal.user?.username} deleted successfully`, type: 'success' });
+            setToast({ message: `${roleFilter === 'ADMIN' ? 'Admin' : 'Broker'} ${deleteModal.user?.username} deleted successfully`, type: 'success' });
             fetchUsers();
         } catch (err) {
             console.error('Failed to delete user:', err);
@@ -112,7 +110,8 @@ const UsersPage = ({ onNavigate }) => {
     const filteredUsers = usersData.filter(u => {
         const matchUser = filters.username ? u.username.toLowerCase().includes(filters.username.toLowerCase()) : true;
         const matchStatus = filters.status ? u.status === filters.status : true;
-        return matchUser && matchStatus;
+        const matchRole = roleFilter ? u.role === roleFilter : true;
+        return matchUser && matchStatus && matchRole;
     });
 
     return (
@@ -163,7 +162,7 @@ const UsersPage = ({ onNavigate }) => {
             </div>
 
             <div className="px-6 flex flex-wrap gap-4">
-                {isSuperAdmin() && (
+                {roleFilter === 'ADMIN' && isSuperAdmin() && (
                     <button
                         onClick={() => onNavigate('create-admin')}
                         className="text-white px-6 py-2.5 rounded font-bold text-xs uppercase tracking-widest transition-all shadow-[0_4px_10px_rgba(76,175,80,0.3)] hover:shadow-[0_4px_20px_rgba(76,175,80,0.5)] active:scale-95"
@@ -172,7 +171,7 @@ const UsersPage = ({ onNavigate }) => {
                         ADD ADMIN
                     </button>
                 )}
-                {user?.role === ROLES.ADMIN && (
+                {roleFilter === 'BROKER' && isAdmin() && (
                     <button
                         onClick={() => onNavigate('create-broker')}
                         className="text-white px-6 py-2.5 rounded font-bold text-xs uppercase tracking-widest transition-all shadow-[0_4px_10px_rgba(76,175,80,0.3)] hover:shadow-[0_4_20px_rgba(76,175,80,0.5)] active:scale-95"
@@ -181,24 +180,15 @@ const UsersPage = ({ onNavigate }) => {
                         ADD BROKER
                     </button>
                 )}
-                {(user?.role === ROLES.ADMIN || isBroker()) && (
-                    <button
-                        onClick={() => onNavigate('create-client')}
-                        className="text-white px-6 py-2.5 rounded font-bold text-xs uppercase tracking-widest transition-all shadow-[0_4px_10px_rgba(76,175,80,0.3)] hover:shadow-[0_4_20px_rgba(76,175,80,0.5)] active:scale-95"
-                        style={{ background: 'linear-gradient(60deg, #288c6c, #4ea752)' }}
-                    >
-                        ADD TRADER
-                    </button>
-                )}
             </div>
 
             <div className="mx-6 bg-[#1f283e] rounded border border-white/5 p-8 text-slate-400 text-sm">
                 {loading ? (
-                    <div className="text-left font-medium">Loading Users...</div>
+                    <div className="text-left font-medium">Loading {roleFilter === 'ADMIN' ? 'Admins' : 'Brokers'}...</div>
                 ) : filteredUsers.length > 0 ? (
-                    <DataTable columns={columns} data={filteredUsers} actions={actions} searchable={false} emptyMessage="No Users Found" />
+                    <DataTable columns={columns} data={filteredUsers} actions={actions} searchable={false} emptyMessage={`${roleFilter === 'ADMIN' ? 'Admins' : 'Brokers'} Not Found`} />
                 ) : (
-                    <div className="text-left font-medium">No Users Found</div>
+                    <div className="text-left font-medium">{roleFilter === 'ADMIN' ? 'Admins' : 'Brokers'} Not Found</div>
                 )}
             </div>
 
@@ -216,9 +206,9 @@ const UsersPage = ({ onNavigate }) => {
                 isOpen={deleteModal.open}
                 onClose={() => setDeleteModal({ open: false, user: null })}
                 onConfirm={handleDeleteUser}
-                title="Delete User"
-                message={`Are you sure you want to delete user "${deleteModal.user?.username}"? This action cannot be undone.`}
-                confirmText="Delete User"
+                title={`Delete ${roleFilter === 'ADMIN' ? 'Admin' : 'Broker'}`}
+                message={`Are you sure you want to delete ${roleFilter === 'ADMIN' ? 'admin' : 'broker'} "${deleteModal.user?.username}"? This action cannot be undone.`}
+                confirmText={`Delete ${roleFilter === 'ADMIN' ? 'Admin' : 'Broker'}`}
                 type="danger"
             />
 

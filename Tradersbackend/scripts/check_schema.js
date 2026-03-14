@@ -9,8 +9,18 @@ async function checkSchema() {
         database: process.env.DB_NAME
     });
 
-    const [rows] = await connection.execute('DESCRIBE tickers');
-    console.log(JSON.stringify(rows, null, 2));
+    const [userSchema] = await connection.execute('DESCRIBE users');
+    console.log('--- users Table ---');
+    console.log(JSON.stringify(userSchema, null, 2));
+
+    try {
+        const [settingsSchema] = await connection.execute('DESCRIBE client_settings');
+        console.log('\n--- client_settings Table ---');
+        console.log(JSON.stringify(settingsSchema, null, 2));
+    } catch (e) {
+        console.log('\nclient_settings table does not exist.');
+    }
+
     await connection.end();
 }
 

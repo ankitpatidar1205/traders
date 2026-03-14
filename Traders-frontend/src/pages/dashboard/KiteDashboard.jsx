@@ -1,0 +1,345 @@
+import React, { useState, useEffect } from 'react';
+import { 
+    LayoutDashboard, 
+    Briefcase, 
+    ClipboardList, 
+    ArrowUpRight, 
+    ArrowDownRight, 
+    Search, 
+    RefreshCw,
+    TrendingUp,
+    Wallet,
+    Box,
+    Clock
+} from 'lucide-react';
+import * as api from '../../services/api';
+
+const KiteDashboard = () => {
+    const [profile, setProfile] = useState(null);
+    const [margins, setMargins] = useState(null);
+    const [holdings, setHoldings] = useState([]);
+    const [positions, setPositions] = useState([]);
+    const [orders, setOrders] = useState([]);
+    const [trades, setTrades] = useState([]);
+    const [marketWatch, setMarketWatch] = useState({});
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [activeTab, setActiveTab] = useState('holdings');
+
+    useEffect(() => {
+        fetchKiteData();
+        const interval = setInterval(fetchKiteData, 30000); // Refresh every 30 seconds
+        return () => clearInterval(interval);
+    }, []);
+
+    const fetchKiteData = async () => {
+        try {
+            // In a real scenario, we might need to handle token exchange first if not authenticated
+            const [profileData, marginData, holdingsData, positionsData, ordersData, tradesData] = await Promise.all([
+                fetch('/api/kite/profile').then(res => res.json()),
+                fetch('/api/kite/margins').then(res => res.json()),
+                fetch('/api/kite/holdings').then(res => res.json()),
+                fetch('/api/kite/positions').then(res => res.json()),
+                fetch('/api/kite/orders').then(res => res.json()),
+                fetch('/api/kite/trades').then(res => res.json())
+            ]);
+
+            setProfile(profileData);
+            setMargins(marginData);
+            setHoldings(holdingsData || []);
+            setPositions(positionsData?.net || []);
+            setOrders(ordersData || []);
+            setTrades(tradesData || []);
+
+            // Fetch Quotes for Market Watch (example default instruments)
+            const watchInstruments = ['NSE:RELIANCE', 'NSE:TCS', 'NSE:HDFCBANK', 'NSE:INFY'];
+            const quotesData = await fetch(`/api/kite/quote?i=${watchInstruments.join(',')}`).then(res => res.json());
+            setMarketWatch(quotesData || {});
+            
+            setError(null);
+        } catch (err) {
+            console.error('Failed to fetch Kite data:', err);
+            setError('Failed to load dashboard data. Check API configuration.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (loading) return (
+        <div className="flex items-center justify-center h-full bg-[#1a2035] text-white">
+            <RefreshCw className="w-8 h-8 animate-spin text-green-500 mr-3" />
+            <span className="text-xl font-medium">Connecting to Kite...</span>
+        </div>
+    );
+
+    return (
+        <div className="flex flex-col h-full bg-[#1a2035] p-6 space-y-6 overflow-y-auto custom-scrollbar">
+            {/* Top Stats Bar */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div className="bg-[#1f283e] p-6 rounded-xl border border-white/5 shadow-xl">
+                    <div className="flex justify-between items-start mb-4">
+                        <div className="bg-blue-500/10 p-2 rounded-lg">
+                            <Wallet className="w-5 h-5 text-blue-400" />
+                        </div>
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Available Margin</span>
+                    </div>
+                    <div className="text-2xl font-bold text-white">
+                        ₹{margins?.equity?.available?.cash?.toLocaleString() || '0'}
+                    </div>
+                    <div className="mt-2 text-[11px] text-slate-400">Equity & Derivatives</div>
+                </div>
+
+                <div className="bg-[#1f283e] p-6 rounded-xl border border-white/5 shadow-xl">
+                    <div className="flex justify-between items-start mb-4">
+                        <div className="bg-green-500/10 p-2 rounded-lg">
+                            <TrendingUp className="w-5 h-5 text-green-400" />
+                        </div>
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total P&L</span>
+                    </div>
+                    <div className={`text-2xl font-bold ${holdings.reduce((a, b) => a + b.pnl, 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        ₹{holdings.reduce((a, b) => a + b.pnl, 0).toLocaleString()}
+                    </div>
+                    <div className="mt-2 text-[11px] text-slate-400">Current Day</div>
+                </div>
+
+                <div className="bg-[#1f283e] p-6 rounded-xl border border-white/5 shadow-xl">
+                    <div className="flex justify-between items-start mb-4">
+                        <div className="bg-purple-500/10 p-2 rounded-lg">
+                            <Box className="w-5 h-5 text-purple-400" />
+                        </div>
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Items in Holdings</span>
+                    </div>
+                    <div className="text-2xl font-bold text-white">{holdings.length}</div>
+                    <div className="mt-2 text-[11px] text-slate-400">Total Scripts</div>
+                </div>
+
+                <div className="bg-[#1f283e] p-6 rounded-xl border border-white/5 shadow-xl">
+                    <div className="flex justify-between items-start mb-4">
+                        <div className="bg-orange-500/10 p-2 rounded-lg">
+                            <Clock className="w-5 h-5 text-orange-400" />
+                        </div>
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Pending Orders</span>
+                    </div>
+                    <div className="text-2xl font-bold text-white">{orders.filter(o => o.status === 'OPEN' || o.status === 'PENDING').length}</div>
+                    <div className="mt-2 text-[11px] text-slate-400">Awaiting Execution</div>
+                </div>
+            </div>
+
+            {/* Main Content Area */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Left Column: Portfolio Tabs */}
+                <div className="lg:col-span-2 space-y-6">
+                    <div className="bg-[#1f283e] rounded-xl border border-white/5 shadow-xl overflow-hidden">
+                        <div className="flex border-b border-white/5 bg-[#1a2035]/50 overflow-x-auto">
+                            {[
+                                { id: 'holdings', label: 'Holdings', icon: Briefcase },
+                                { id: 'positions', label: 'Positions', icon: LayoutDashboard },
+                                { id: 'orders', label: 'Orders', icon: ClipboardList },
+                                { id: 'trades', label: 'Trades', icon: TrendingUp }
+                            ].map(tab => (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setActiveTab(tab.id)}
+                                    className={`flex items-center gap-2 px-6 py-4 text-xs font-bold uppercase tracking-wider transition-all border-b-2 whitespace-nowrap ${
+                                        activeTab === tab.id 
+                                        ? 'text-green-500 border-green-500 bg-green-500/5' 
+                                        : 'text-slate-500 border-transparent hover:text-slate-300 hover:bg-white/5'
+                                    }`}
+                                >
+                                    <tab.icon className="w-4 h-4" />
+                                    {tab.label}
+                                </button>
+                            ))}
+                        </div>
+
+                        <div className="p-0 overflow-x-auto">
+                            {activeTab === 'holdings' && (
+                                <table className="w-full text-left text-sm">
+                                    <thead className="bg-[#1a2035]/30 text-slate-500 text-[10px] uppercase tracking-wider">
+                                        <tr>
+                                            <th className="px-6 py-4">Instrument</th>
+                                            <th className="px-6 py-4">Qty.</th>
+                                            <th className="px-6 py-4">Avg. Cost</th>
+                                            <th className="px-6 py-4">LTP</th>
+                                            <th className="px-6 py-4">P&L</th>
+                                            <th className="px-6 py-4">Change</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-white/5">
+                                        {holdings.map((h, i) => (
+                                            <tr key={i} className="hover:bg-white/5 transition-colors group">
+                                                <td className="px-6 py-4 font-bold text-white group-hover:text-green-400 transition-colors">{h.tradingsymbol}</td>
+                                                <td className="px-6 py-4 text-slate-300">{h.quantity}</td>
+                                                <td className="px-6 py-4 text-slate-300">₹{h.average_price.toFixed(2)}</td>
+                                                <td className="px-6 py-4 text-white font-medium">₹{h.last_price.toFixed(2)}</td>
+                                                <td className={`px-6 py-4 font-bold ${h.pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                                    {h.pnl >= 0 ? '+' : ''}{h.pnl.toFixed(2)}
+                                                </td>
+                                                <td className={`px-6 py-4 font-medium ${((h.last_price - h.average_price) / h.average_price) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                                                    {(((h.last_price - h.average_price) / h.average_price) * 100).toFixed(2)}%
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
+                            
+                            {activeTab === 'positions' && (
+                                <table className="w-full text-left text-sm">
+                                    <thead className="bg-[#1a2035]/30 text-slate-500 text-[10px] uppercase tracking-wider">
+                                        <tr>
+                                            <th className="px-6 py-4">Instrument</th>
+                                            <th className="px-6 py-4">Net Qty.</th>
+                                            <th className="px-6 py-4">Avg. Price</th>
+                                            <th className="px-6 py-4">LTP</th>
+                                            <th className="px-6 py-4">Realised P&L</th>
+                                            <th className="px-6 py-4">Unrealised P&L</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-white/5">
+                                        {positions.map((p, i) => (
+                                            <tr key={i} className="hover:bg-white/5 transition-colors">
+                                                <td className="px-6 py-4 font-bold text-white">{p.tradingsymbol}</td>
+                                                <td className="px-6 py-4 text-slate-300">{p.quantity}</td>
+                                                <td className="px-6 py-4 text-slate-300">₹{p.average_price.toFixed(2)}</td>
+                                                <td className="px-6 py-4 text-white">₹{p.last_price.toFixed(2)}</td>
+                                                <td className={`px-6 py-4 font-bold ${p.realised >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                                    {p.realised.toFixed(2)}
+                                                </td>
+                                                <td className={`px-6 py-4 font-bold ${p.unrealised >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                                    {p.unrealised.toFixed(2)}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
+                            {activeTab === 'orders' && (
+                                <table className="w-full text-left text-sm">
+                                    <thead className="bg-[#1a2035]/30 text-slate-500 text-[10px] uppercase tracking-wider">
+                                        <tr>
+                                            <th className="px-6 py-4">Time</th>
+                                            <th className="px-6 py-4">Type</th>
+                                            <th className="px-6 py-4">Instrument</th>
+                                            <th className="px-6 py-4">Qty.</th>
+                                            <th className="px-6 py-4">Avg. Price</th>
+                                            <th className="px-6 py-4">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-white/5">
+                                        {orders.map((o, i) => (
+                                            <tr key={i} className="hover:bg-white/5 transition-colors">
+                                                <td className="px-6 py-4 text-slate-400 text-xs">{new Date(o.order_timestamp || o.exchange_timestamp).toLocaleTimeString()}</td>
+                                                <td className="px-6 py-4 font-bold">
+                                                    <span className={`px-2 py-0.5 rounded text-[10px] ${o.transaction_type === 'BUY' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                                                        {o.transaction_type}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 text-white font-medium">{o.tradingsymbol}</td>
+                                                <td className="px-6 py-4 text-slate-300">{o.quantity}</td>
+                                                <td className="px-6 py-4 text-slate-300">₹{o.average_price.toFixed(2)}</td>
+                                                <td className="px-6 py-4">
+                                                    <span className={`text-[10px] font-bold tracking-wider ${
+                                                        o.status === 'COMPLETE' ? 'text-green-500' : 
+                                                        o.status === 'REJECTED' || o.status === 'CANCELLED' ? 'text-red-500' : 'text-orange-500'
+                                                    }`}>
+                                                        {o.status}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
+
+                            {activeTab === 'trades' && (
+                                <table className="w-full text-left text-sm">
+                                    <thead className="bg-[#1a2035]/30 text-slate-500 text-[10px] uppercase tracking-wider">
+                                        <tr>
+                                            <th className="px-6 py-4">Time</th>
+                                            <th className="px-6 py-4">Type</th>
+                                            <th className="px-6 py-4">Instrument</th>
+                                            <th className="px-6 py-4">Qty.</th>
+                                            <th className="px-6 py-4">Price</th>
+                                            <th className="px-6 py-4">Order ID</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-white/5">
+                                        {trades.map((t, i) => (
+                                            <tr key={i} className="hover:bg-white/5 transition-colors">
+                                                <td className="px-6 py-4 text-slate-400 text-xs">{new Date(t.fill_timestamp).toLocaleTimeString()}</td>
+                                                <td className="px-6 py-4 font-bold">
+                                                    <span className={`px-2 py-0.5 rounded text-[10px] ${t.transaction_type === 'BUY' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                                                        {t.transaction_type}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 text-white font-medium">{t.tradingsymbol}</td>
+                                                <td className="px-6 py-4 text-slate-300">{t.quantity}</td>
+                                                <td className="px-6 py-4 text-white font-bold">₹{t.average_price.toFixed(2)}</td>
+                                                <td className="px-6 py-4 text-slate-500 text-[10px]">{t.order_id}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Right Column: Market Watch & Charts */}
+                <div className="space-y-6">
+                    <div className="bg-[#1f283e] rounded-xl border border-white/5 shadow-xl p-6">
+                        <h3 className="text-white text-sm font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
+                             <TrendingUp className="w-4 h-4 text-green-500" />
+                             Market Watch
+                        </h3>
+                        <div className="relative mb-6">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                            <input 
+                                type="text" 
+                                placeholder="Search stocks... (NSE/BSE)"
+                                className="w-full bg-[#1a2035] border border-white/10 rounded-lg py-2.5 pl-10 pr-4 text-sm text-white focus:outline-none focus:border-green-500/50 transition-all"
+                            />
+                        </div>
+                        
+                        <div className="space-y-3">
+                            {Object.entries(marketWatch).map(([symbol, data]) => (
+                                <div key={symbol} className="flex justify-between items-center p-3 rounded-lg hover:bg-white/5 cursor-pointer border border-transparent hover:border-white/10 transition-all group">
+                                    <div className="flex flex-col">
+                                        <span className="text-sm font-bold text-white group-hover:text-green-400 transition-colors uppercase">{symbol.split(':')[1]}</span>
+                                        <span className="text-[10px] text-slate-500">{symbol.split(':')[0]}</span>
+                                    </div>
+                                    <div className="flex flex-col items-end">
+                                        <span className="text-sm font-bold text-white">₹{data.last_price.toLocaleString()}</span>
+                                        <span className={`text-[10px] ${data.change >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                                            {data.change >= 0 ? '+' : ''}{data.change.toFixed(2)}%
+                                        </span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-green-600 to-green-800 rounded-xl shadow-xl p-6 text-white relative overflow-hidden group">
+                        <div className="relative z-10">
+                            <h4 className="text-[10px] font-bold uppercase tracking-[2px] opacity-80 mb-1">Quick Action</h4>
+                            <p className="text-lg font-bold mb-4">Place a new market order</p>
+                            <button className="bg-white text-green-800 px-6 py-2 rounded-lg font-bold text-xs uppercase tracking-widest transition-all hover:shadow-[0_4px_15px_rgba(255,255,255,0.3)] active:scale-95">
+                                Buy Stock
+                            </button>
+                        </div>
+                        <ArrowUpRight className="absolute -bottom-2 -right-2 w-32 h-32 text-white/10 group-hover:scale-110 transition-transform duration-500" />
+                    </div>
+                </div>
+            </div>
+            
+            {error && (
+                <div className="fixed bottom-6 right-6 bg-red-500 text-white px-6 py-3 rounded-lg shadow-2xl flex items-center gap-3 animate-bounce">
+                    <span className="text-sm font-bold">{error}</span>
+                </div>
+            )}
+        </div>
+    );
+};
+
+export default KiteDashboard;

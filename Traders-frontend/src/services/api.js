@@ -307,6 +307,85 @@ export const updateGlobalSettings = async (data) => {
     return handleResponse(res);
 };
 
+// ─── USER PROFILE UPDATE ─────────────────────────────
+export const updateUser = async (id, data) => {
+    const res = await fetch(`${BASE_URL}/users/${id}`, {
+        method: 'PUT',
+        headers: getHeaders(),
+        body: JSON.stringify(data),
+    });
+    return handleResponse(res);
+};
+
+// ─── CLIENT SETTINGS ─────────────────────────────────
+export const updateClientSettings = async (id, data) => {
+    const res = await fetch(`${BASE_URL}/users/${id}/settings`, {
+        method: 'PUT',
+        headers: getHeaders(),
+        body: JSON.stringify(data),
+    });
+    return handleResponse(res);
+};
+
+// ─── BROKER SHARES ───────────────────────────────────
+export const getBrokerShares = async (id) => {
+    const res = await fetch(`${BASE_URL}/users/${id}/broker-shares`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const updateBrokerShares = async (id, data) => {
+    const res = await fetch(`${BASE_URL}/users/${id}/broker-shares`, {
+        method: 'PUT',
+        headers: getHeaders(),
+        body: JSON.stringify(data),
+    });
+    return handleResponse(res);
+};
+
+// ─── DOCUMENTS ───────────────────────────────────────
+export const getDocuments = async (id) => {
+    const res = await fetch(`${BASE_URL}/users/${id}/documents`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const updateDocuments = async (id, formData) => {
+    // formData is FormData (for file upload) or plain object (text only)
+    const isFormData = formData instanceof FormData;
+    const res = await fetch(`${BASE_URL}/users/${id}/documents`, {
+        method: 'PUT',
+        headers: isFormData
+            ? { 'Authorization': `Bearer ${localStorage.getItem('traders_token') || ''}` }
+            : getHeaders(),
+        body: isFormData ? formData : JSON.stringify(formData),
+    });
+    return handleResponse(res);
+};
+
+// ─── USER SEGMENTS ───────────────────────────────────
+export const getUserSegments = async (id) => {
+    const res = await fetch(`${BASE_URL}/users/${id}/segments`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const updateUserSegments = async (id, segments) => {
+    const res = await fetch(`${BASE_URL}/users/${id}/segments`, {
+        method: 'PUT',
+        headers: getHeaders(),
+        body: JSON.stringify({ segments }),
+    });
+    return handleResponse(res);
+};
+
+// ─── PASSWORDS (update via admin) ────────────────────
+export const updateUserPasswords = async (id, data) => {
+    const res = await fetch(`${BASE_URL}/users/${id}/passwords`, {
+        method: 'PUT',
+        headers: getHeaders(),
+        body: JSON.stringify(data),
+    });
+    return handleResponse(res);
+};
+
 export const updateUserStatus = async (userId, status) => {
     const res = await fetch(`${BASE_URL}/users/${userId}/status`, {
         method: 'PUT',

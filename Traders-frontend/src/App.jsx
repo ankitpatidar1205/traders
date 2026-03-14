@@ -9,6 +9,7 @@ import BankDetailsPage from './pages/bank/BankDetailsPage';
 import TradesPage from './pages/trades/TradesPage';
 import TickersPage from './pages/tickers/TickersPage';
 import LiveM2MPage from './pages/dashboard/LiveM2MPage';
+import KiteDashboard from './pages/dashboard/KiteDashboard';
 import LiveM2MDetailPage from './pages/dashboard/LiveM2MDetailPage';
 import ClientActivePositionsPage from './pages/dashboard/ClientActivePositionsPage';
 import BrokerM2MPage from './pages/dashboard/BrokerM2MPage';
@@ -117,15 +118,11 @@ function App() {
         }
     };
 
-    const handleAddClient = async (newClientData) => {
-        try {
-            await api.createClient(newClientData);
-            fetchInitialData();
-            setView('users');
-            setToast({ message: 'Client created successfully!', type: 'success' });
-        } catch (err) {
-            setToast({ message: 'Failed to create client: ' + err.message, type: 'error' });
-        }
+    const handleAddClient = () => {
+        // Forms make API calls directly; this handles post-save navigation
+        fetchInitialData();
+        setView('users');
+        setToast({ message: 'Created successfully!', type: 'success' });
     };
 
     const handleAddTrade = async (newTradeData) => {
@@ -178,6 +175,8 @@ function App() {
                     if (client) setSelectedClient(client);
                     setView(v);
                 }} />} />
+
+                <Route path="/kite-dashboard" element={<KiteDashboard />} />
                 
                 <Route path="/live-m2m-detail" element={<LiveM2MDetailPage
                     selectedClient={selectedClient}
@@ -214,15 +213,11 @@ function App() {
                 <Route path="/notifications" element={<NotificationsPage />} />
                 <Route path="/closed-positions" element={<ClosedPositionsPage />} />
                 
-                <Route path="/users" element={<TradingClientsPage 
-                    clients={clients} 
-                    onLogout={handleLogout} 
-                    onNavigate={setView} 
-                    onClientClick={() => setView('client-details')} 
-                    onAddBrokerClick={() => setView('create-broker')} 
-                    onDepositClick={handleDeposit} 
-                    onWithdrawClick={handleWithdraw} 
-                    onViewClick={() => setView('client-details')} 
+                <Route path="/users" element={<TradingClientsPage
+                    onLogout={handleLogout}
+                    onNavigate={setView}
+                    onDepositClick={handleDeposit}
+                    onWithdrawClick={handleWithdraw}
                 />} />
 
                 <Route path="/create-client" element={<SimpleTraderForm onBack={() => setView('users')} onSave={handleAddClient} />} />
@@ -240,7 +235,8 @@ function App() {
                     onLogout={handleLogout}
                 />} />
 
-                <Route path="/trading-clients" element={<ProtectedRoute viewId="trading-clients"><UsersPage onNavigate={setView} /></ProtectedRoute>} />
+                <Route path="/admins" element={<ProtectedRoute viewId="admins"><UsersPage onNavigate={setView} roleFilter="ADMIN" /></ProtectedRoute>} />
+                <Route path="/trading-clients" element={<ProtectedRoute viewId="trading-clients"><UsersPage onNavigate={setView} roleFilter="BROKER" /></ProtectedRoute>} />
                 <Route path="/new-client-bank" element={<ProtectedRoute viewId="new-client-bank"><NewClientBankDetailsPage /></ProtectedRoute>} />
                 <Route path="/create-trade" element={<CreateTradeForm onSave={handleAddTrade} onBack={() => setView('trades')} onLogout={handleLogout} onNavigate={setView} />} />
                 <Route path="/change-password" element={<ChangePasswordPage />} />

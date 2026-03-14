@@ -152,37 +152,37 @@ const PendingOrdersPage = () => {
                                 {/* Script */}
                                 <div className="space-y-2 group">
                                     <label className="block text-[#bcc0cf] text-[12px] font-bold uppercase tracking-tight">Script</label>
-                                    <div className="relative border-b border-white/10 group-focus-within:border-[#4caf50] transition-colors">
+                                    <div className="relative">
                                         <select
-                                            className="w-full bg-transparent text-white py-2 focus:outline-none appearance-none font-normal text-[15px]"
+                                            className="w-full bg-white border border-slate-200 py-2.5 px-4 text-black font-extrabold outline-none rounded shadow-sm appearance-none focus:ring-2 focus:ring-[#4caf50]/20 transition-all text-sm uppercase tracking-wider cursor-pointer"
                                             value={formData.script}
                                             onChange={(e) => setFormData({ ...formData, script: e.target.value })}
                                             required
                                         >
-                                            <option value="" disabled className="bg-[#202940]">Select Scrip</option>
+                                            <option value="" disabled className="bg-white text-black font-bold">Select Scrip</option>
                                             {scrips.map(s => (
-                                                <option key={s.id} value={s.symbol} className="bg-[#202940]">{s.symbol}</option>
+                                                <option key={s.id} value={s.symbol} className="bg-white text-black font-bold">{s.symbol}</option>
                                             ))}
                                         </select>
-                                        <ChevronDown className="absolute right-0 top-3 w-4 h-4 text-slate-500 pointer-events-none" />
+                                        <ChevronDown className="absolute right-3 top-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
                                     </div>
                                 </div>
 
                                 {/* User ID */}
                                 <div className="space-y-2 group">
                                     <label className="block text-[#bcc0cf] text-[12px] font-bold uppercase tracking-tight">User ID</label>
-                                    <div className="relative border-b border-white/10 group-focus-within:border-[#4caf50] transition-colors">
+                                    <div className="relative">
                                         <select
-                                            className="w-full bg-transparent text-white py-2 focus:outline-none appearance-none font-normal text-[15px]"
+                                            className="w-full bg-white border border-slate-200 py-2.5 px-4 text-black font-extrabold outline-none rounded shadow-sm appearance-none focus:ring-2 focus:ring-[#4caf50]/20 transition-all text-sm uppercase tracking-wider cursor-pointer"
                                             value={formData.userId}
                                             onChange={(e) => setFormData({ ...formData, userId: e.target.value })}
                                         >
-                                            <option value="" className="bg-[#202940]">Select User (Self)</option>
+                                            <option value="" className="bg-white text-black font-bold">Select User (Self)</option>
                                             {users.map(u => (
-                                                <option key={u.id} value={u.id} className="bg-[#202940]">{u.username} - {u.full_name}</option>
+                                                <option key={u.id} value={u.id} className="bg-white text-black font-bold">{u.username} - {u.full_name}</option>
                                             ))}
                                         </select>
-                                        <ChevronDown className="absolute right-0 top-3 w-4 h-4 text-slate-500 pointer-events-none" />
+                                        <ChevronDown className="absolute right-3 top-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
                                     </div>
                                 </div>
 
@@ -222,18 +222,18 @@ const PendingOrdersPage = () => {
                                 {/* Order Type */}
                                 <div className="space-y-2 group">
                                     <label className="block text-[#bcc0cf] text-[12px] font-bold uppercase tracking-tight">Order Type</label>
-                                    <div className="relative border-b border-white/10 group-focus-within:border-[#4caf50] transition-colors">
+                                    <div className="relative">
                                         <select
-                                            className="w-full bg-transparent text-white py-2 focus:outline-none appearance-none font-normal text-[15px]"
+                                            className="w-full bg-white border border-slate-200 py-2.5 px-4 text-black font-extrabold outline-none rounded shadow-sm appearance-none focus:ring-2 focus:ring-[#4caf50]/20 transition-all text-sm uppercase tracking-wider cursor-pointer"
                                             value={formData.orderType}
                                             onChange={(e) => setFormData({ ...formData, orderType: e.target.value })}
                                             required
                                         >
-                                            <option value="" disabled className="bg-[#202940]">Select Order Type</option>
-                                            <option value="BUY" className="bg-[#202940]">BUY LIMIT</option>
-                                            <option value="SELL" className="bg-[#202940]">SELL LIMIT</option>
+                                            <option value="" disabled className="bg-white text-black font-bold">Select Order Type</option>
+                                            <option value="BUY" className="bg-white text-black font-bold">BUY LIMIT</option>
+                                            <option value="SELL" className="bg-white text-black font-bold">SELL LIMIT</option>
                                         </select>
-                                        <ChevronDown className="absolute right-0 top-3 w-4 h-4 text-slate-500 pointer-events-none" />
+                                        <ChevronDown className="absolute right-3 top-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
                                     </div>
                                 </div>
 

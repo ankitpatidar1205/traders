@@ -4,6 +4,7 @@ import { ROLE_MENU_ACCESS } from '../context/AuthContext';
 
 const ALL_MENU_ITEMS = [
     { id: 'live-m2m', label: 'Dashboard', icon: 'fa-table-columns' },
+    { id: 'kite-dashboard', label: 'Kite Dashboard', icon: 'fa-chart-line text-green-400' },
     { id: 'market-watch', label: 'Market Watch', icon: 'fa-arrow-trend-up' },
     { id: 'notifications', label: 'Notifications', icon: 'fa-bell' },
     { id: 'action-ledger', label: 'Action Ledger', icon: 'fa-podcast' },
@@ -16,7 +17,8 @@ const ALL_MENU_ITEMS = [
     { id: 'deleted-trades', label: 'Deleted Trades', icon: 'fa-tag' },
     { id: 'pending-orders', label: 'Pending Orders', icon: 'fa-swatchbook' },
     { id: 'funds', label: 'Trader Funds', icon: 'fa-circle-dollar-to-slot' },
-    { id: 'trading-clients', label: 'Users', icon: 'fa-user-group' },
+    { id: 'trading-clients', label: 'Brokers', icon: 'fa-user-group' },
+    { id: 'admins', label: 'Admins', icon: 'fa-user-shield' },
     { id: 'tickers', label: 'Tickers', icon: 'fa-calculator' },
     { id: 'banned', label: 'Banned Limit Orders', icon: 'fa-ban' },
     { id: 'bank', label: 'Bank Details', icon: 'fa-building-columns' },

@@ -1,5 +1,88 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Save, ArrowLeft, Info, Check, Lock, Key, Settings, User, ChevronDown, FileUp, ShieldCheck } from 'lucide-react';
+import * as api from '../../services/api';
+
+const ScripField = ({ label, value, onChange, hint, name }) => (
+    <div className="mb-4">
+        <label htmlFor={name} className="text-sm uppercase font-bold tracking-wider" style={{ color: '#bcc0cf' }}>{label}</label>
+        <input
+            id={name}
+            type="text"
+            value={value}
+            onChange={onChange}
+            className="w-full bg-transparent border-b border-slate-700 py-1 text-white focus:outline-none focus:border-[#4caf50] transition-colors text-sm"
+            placeholder="0"
+            style={{ color: 'white' }}
+        />
+        {hint && <p className="text-[12px] mt-1" style={{ color: '#bcc0cf' }}>{hint}</p>}
+    </div>
+);
+
+const FieldLegend = ({ title }) => (
+    <legend className="text-lg font-bold mb-4 border-none pt-4 bg-[#1a2035]/50 px-2 rounded tracking-wider" style={{ color: '#bcc0cf' }}>
+        {title}:
+    </legend>
+);
+
+const InputField = ({ label, name, value, onChange, type = "text", placeholder, hint }) => (
+    <div className="mb-4 group px-2">
+        <label htmlFor={name} className="block text-sm mb-1 font-light" style={{ color: '#bcc0cf' }}>
+            {label}
+        </label>
+        <input
+            id={name}
+            type={type}
+            name={name}
+            value={value}
+            onChange={onChange}
+            placeholder={placeholder}
+            className="w-full bg-transparent border-b border-slate-700 py-1 text-white focus:outline-none focus:border-[#4caf50] transition-colors text-sm"
+        />
+        {hint && <p id={`${name}-hint`} className="text-sm mt-2 font-light leading-snug" style={{ color: '#bcc0cf' }}>{hint}</p>}
+    </div>
+);
+
+const CheckboxField = ({ label, name, checked, onChange }) => (
+    <label htmlFor={name} className="flex items-center gap-3 cursor-pointer group mb-6 px-2">
+        <div className="relative flex items-center justify-center">
+            <input
+                id={name}
+                type="checkbox"
+                name={name}
+                checked={checked}
+                onChange={onChange}
+                className="appearance-none w-5 h-5 border border-slate-600 rounded-sm checked:bg-[#4caf50] checked:border-[#4caf50] transition-all cursor-pointer"
+            />
+            {checked && <Check className="w-3.5 h-3.5 text-white absolute pointer-events-none" />}
+        </div>
+        <span className="text-sm group-hover:text-white transition-colors" style={{ color: '#bcc0cf' }}>{label}</span>
+    </label>
+);
+
+const SelectField = ({ label, name, options, value, onChange, hint }) => (
+    <div className="mb-8 group px-2">
+        <label htmlFor={name} className="block text-sm mb-1 font-light" style={{ color: '#bcc0cf' }}>
+            {label}
+        </label>
+        <div className="relative">
+            <select
+                id={name}
+                name={name}
+                value={value}
+                onChange={onChange}
+                className="w-full bg-white border border-slate-200 py-2.5 px-4 text-black font-extrabold outline-none rounded shadow-sm appearance-none focus:ring-2 focus:ring-[#4caf50]/20 transition-all text-sm uppercase tracking-wider cursor-pointer"
+            >
+                {options.map(opt => (
+                    <option key={opt.value} value={opt.value} className="bg-white text-black font-bold">{opt.label}</option>
+                ))}
+            </select>
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 group-focus-within:text-[#4caf50] transition-colors">
+                <ChevronDown className="w-4 h-4" />
+            </div>
+        </div>
+        {hint && <p className="text-[12px] mt-2 font-light leading-snug" style={{ color: '#8b8f9a' }}>{hint}</p>}
+    </div>
+);
 
 const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => {
     const [formData, setFormData] = useState({
@@ -119,24 +202,6 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
         optionsMcxHolding: '2',
         optionsOrdersAway: '10',
 
-        // 5.1 Comex, Forex & Crypto (Merged from Settings)
-        comexTrading: false,
-        comexBrokerage: '800',
-        comexIntradayMargin: '500',
-        comexHoldingMargin: '100',
-        comexMaxLot: '50',
-
-        forexTrading: false,
-        forexBrokerage: '500',
-        forexIntradayMargin: '1000',
-        forexHoldingMargin: '200',
-        forexMaxLot: '100',
-
-        cryptoTrading: false,
-        cryptoBrokerage: '1000',
-        cryptoIntradayMargin: '200',
-        cryptoHoldingMargin: '50',
-        cryptoMaxLot: '10',
 
         // 6. Expiry Rules
         autoSquareOff: 'No',
@@ -166,6 +231,8 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
         kycStatus: 'Pending'
     });
 
+    const [loading, setLoading] = useState(false);
+    const [saveError, setSaveError] = useState('');
     const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString());
     const [showProfileDropdown, setShowProfileDropdown] = useState(false);
     const profileRef = useRef(null);
@@ -208,23 +275,6 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
         });
     };
 
-    const ScripField = ({ label, value, onChange, hint, name }) => (
-        <div className="mb-4">
-            <label htmlFor={name} className="text-sm uppercase font-bold tracking-wider" style={{ color: '#bcc0cf' }}>{label}</label>
-            <input
-                id={name}
-                type="text"
-                value={value}
-                onChange={onChange}
-                className="w-full bg-transparent border-b border-slate-700 py-1 text-white focus:outline-none focus:border-[#4caf50] transition-colors text-sm"
-                placeholder="0"
-                style={{ color: 'white' }}
-            />
-            {hint && <p className="text-[12px] mt-1" style={{ color: '#bcc0cf' }}>{hint}</p>}
-        </div>
-    );
-
-
     const isKycValid = () => {
         return (
             formData.documents.panCard &&
@@ -234,81 +284,42 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
         );
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!isKycValid()) {
-            alert('Please upload all mandatory KYC documents (PAN, Aadhaar Front/Back, and Bank Proof) before submitting.');
-            return;
+        setLoading(true);
+        setSaveError('');
+        try {
+            // Step 1: Create user
+            const result = await api.createClient({
+                fullName: formData.fullName,
+                username: formData.username,
+                password: formData.password,
+                mobile: formData.mobile,
+                city: formData.city,
+                creditLimit: formData.initialFunds || 0,
+                role: 'TRADER'
+            });
+            const userId = result.id;
+
+            // Step 2: Save all settings + full config as JSON
+            await api.updateClientSettings(userId, {
+                allowFreshEntry: formData.allowFreshEntry,
+                allowOrdersBetweenHL: formData.allowOrdersBetweenHL,
+                tradeEquityUnits: formData.tradeEquityUnits,
+                autoClosePct: formData.autoClosePercentage,
+                notifyPct: formData.notifyPercentage,
+                minProfitTime: formData.minTimeToBookProfit,
+                scalpingSlEnabled: formData.scalpingStopLoss,
+                config: formData
+            });
+
+            onSave(formData);
+        } catch (err) {
+            setSaveError(err.message || 'Failed to create client');
+        } finally {
+            setLoading(false);
         }
-        onSave(formData);
     };
-
-    const FieldLegend = ({ title }) => (
-        <legend className="text-lg font-bold mb-4 border-none pt-4 bg-[#1a2035]/50 px-2 rounded tracking-wider" style={{ color: '#bcc0cf' }}>
-            {title}:
-        </legend>
-    );
-
-    const InputField = ({ label, name, type = "text", placeholder, hint }) => (
-        <div className="mb-4 group px-2">
-            <label htmlFor={name} className="block text-sm mb-1 font-light" style={{ color: '#bcc0cf' }}>
-                {label}
-            </label>
-            <input
-                id={name}
-                type={type}
-                name={name}
-                value={formData[name]}
-                onChange={handleChange}
-                placeholder={placeholder}
-                className="w-full bg-transparent border-b border-slate-700 py-1 text-white focus:outline-none focus:border-[#4caf50] transition-colors text-sm"
-            />
-            {hint && <p id={`${name}-hint`} className="text-sm mt-2 font-light leading-snug" style={{ color: '#bcc0cf' }}>{hint}</p>}
-        </div>
-    );
-
-    const CheckboxField = ({ label, name, checked, onChange }) => (
-        <label htmlFor={name} className="flex items-center gap-3 cursor-pointer group mb-6 px-2">
-            <div className="relative flex items-center justify-center">
-                <input
-                    id={name}
-                    type="checkbox"
-                    name={name}
-                    checked={checked}
-                    onChange={onChange}
-                    className="appearance-none w-5 h-5 border border-slate-600 rounded-sm checked:bg-[#4caf50] checked:border-[#4caf50] transition-all cursor-pointer"
-                />
-                {checked && <Check className="w-3.5 h-3.5 text-white absolute pointer-events-none" />}
-            </div>
-            <span className="text-sm group-hover:text-white transition-colors" style={{ color: '#bcc0cf' }}>{label}</span>
-        </label>
-    );
-
-    const SelectField = ({ label, name, options, value, onChange, hint }) => (
-        <div className="mb-8 group px-2">
-            <label htmlFor={name} className="block text-sm mb-1 font-light" style={{ color: '#bcc0cf' }}>
-                {label}
-            </label>
-            <div className="relative">
-                <select
-                    id={name}
-                    name={name}
-                    value={value}
-                    onChange={onChange}
-                    className="w-full bg-white border border-slate-200 py-3 px-4 text-black font-extrabold outline-none rounded shadow-sm appearance-none focus:ring-2 focus:ring-[#4caf50]/20 transition-all text-sm uppercase tracking-wider"
-                >
-                    {options.map(opt => (
-                        <option key={opt.value} value={opt.value}>{opt.label}</option>
-                    ))}
-                </select>
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 group-focus-within:text-[#4caf50] transition-colors">
-                    <ChevronDown className="w-4 h-4" />
-                </div>
-            </div>
-            {hint && <p className="text-[12px] mt-2 font-light leading-snug" style={{ color: '#8b8f9a' }}>{hint}</p>}
-        </div>
-    );
-
 
     return (
         <div className="fixed inset-0 bg-[#1a2035] z-50 flex flex-col overflow-hidden">
@@ -481,24 +492,32 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                             <InputField
                                                 label="Name"
                                                 name="fullName"
+                                                value={formData.fullName}
+                                                onChange={handleChange}
                                                 placeholder=""
                                                 hint="Insert Real name of the trader. Will be visible in trading App"
                                             />
                                             <InputField
                                                 label="Mobile"
                                                 name="mobile"
+                                                value={formData.mobile}
+                                                onChange={handleChange}
                                                 placeholder=""
                                                 hint="Optional"
                                             />
                                             <InputField
                                                 label="Username"
                                                 name="username"
+                                                value={formData.username}
+                                                onChange={handleChange}
                                                 placeholder=""
                                                 hint="username for loggin-in with, is not case sensitive. must be unique for every trader. should not contain symbols."
                                             />
                                             <InputField
                                                 label="Password"
                                                 name="password"
+                                                value={formData.password}
+                                                onChange={handleChange}
                                                 type="text"
                                                 placeholder=""
                                                 hint="password for loggin-in with, is case sensitive. Leave Blank if you want password remain unchanged."
@@ -506,29 +525,30 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                             <InputField
                                                 label="City"
                                                 name="city"
+                                                value={formData.city}
+                                                onChange={handleChange}
                                                 placeholder=""
                                                 hint="Optional"
                                             />
                                             <InputField
                                                 label="Min. Time to book profit (No. of Seconds)"
                                                 name="minTimeToBookProfit"
+                                                value={formData.minTimeToBookProfit}
+                                                onChange={handleChange}
                                                 placeholder="120"
                                                 hint="Example: 120, will hold the trade for 2 minutes before closing a trade in profit"
                                             />
-                                            <div className="mb-8 px-2">
-                                                <label className="block text-sm mb-1 font-light" style={{ color: '#bcc0cf' }}>Scalping Stop Loss</label>
-                                                <select
-                                                    name="scalpingStopLoss"
-                                                    value={formData.scalpingStopLoss}
-                                                    onChange={handleChange}
-                                                    className="w-full bg-transparent border-b border-slate-700 py-1 text-white focus:outline-none focus:border-[#4caf50] transition-colors text-sm appearance-none"
-                                                    style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'white\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 4px center', backgroundSize: '16px' }}
-                                                >
-                                                    <option value="Disabled" className="bg-[#202940]">Disabled</option>
-                                                    <option value="Enabled" className="bg-[#202940]">Enabled</option>
-                                                </select>
-                                                <p className="text-[12px] mt-2 font-light leading-snug" style={{ color: '#bcc0cf' }}>If Disabled, Stop Loss or Booking Loss can be done after Min. time of profit booking.</p>
-                                            </div>
+                                            <SelectField
+                                                label="Scalping Stop Loss"
+                                                name="scalpingStopLoss"
+                                                value={formData.scalpingStopLoss}
+                                                onChange={handleChange}
+                                                options={[
+                                                    { value: 'Disabled', label: 'Disabled' },
+                                                    { value: 'Enabled', label: 'Enabled' }
+                                                ]}
+                                                hint="If Disabled, Stop Loss or Booking Loss can be done after Min. time of profit booking."
+                                            />
                                         </div>
                                     </fieldset>
 
@@ -547,24 +567,9 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                                 <CheckboxField label="Auto Close Trades if condition met" name="autoCloseTrades" checked={formData.autoCloseTrades} onChange={handleChange} />
                                             </div>
                                             <div className="space-y-0">
-                                                <InputField label="auto-Close all active trades when the losses reach % of Ledger-balance" name="autoClosePercentage" placeholder="90" hint="Example: 95, will close when losses reach 95% of ledger balance" />
-                                                <InputField label="Notify client when the losses reach % of Ledger-balance" name="notifyPercentage" placeholder="70" hint="Example: 70, will send notification to customer every 5-minutes until losses cross 70% of ledger balance" />
-                                                <InputField label="Min. Time to book profit (No. of Seconds)" name="minTimeToBookProfit" placeholder="120" hint="Example: 120, will hold the trade for 2 minutes before closing a trade in profit" />
-                                                <div className="mb-4 group px-2">
-                                                    <label className="block text-sm mb-1 font-light tracking-tight group-focus-within:text-[#4caf50] transition-colors" style={{ color: '#bcc0cf' }}>
-                                                        Scalping Stop Loss
-                                                    </label>
-                                                    <select
-                                                        name="scalpingStopLoss"
-                                                        value={formData.scalpingStopLoss}
-                                                        onChange={handleChange}
-                                                        className="w-full bg-white border border-slate-200 py-2.5 px-3 text-black font-bold outline-none rounded-sm text-sm"
-                                                    >
-                                                        <option value="Enabled">Enabled</option>
-                                                        <option value="Disabled">Disabled</option>
-                                                    </select>
-                                                    <p className="text-sm text-slate-400 mt-2 font-light">If Disabled, Stop Loss or Booking Loss can be done after Min. time of profit booking.</p>
-                                                </div>
+                                                <InputField label="auto-Close all active trades when the losses reach % of Ledger-balance" name="autoClosePercentage" value={formData.autoClosePercentage} onChange={handleChange} placeholder="90" hint="Example: 95, will close when losses reach 95% of ledger balance" />
+                                                <InputField label="Notify client when the losses reach % of Ledger-balance" name="notifyPercentage" value={formData.notifyPercentage} onChange={handleChange} placeholder="70" hint="Example: 70, will send notification to customer every 5-minutes until losses cross 70% of ledger balance" />
+                                                <InputField label="Min. Time to book profit (No. of Seconds)" name="minTimeToBookProfit" value={formData.minTimeToBookProfit} onChange={handleChange} placeholder="120" hint="Example: 120, will hold the trade for 2 minutes before closing a trade in profit" />
                                             </div>
                                         </div>
                                     </fieldset>
@@ -584,10 +589,10 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
 
                                         {formData.mcxTrading && (
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 animate-in fade-in slide-in-from-top-2 duration-500">
-                                                <InputField label="Minimum lot size required per single trade of MCX" name="mcxMinLot" placeholder="0" />
-                                                <InputField label="Maximum lot size allowed per single trade of MCX" name="mcxMaxLot" placeholder="20" />
-                                                <InputField label="Maximum lot size allowed per script of MCX to be actively open at a time" name="mcxMaxLotScrip" placeholder="50" />
-                                                <InputField label="Max Size All Commodity" name="mcxMaxSizeAll" placeholder="100" />
+                                                <InputField label="Minimum lot size required per single trade of MCX" name="mcxMinLot" value={formData.mcxMinLot} onChange={handleChange} placeholder="0" />
+                                                <InputField label="Maximum lot size allowed per single trade of MCX" name="mcxMaxLot" value={formData.mcxMaxLot} onChange={handleChange} placeholder="20" />
+                                                <InputField label="Maximum lot size allowed per script of MCX to be actively open at a time" name="mcxMaxLotScrip" value={formData.mcxMaxLotScrip} onChange={handleChange} placeholder="50" />
+                                                <InputField label="Max Size All Commodity" name="mcxMaxSizeAll" value={formData.mcxMaxSizeAll} onChange={handleChange} placeholder="100" />
 
                                                 <SelectField
                                                     label="Mcx Brokerage Type"
@@ -600,7 +605,7 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                                     ]}
                                                 />
                                                 {formData.mcxBrokerageType === 'per_crore' && (
-                                                    <InputField label="MCX brokerage" name="mcxBrokerage" placeholder="800" />
+                                                    <InputField label="MCX brokerage" name="mcxBrokerage" value={formData.mcxBrokerage} onChange={handleChange} placeholder="800" />
                                                 )}
 
                                                 <SelectField
@@ -616,8 +621,8 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
 
                                                 {formData.mcxExposureType === 'per_turnover' && (
                                                     <>
-                                                        <InputField label="Intraday Exposure/Margin MCX" name="mcxIntradayMargin" placeholder="500" hint="Exposure auto calculates the margin money required for any new trade entry. Calculation : turnover of a trade devided by Exposure is required margin. eg. if gold having lotsize of 100 is trading @ 45000 and exposure is 200, (45000 X 100) / 200 = 22500 is required to initiate the trade." />
-                                                        <InputField label="Holding Exposure/Margin MCX" name="mcxHoldingMargin" placeholder="100" hint="Holding Exposure auto calculates the margin money required to hold a position overnight for the next market working day. Calculation : turnover of a trade devided by Exposure is required margin. eg. if gold having lotsize of 100 is trading @ 45000 and holding exposure is 800, (45000 X 100) / 80 = 56250 is required to hold position overnight. System automatically checks at a given time around market closure to check and close all trades if margin(M2M) insufficient." />
+                                                        <InputField label="Intraday Exposure/Margin MCX" name="mcxIntradayMargin" value={formData.mcxIntradayMargin} onChange={handleChange} placeholder="500" hint="Exposure auto calculates the margin money required for any new trade entry. Calculation : turnover of a trade devided by Exposure is required margin. eg. if gold having lotsize of 100 is trading @ 45000 and exposure is 200, (45000 X 100) / 200 = 22500 is required to initiate the trade." />
+                                                        <InputField label="Holding Exposure/Margin MCX" name="mcxHoldingMargin" value={formData.mcxHoldingMargin} onChange={handleChange} placeholder="100" hint="Holding Exposure auto calculates the margin money required to hold a position overnight for the next market working day. Calculation : turnover of a trade devided by Exposure is required margin. eg. if gold having lotsize of 100 is trading @ 45000 and holding exposure is 800, (45000 X 100) / 80 = 56250 is required to hold position overnight. System automatically checks at a given time around market closure to check and close all trades if margin(M2M) insufficient." />
                                                     </>
                                                 )}
                                             </div>
@@ -698,18 +703,18 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
 
                                         {formData.equityTrading && (
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 animate-in fade-in slide-in-from-top-2 duration-500">
-                                                <InputField label="Equity Brokerage Per Crore" name="equityBrokerage" placeholder="800" />
-                                                <InputField label="Minimum lot size required per single trade of Equity" name="equityMinLot" placeholder="0" />
-                                                <InputField label="Maximum lot size allowed per single trade of Equity" name="equityMaxLot" placeholder="50" />
-                                                <InputField label="Minimum lot size required per single trade of Equity INDEX" name="equityMinIndexLot" placeholder="0" />
-                                                <InputField label="Maximum lot size allowed per single trade of Equity INDEX" name="equityMaxIndexLot" placeholder="20" />
-                                                <InputField label="Maximum lot size allowed per script of Equity to be actively open at a time" name="equityMaxScrip" placeholder="100" />
-                                                <InputField label="Maximum lot size allowed per script of Equity INDEX to be actively open at a time" name="equityMaxIndexScrip" placeholder="100" />
-                                                <InputField label="Max Size All Equity" name="equityMaxSizeAll" placeholder="100" />
-                                                <InputField label="Max Size All Index" name="equityMaxSizeAllIndex" placeholder="100" />
-                                                <InputField label="Intraday Exposure/Margin Equity" name="equityIntradayMargin" placeholder="500" hint="Exposure auto calculates the margin money required for any new trade entry. Calculation : turnover of a trade devided by Exposure is required margin. eg. if gold having lotsize of 100 is trading @ 45000 and exposure is 200, (45000 X 100) / 200 = 22500 is required to initiate the trade." />
-                                                <InputField label="Holding Exposure/Margin Equity" name="equityHoldingMargin" placeholder="100" hint="Holding Exposure auto calculates the margin money required to hold a position overnight for the next market working day. Calculation : turnover of a trade divided by Exposure is required margin. eg. if gold having lot size of 100 is trading @ 45000 and holding exposure is 800, (45000 X 100) / 80 = 56250 is required to hold position overnight. System automatically checks at a given time around market closure to check and close all trades if margin(M2M) insufficient." />
-                                                <InputField label="Orders to be away by % from current price Equity" name="equityOrdersAway" placeholder="5" />
+                                                <InputField label="Equity Brokerage Per Crore" name="equityBrokerage" value={formData.equityBrokerage} onChange={handleChange} placeholder="800" />
+                                                <InputField label="Minimum lot size required per single trade of Equity" name="equityMinLot" value={formData.equityMinLot} onChange={handleChange} placeholder="0" />
+                                                <InputField label="Maximum lot size allowed per single trade of Equity" name="equityMaxLot" value={formData.equityMaxLot} onChange={handleChange} placeholder="50" />
+                                                <InputField label="Minimum lot size required per single trade of Equity INDEX" name="equityMinIndexLot" value={formData.equityMinIndexLot} onChange={handleChange} placeholder="0" />
+                                                <InputField label="Maximum lot size allowed per single trade of Equity INDEX" name="equityMaxIndexLot" value={formData.equityMaxIndexLot} onChange={handleChange} placeholder="20" />
+                                                <InputField label="Maximum lot size allowed per script of Equity to be actively open at a time" name="equityMaxScrip" value={formData.equityMaxScrip} onChange={handleChange} placeholder="100" />
+                                                <InputField label="Maximum lot size allowed per script of Equity INDEX to be actively open at a time" name="equityMaxIndexScrip" value={formData.equityMaxIndexScrip} onChange={handleChange} placeholder="100" />
+                                                <InputField label="Max Size All Equity" name="equityMaxSizeAll" value={formData.equityMaxSizeAll} onChange={handleChange} placeholder="100" />
+                                                <InputField label="Max Size All Index" name="equityMaxSizeAllIndex" value={formData.equityMaxSizeAllIndex} onChange={handleChange} placeholder="100" />
+                                                <InputField label="Intraday Exposure/Margin Equity" name="equityIntradayMargin" value={formData.equityIntradayMargin} onChange={handleChange} placeholder="500" hint="Exposure auto calculates the margin money required for any new trade entry. Calculation : turnover of a trade devided by Exposure is required margin. eg. if gold having lotsize of 100 is trading @ 45000 and exposure is 200, (45000 X 100) / 200 = 22500 is required to initiate the trade." />
+                                                <InputField label="Holding Exposure/Margin Equity" name="equityHoldingMargin" value={formData.equityHoldingMargin} onChange={handleChange} placeholder="100" hint="Holding Exposure auto calculates the margin money required to hold a position overnight for the next market working day. Calculation : turnover of a trade divided by Exposure is required margin. eg. if gold having lot size of 100 is trading @ 45000 and holding exposure is 800, (45000 X 100) / 80 = 56250 is required to hold position overnight. System automatically checks at a given time around market closure to check and close all trades if margin(M2M) insufficient." />
+                                                <InputField label="Orders to be away by % from current price Equity" name="equityOrdersAway" value={formData.equityOrdersAway} onChange={handleChange} placeholder="5" />
                                             </div>
                                         )}
                                     </fieldset>
@@ -755,7 +760,7 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                                                     { value: 'per_crore', label: 'Per Crore Basis' }
                                                                 ]}
                                                             />
-                                                            <InputField label="Options Index brokerage" name="optionsIndexBrokerage" placeholder="20" />
+                                                            <InputField label="Options Index brokerage" name="optionsIndexBrokerage" value={formData.optionsIndexBrokerage} onChange={handleChange} placeholder="20" />
                                                             <SelectField
                                                                 label="Options Index Short Selling Allowed"
                                                                 name="optionsIndexShortSelling"
@@ -763,10 +768,10 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                                                 onChange={handleChange}
                                                                 options={[{ value: 'No', label: 'No' }, { value: 'Yes', label: 'Yes' }]}
                                                             />
-                                                            <InputField label="Maximum lot size per single trade of INDEX Options" name="optionsIndexMaxLot" placeholder="20" />
-                                                            <InputField label="Min lot size per single trade of INDEX Options" name="optionsIndexMinLot" placeholder="0" />
-                                                            <InputField label="Intraday Exposure Options Index" name="optionsIndexIntraday" placeholder="5" />
-                                                            <InputField label="Holding Exposure Options Index" name="optionsIndexHolding" placeholder="2" />
+                                                            <InputField label="Maximum lot size per single trade of INDEX Options" name="optionsIndexMaxLot" value={formData.optionsIndexMaxLot} onChange={handleChange} placeholder="20" />
+                                                            <InputField label="Min lot size per single trade of INDEX Options" name="optionsIndexMinLot" value={formData.optionsIndexMinLot} onChange={handleChange} placeholder="0" />
+                                                            <InputField label="Intraday Exposure Options Index" name="optionsIndexIntraday" value={formData.optionsIndexIntraday} onChange={handleChange} placeholder="5" />
+                                                            <InputField label="Holding Exposure Options Index" name="optionsIndexHolding" value={formData.optionsIndexHolding} onChange={handleChange} placeholder="2" />
                                                         </>
                                                     )}
 
@@ -782,7 +787,7 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                                                     { value: 'per_crore', label: 'Per Crore Basis' }
                                                                 ]}
                                                             />
-                                                            <InputField label="Options Equity brokerage" name="optionsEquityBrokerage" placeholder="20" />
+                                                            <InputField label="Options Equity brokerage" name="optionsEquityBrokerage" value={formData.optionsEquityBrokerage} onChange={handleChange} placeholder="20" />
                                                             <SelectField
                                                                 label="Options Equity Short Selling Allowed"
                                                                 name="optionsEquityShortSelling"
@@ -794,10 +799,10 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                                                     { value: 'Yes', label: 'Yes' }
                                                                 ]}
                                                             />
-                                                            <InputField label="Max lot size per single trade of Equity Options" name="optionsEquityMaxLot" placeholder="50" />
-                                                            <InputField label="Min lot size per single trade of Equity Options" name="optionsEquityMinLot" placeholder="0" />
-                                                            <InputField label="Intraday Exposure Options Equity" name="optionsEquityIntraday" placeholder="5" />
-                                                            <InputField label="Holding Exposure Options Equity" name="optionsEquityHolding" placeholder="2" />
+                                                            <InputField label="Max lot size per single trade of Equity Options" name="optionsEquityMaxLot" value={formData.optionsEquityMaxLot} onChange={handleChange} placeholder="50" />
+                                                            <InputField label="Min lot size per single trade of Equity Options" name="optionsEquityMinLot" value={formData.optionsEquityMinLot} onChange={handleChange} placeholder="0" />
+                                                            <InputField label="Intraday Exposure Options Equity" name="optionsEquityIntraday" value={formData.optionsEquityIntraday} onChange={handleChange} placeholder="5" />
+                                                            <InputField label="Holding Exposure Options Equity" name="optionsEquityHolding" value={formData.optionsEquityHolding} onChange={handleChange} placeholder="2" />
                                                         </>
                                                     )}
                                                 </div>
@@ -816,7 +821,7 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                                                     { value: 'per_crore', label: 'Per Crore Basis' }
                                                                 ]}
                                                             />
-                                                            <InputField label="Options MCX brokerage" name="optionsMcxBrokerage" placeholder="20" />
+                                                            <InputField label="Options MCX brokerage" name="optionsMcxBrokerage" value={formData.optionsMcxBrokerage} onChange={handleChange} placeholder="20" />
                                                             <SelectField
                                                                 label="MCX Options Short Selling Allowed"
                                                                 name="optionsMcxShortSelling"
@@ -824,108 +829,25 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                                                 onChange={handleChange}
                                                                 options={[{ value: 'No', label: 'No' }, { value: 'Yes', label: 'Yes' }]}
                                                             />
-                                                            <InputField label="Max lot size per single trade of MCX Options" name="optionsMcxMaxLot" placeholder="50" />
-                                                            <InputField label="Min lot size per single trade of MCX Options" name="optionsMcxMinLot" placeholder="0" />
-                                                            <InputField label="Intraday Exposure Options MCX" name="optionsMcxIntraday" placeholder="5" />
-                                                            <InputField label="Holding Exposure Options MCX" name="optionsMcxHolding" placeholder="2" />
+                                                            <InputField label="Max lot size per single trade of MCX Options" name="optionsMcxMaxLot" value={formData.optionsMcxMaxLot} onChange={handleChange} placeholder="50" />
+                                                            <InputField label="Min lot size per single trade of MCX Options" name="optionsMcxMinLot" value={formData.optionsMcxMinLot} onChange={handleChange} placeholder="0" />
+                                                            <InputField label="Intraday Exposure Options MCX" name="optionsMcxIntraday" value={formData.optionsMcxIntraday} onChange={handleChange} placeholder="5" />
+                                                            <InputField label="Holding Exposure Options MCX" name="optionsMcxHolding" value={formData.optionsMcxHolding} onChange={handleChange} placeholder="2" />
                                                         </>
                                                     )}
-                                                    <InputField label="Options Min. Bid Price" name="optionsMinBidPrice" placeholder="1" />
-                                                    <InputField label="Orders to be away from current price" name="optionsOrdersAway" placeholder="10" />
-                                                    <InputField label="Max Size All Equity Options" name="optionsMaxEquitySizeAll" placeholder="200" />
-                                                    <InputField label="Max Size All Index Options" name="optionsMaxIndexSizeAll" placeholder="200" />
-                                                    <InputField label="Max Size All MCX Options" name="optionsMaxMcxSizeAll" placeholder="200" />
-                                                    <InputField label="Maximum lot size allowed per scrip of Equity Options to be actively open at a time" name="optionsEquityMaxScrip" placeholder="200" />
-                                                    <InputField label="Maximum lot size allowed per scrip of Equity INDEX Options to be actively open at a time" name="optionsIndexMaxScrip" placeholder="200" />
-                                                    <InputField label="Maximum lot size allowed per scrip of MCX Options to be actively open at a time" name="optionsMcxMaxScrip" placeholder="200" />
+                                                    <InputField label="Options Min. Bid Price" name="optionsMinBidPrice" value={formData.optionsMinBidPrice} onChange={handleChange} placeholder="1" />
+                                                    <InputField label="Orders to be away from current price" name="optionsOrdersAway" value={formData.optionsOrdersAway} onChange={handleChange} placeholder="10" />
+                                                    <InputField label="Max Size All Equity Options" name="optionsMaxEquitySizeAll" value={formData.optionsMaxEquitySizeAll} onChange={handleChange} placeholder="200" />
+                                                    <InputField label="Max Size All Index Options" name="optionsMaxIndexSizeAll" value={formData.optionsMaxIndexSizeAll} onChange={handleChange} placeholder="200" />
+                                                    <InputField label="Max Size All MCX Options" name="optionsMaxMcxSizeAll" value={formData.optionsMaxMcxSizeAll} onChange={handleChange} placeholder="200" />
+                                                    <InputField label="Maximum lot size allowed per scrip of Equity Options to be actively open at a time" name="optionsEquityMaxScrip" value={formData.optionsEquityMaxScrip} onChange={handleChange} placeholder="200" />
+                                                    <InputField label="Maximum lot size allowed per scrip of Equity INDEX Options to be actively open at a time" name="optionsIndexMaxScrip" value={formData.optionsIndexMaxScrip} onChange={handleChange} placeholder="200" />
+                                                    <InputField label="Maximum lot size allowed per scrip of MCX Options to be actively open at a time" name="optionsMcxMaxScrip" value={formData.optionsMcxMaxScrip} onChange={handleChange} placeholder="200" />
                                                 </div>
                                             </div>
                                         )}
                                     </fieldset>
 
-                                    <hr className="border-white/5" />
-
-                                    {/* COMEX, FOREX & CRYPTO SEGMENTS */}
-                                    <fieldset className="border-none p-0 m-0">
-                                        <FieldLegend title="International Segments (Comex, Forex, Crypto)" />
-
-                                        <div className="space-y-12 mb-12">
-                                            {/* Comex Section */}
-                                            <div className="bg-[#151c2c]/30 p-8 rounded-lg border border-white/10 shadow-inner">
-                                                <div className="flex items-center justify-between mb-8 pb-4 border-b border-white/5">
-                                                    <div>
-                                                        <h4 className="text-[#4caf50] text-xl font-bold uppercase tracking-widest flex items-center gap-2">
-                                                            <div className="w-2 h-6 bg-[#4caf50]"></div> COMEX COMMODITIES
-                                                        </h4>
-                                                        <p className="text-[10px] text-slate-500 font-bold uppercase mt-1 tracking-widest">Global Commodity Exchange Settings</p>
-                                                    </div>
-                                                    <div className="flex items-center gap-4 bg-[#1a2035] px-6 py-3 rounded-lg border border-white/5">
-                                                        <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest leading-none">Status</span>
-                                                        <CheckboxField label="" name="comexTrading" checked={formData.comexTrading} onChange={handleChange} />
-                                                        <span className={`text-xs font-black uppercase tracking-widest ${formData.comexTrading ? 'text-[#4caf50]' : 'text-slate-600'}`}>{formData.comexTrading ? 'ENABLED' : 'DISABLED'}</span>
-                                                    </div>
-                                                </div>
-                                                {formData.comexTrading && (
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 animate-in fade-in slide-in-from-top-2 duration-500">
-                                                        <InputField label="Comex Brokerage (Per Crore)" name="comexBrokerage" placeholder="800" hint="Universal brokerage applied to all Comex scripts" />
-                                                        <InputField label="Max Lot Size Per Script" name="comexMaxLot" placeholder="50" hint="Maximum allowed lots per position" />
-                                                        <InputField label="Intraday Margin % / Exposure" name="comexIntradayMargin" placeholder="500" hint="Leverage for intraday executions" />
-                                                        <InputField label="Holding Margin % / Exposure" name="comexHoldingMargin" placeholder="100" hint="Leverage for overnight positions" />
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            {/* Forex Section */}
-                                            <div className="bg-[#151c2c]/30 p-8 rounded-lg border border-white/10 shadow-inner">
-                                                <div className="flex items-center justify-between mb-8 pb-4 border-b border-white/5">
-                                                    <div>
-                                                        <h4 className="text-[#01B4EA] text-xl font-bold uppercase tracking-widest flex items-center gap-2">
-                                                            <div className="w-2 h-6 bg-[#01B4EA]"></div> FOREX / CURRENCY
-                                                        </h4>
-                                                        <p className="text-[10px] text-slate-500 font-bold uppercase mt-1 tracking-widest">Universal Currency Trading Parameters</p>
-                                                    </div>
-                                                    <div className="flex items-center gap-4 bg-[#1a2035] px-6 py-3 rounded-lg border border-white/5">
-                                                        <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest leading-none">Status</span>
-                                                        <CheckboxField label="" name="forexTrading" checked={formData.forexTrading} onChange={handleChange} />
-                                                        <span className={`text-xs font-black uppercase tracking-widest ${formData.forexTrading ? 'text-[#01B4EA]' : 'text-slate-600'}`}>{formData.forexTrading ? 'ENABLED' : 'DISABLED'}</span>
-                                                    </div>
-                                                </div>
-                                                {formData.forexTrading && (
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 animate-in fade-in slide-in-from-top-2 duration-500">
-                                                        <InputField label="Forex Brokerage (Per Crore)" name="forexBrokerage" placeholder="500" hint="Brokerage for all Currency/Forex pairs" />
-                                                        <InputField label="Max Lot Size Per Scrip" name="forexMaxLot" placeholder="100" />
-                                                        <InputField label="Intraday Margin / Exposure" name="forexIntradayMargin" placeholder="1000" />
-                                                        <InputField label="Holding Margin / Exposure" name="forexHoldingMargin" placeholder="200" />
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            {/* Crypto Section */}
-                                            <div className="bg-[#151c2c]/30 p-8 rounded-lg border border-white/10 shadow-inner">
-                                                <div className="flex items-center justify-between mb-8 pb-4 border-b border-white/5">
-                                                    <div>
-                                                        <h4 className="text-orange-500 text-xl font-bold uppercase tracking-widest flex items-center gap-2">
-                                                            <div className="w-2 h-6 bg-orange-500"></div> CRYPTO (BITCOIN/ETH)
-                                                        </h4>
-                                                        <p className="text-[10px] text-slate-500 font-bold uppercase mt-1 tracking-widest">Cryptocurrency Asset Execution Hub</p>
-                                                    </div>
-                                                    <div className="flex items-center gap-4 bg-[#1a2035] px-6 py-3 rounded-lg border border-white/5">
-                                                        <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest leading-none">Status</span>
-                                                        <CheckboxField label="" name="cryptoTrading" checked={formData.cryptoTrading} onChange={handleChange} />
-                                                        <span className={`text-xs font-black uppercase tracking-widest ${formData.cryptoTrading ? 'text-orange-500' : 'text-slate-600'}`}>{formData.cryptoTrading ? 'ENABLED' : 'DISABLED'}</span>
-                                                    </div>
-                                                </div>
-                                                {formData.cryptoTrading && (
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 animate-in fade-in slide-in-from-top-2 duration-500">
-                                                        <InputField label="Crypto Brokerage (Per Crore)" name="cryptoBrokerage" placeholder="1000" hint="Global brokerage for digital assets" />
-                                                        <InputField label="Max Lot Size Per Scrip" name="cryptoMaxLot" placeholder="10" />
-                                                        <InputField label="Intraday Margin / Exposure" name="cryptoIntradayMargin" placeholder="200" />
-                                                        <InputField label="Holding Margin / Exposure" name="cryptoHoldingMargin" placeholder="50" />
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </fieldset>
 
                                     <hr className="border-white/5" />
 
@@ -963,15 +885,12 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                                                 <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center">
                                                                     <Check className="w-6 h-6 text-green-400" />
                                                                 </div>
-                                                                <span className="text-[10px] text-green-400 font-black uppercase tracking-widest px-4 text-center">{formData.documents.panCard.name}</span>
+                                                                <span className="text-[10px] font-black text-green-400">UPLOADED: {formData.documents.panCard.name}</span>
                                                             </div>
                                                         ) : (
                                                             <>
-                                                                <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-4 group-hover:bg-green-500/20 transition-all">
-                                                                    <FileUp className="w-6 h-6 text-slate-600 group-hover:text-green-400" />
-                                                                </div>
-                                                                <span className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Upload PAN Card</span>
-                                                                <p className="text-[9px] text-slate-600 mt-2 font-bold uppercase underline">Click to Browse</p>
+                                                                <FileUp className="w-10 h-10 text-slate-600 group-hover:text-green-500 transition-colors mb-4" />
+                                                                <span className="text-[11px] font-black text-slate-500 group-hover:text-green-500 uppercase tracking-[0.2em]">Select Document</span>
                                                             </>
                                                         )}
                                                     </label>
@@ -980,7 +899,7 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
 
                                             {/* Aadhaar Front */}
                                             <div className="space-y-3">
-                                                <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Aadhaar Card (Front)</label>
+                                                <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Aadhaar Front Image</label>
                                                 <div className="relative group cursor-pointer">
                                                     <input
                                                         type="file"
@@ -994,15 +913,12 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                                                 <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center">
                                                                     <Check className="w-6 h-6 text-green-400" />
                                                                 </div>
-                                                                <span className="text-[10px] text-green-400 font-black uppercase tracking-widest px-4 text-center">{formData.documents.aadhaarFront.name}</span>
+                                                                <span className="text-[10px] font-black text-green-400">UPLOADED: {formData.documents.aadhaarFront.name}</span>
                                                             </div>
                                                         ) : (
                                                             <>
-                                                                <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-4 group-hover:bg-green-500/20 transition-all">
-                                                                    <FileUp className="w-6 h-6 text-slate-600 group-hover:text-green-400" />
-                                                                </div>
-                                                                <span className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Aadhaar (Front Side)</span>
-                                                                <p className="text-[9px] text-slate-600 mt-2 font-bold uppercase underline">Click to Browse</p>
+                                                                <FileUp className="w-10 h-10 text-slate-600 group-hover:text-green-500 transition-colors mb-4" />
+                                                                <span className="text-[11px] font-black text-slate-500 group-hover:text-green-500 uppercase tracking-[0.2em]">Select Document</span>
                                                             </>
                                                         )}
                                                     </label>
@@ -1011,7 +927,7 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
 
                                             {/* Aadhaar Back */}
                                             <div className="space-y-3">
-                                                <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Aadhaar Card (Back)</label>
+                                                <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Aadhaar Back Image</label>
                                                 <div className="relative group cursor-pointer">
                                                     <input
                                                         type="file"
@@ -1025,15 +941,12 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                                                 <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center">
                                                                     <Check className="w-6 h-6 text-green-400" />
                                                                 </div>
-                                                                <span className="text-[10px] text-green-400 font-black uppercase tracking-widest px-4 text-center">{formData.documents.aadhaarBack.name}</span>
+                                                                <span className="text-[10px] font-black text-green-400">UPLOADED: {formData.documents.aadhaarBack.name}</span>
                                                             </div>
                                                         ) : (
                                                             <>
-                                                                <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-4 group-hover:bg-green-500/20 transition-all">
-                                                                    <FileUp className="w-6 h-6 text-slate-600 group-hover:text-green-400" />
-                                                                </div>
-                                                                <span className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Aadhaar (Back Side)</span>
-                                                                <p className="text-[9px] text-slate-600 mt-2 font-bold uppercase underline">Click to Browse</p>
+                                                                <FileUp className="w-10 h-10 text-slate-600 group-hover:text-green-500 transition-colors mb-4" />
+                                                                <span className="text-[11px] font-black text-slate-500 group-hover:text-green-500 uppercase tracking-[0.2em]">Select Document</span>
                                                             </>
                                                         )}
                                                     </label>
@@ -1042,7 +955,7 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
 
                                             {/* Bank Statement */}
                                             <div className="space-y-3">
-                                                <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Bank Proof (Statement/Cheque)</label>
+                                                <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Bank Statement / Cheque</label>
                                                 <div className="relative group cursor-pointer">
                                                     <input
                                                         type="file"
@@ -1056,60 +969,21 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                                                 <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center">
                                                                     <Check className="w-6 h-6 text-green-400" />
                                                                 </div>
-                                                                <span className="text-[10px] text-green-400 font-black uppercase tracking-widest px-4 text-center">{formData.documents.bankStatement.name}</span>
+                                                                <span className="text-[10px] font-black text-green-400">UPLOADED: {formData.documents.bankStatement.name}</span>
                                                             </div>
                                                         ) : (
                                                             <>
-                                                                <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-4 group-hover:bg-green-500/20 transition-all">
-                                                                    <FileUp className="w-6 h-6 text-slate-600 group-hover:text-green-400" />
-                                                                </div>
-                                                                <span className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Bank Proof / Cheque</span>
-                                                                <p className="text-[9px] text-slate-600 mt-2 font-bold uppercase underline">Click to Browse</p>
-                                                            </>
-                                                        )}
-                                                    </label>
-                                                </div>
-                                            </div>
-
-                                            {/* Additional Documents */}
-                                            <div className="space-y-3">
-                                                <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Additional Document (Optional)</label>
-                                                <div className="relative group cursor-pointer">
-                                                    <input
-                                                        type="file"
-                                                        className="hidden"
-                                                        id="doc-additional"
-                                                        onChange={(e) => handleNestedChange('documents', 'additionalDoc', e.target.files[0])}
-                                                    />
-                                                    <label htmlFor="doc-additional" className="flex flex-col items-center justify-center h-48 rounded-2xl bg-black/40 border-2 border-dashed border-white/10 hover:border-blue-500/50 hover:bg-black/60 transition-all group overflow-hidden cursor-pointer">
-                                                        {formData.documents.additionalDoc ? (
-                                                            <div className="w-full h-full flex flex-col items-center justify-center gap-3">
-                                                                <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
-                                                                    <Check className="w-6 h-6 text-blue-400" />
-                                                                </div>
-                                                                <span className="text-[10px] text-blue-400 font-black uppercase tracking-widest px-4 text-center">{formData.documents.additionalDoc.name}</span>
-                                                            </div>
-                                                        ) : (
-                                                            <>
-                                                                <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-4 group-hover:bg-blue-500/20 transition-all">
-                                                                    <FileUp className="w-6 h-6 text-slate-600 group-hover:text-blue-400" />
-                                                                </div>
-                                                                <span className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Utility Bill / Rent / Skip</span>
-                                                                <p className="text-[9px] text-slate-600 mt-2 font-bold uppercase underline">Optional Upload</p>
+                                                                <FileUp className="w-10 h-10 text-slate-600 group-hover:text-green-500 transition-colors mb-4" />
+                                                                <span className="text-[11px] font-black text-slate-500 group-hover:text-green-500 uppercase tracking-[0.2em]">Select Document</span>
                                                             </>
                                                         )}
                                                     </label>
                                                 </div>
                                             </div>
                                         </div>
-                                    </fieldset>
 
-                                    <hr className="border-white/5" />
-
-                                    <fieldset className="border-none p-0 m-0 pb-10">
-                                        <h3 className="text-[20px] font-normal mb-8 px-2" style={{ color: '#bcc0cf' }}>Other:</h3>
-                                        <div className="space-y-8 px-2">
-                                            {/* Row 1: Notes and Broker */}
+                                        <div className="mt-12 space-y-8 bg-black/20 p-8 rounded-2xl border border-white/5">
+                                            {/* Row 1: Notes & Broker */}
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12">
                                                 <div className="group">
                                                     <label className="block text-sm mb-1 font-light" style={{ color: '#bcc0cf' }}>Notes</label>
@@ -1151,13 +1025,18 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                             </div>
 
                                             {/* Save Button */}
-                                            <div className="pt-4 flex items-center gap-4">
+                                            <div className="pt-4 flex items-center gap-4 flex-wrap">
+                                                {saveError && (
+                                                    <div className="w-full bg-red-500/10 border border-red-500/30 text-red-400 rounded px-4 py-2 text-sm mb-2">
+                                                        {saveError}
+                                                    </div>
+                                                )}
                                                 <button
                                                     type="submit"
-                                                    disabled={!isKycValid()}
-                                                    className={`px-10 py-2.5 text-white rounded font-bold text-sm uppercase transition-all shadow-md active:scale-95 ${!isKycValid() ? 'bg-slate-700 cursor-not-allowed opacity-50' : 'bg-[#5cb85c] hover:bg-[#43a047]'}`}
+                                                    disabled={loading}
+                                                    className={`px-10 py-2.5 text-white rounded font-bold text-sm uppercase transition-all shadow-md active:scale-95 ${loading ? 'bg-slate-600 cursor-not-allowed opacity-60' : 'bg-[#5cb85c] hover:bg-[#43a047]'}`}
                                                 >
-                                                    {isKycValid() ? 'SAVE' : 'UPLOAD MANDATORY DOCUMENTS TO SAVE'}
+                                                    {loading ? 'SAVING...' : 'SAVE CLIENT'}
                                                 </button>
                                                 {!isKycValid() && (
                                                     <div className="flex items-center gap-2 text-red-500 text-[10px] font-bold uppercase tracking-wider bg-red-500/5 px-4 py-2 rounded border border-red-500/10">

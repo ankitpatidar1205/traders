@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { RotateCcw, SquarePen, ArrowUp, ArrowDown, Eye, Copy, Trash2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import * as api from '../../services/api';
@@ -11,8 +11,10 @@ import ChangePasswordPage from './ChangePasswordPage';
 import DeleteClientPage from './DeleteClientPage';
 import Toast from '../../components/common/Toast';
 
-const TradingClientsPage = ({ clients = [], onCreateClick, onDepositClick, onWithdrawClick, onLogout, onNavigate, loading, fetchClients }) => {
-    const { isSuperAdmin } = useAuth();
+const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavigate }) => {
+    const { isSuperAdmin, isAdmin } = useAuth();
+    const [clients, setClients] = useState([]);
+    const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
     const [fromDate, setFromDate] = useState('');
@@ -27,6 +29,22 @@ const TradingClientsPage = ({ clients = [], onCreateClick, onDepositClick, onWit
     const [showChangePasswordPage, setShowChangePasswordPage] = useState(false);
     const [showDeletePage, setShowDeletePage] = useState(false);
     const [toast, setToast] = useState({ message: '', type: 'success' });
+
+    const fetchClients = async () => {
+        setLoading(true);
+        try {
+            const data = await api.getClients({ role: 'TRADER' });
+            setClients(data || []);
+        } catch (err) {
+            console.error('Failed to fetch clients:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchClients();
+    }, []);
 
     const filteredClients = clients.filter(client => {
         const username = client.username || '';
@@ -144,7 +162,7 @@ const TradingClientsPage = ({ clients = [], onCreateClick, onDepositClick, onWit
                 </div>
 
                 {/* Create Button */}
-                {!isSuperAdmin() && (
+                {isAdmin() && (
                     <div className="flex justify-start">
                         <button
                             onClick={() => {
