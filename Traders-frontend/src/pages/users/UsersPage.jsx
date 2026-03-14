@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { RotateCcw, X, User, Mail, Lock, Phone } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import DataTable from '../../components/common/DataTable';
@@ -7,6 +8,7 @@ import Toast from '../../components/common/Toast';
 import * as api from '../../services/api';
 
 const UsersPage = ({ onNavigate, roleFilter }) => {
+    const navigate = useNavigate();
     const { isSuperAdmin, isAdmin } = useAuth();
     const [filters, setFilters] = useState({ username: '', status: '' });
     const [resetModal, setResetModal] = useState({ open: false, user: null });
@@ -130,8 +132,20 @@ const UsersPage = ({ onNavigate, roleFilter }) => {
     ];
 
     const actions = {
-        onView: (row) => setViewModal({ open: true, user: row }),
-        onEdit: (row) => openEditModal(row),
+        onView: (row) => {
+            if (roleFilter === 'BROKER') {
+                navigate(`/view-broker/${row.id}`);
+            } else {
+                setViewModal({ open: true, user: row });
+            }
+        },
+        onEdit: (row) => {
+            if (roleFilter === 'BROKER') {
+                navigate(`/edit-broker/${row.id}`);
+            } else {
+                openEditModal(row);
+            }
+        },
         onDelete: (row) => setDeleteModal({ open: true, user: row }),
     };
 

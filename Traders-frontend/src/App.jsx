@@ -50,6 +50,8 @@ import RaiseTicketPage from './pages/support/RaiseTicketPage';
 import VoiceModulationPage from './pages/voice/VoiceModulationPage';
 import ClientDetailsForm from './components/ClientDetailsForm';
 import Toast from './components/common/Toast';
+import EditBrokerPage from './pages/brokers/EditBrokerPage';
+import ViewBrokerPage from './pages/brokers/ViewBrokerPage';
 
 import { useAuth, ROLES } from './context/AuthContext';
 import * as api from './services/api';
@@ -118,11 +120,14 @@ function App() {
         }
     };
 
-    const handleAddClient = (redirectTo = 'trading-clients') => {
-        // Forms make API calls directly; this handles post-save navigation
+    const handleActionSuccess = (message, redirectTo = 'trading-clients') => {
         fetchInitialData();
-        setView(redirectTo);
-        setToast({ message: 'Created successfully!', type: 'success' });
+        if (redirectTo) setView(redirectTo);
+        setToast({ message, type: 'success' });
+    };
+
+    const handleAddClient = (redirectTo = 'trading-clients') => {
+        handleActionSuccess('Created successfully!', redirectTo);
     };
 
     const handleAddTrade = async (newTradeData) => {
@@ -198,6 +203,9 @@ function App() {
 
                 <Route path="/edit" element={<ClientDetailsForm
                     initialData={selectedClient}
+                    onSave={() => handleActionSuccess(`${selectedClient?.role || 'User'} updated successfully`, 
+                        selectedClient?.role === 'ADMIN' ? 'admins' : 
+                        selectedClient?.role === 'BROKER' ? 'brokers' : 'trading-clients')}
                     onBack={() => {
                         const role = selectedClient?.role;
                         if (role === 'ADMIN') setView('admins');
@@ -213,7 +221,7 @@ function App() {
                 <Route path="/broker-m2m" element={<BrokerM2MPage />} />
                 <Route path="/active-positions" element={<ActivePositionsPage onNavigate={setView} />} />
                 <Route path="/funds" element={<TraderFundsPage onNavigate={setView} />} />
-                <Route path="/create-fund" element={<CreateFundForm onBack={() => setView('funds')} onSave={(data) => { console.log('Fund Saved:', data); setView('funds'); }} />} />
+                <Route path="/create-fund" element={<CreateFundForm onBack={() => setView('funds')} onSave={(data) => handleActionSuccess('Fund entry created successfully', 'funds')} />} />
                 <Route path="/active-trades" element={<ActiveTradesPage />} />
                 <Route path="/closed-trades" element={<ClosedTradesPage />} />
                 <Route path="/market-watch" element={<MarketWatchPage />} />
@@ -228,13 +236,15 @@ function App() {
                     onWithdrawClick={handleWithdraw}
                 />} />
 
-                <Route path="/create-client" element={<SimpleTraderForm onBack={() => setView('trading-clients')} onSave={() => handleAddClient('trading-clients')} />} />
-                <Route path="/create-admin" element={<SimpleAddUserForm role="Admin" onBack={() => setView('admins')} onSave={() => handleAddClient('admins')} />} />
-                <Route path="/create-broker" element={<AddBrokerForm onBack={() => setView('brokers')} onSave={() => handleAddClient('brokers')} />} />
+                <Route path="/create-client" element={<SimpleTraderForm onBack={() => setView('trading-clients')} onSave={() => handleActionSuccess('Client created successfully', 'trading-clients')} />} />
+                <Route path="/create-admin" element={<SimpleAddUserForm role="Admin" onBack={() => setView('admins')} onSave={() => handleActionSuccess('Admin created successfully', 'admins')} />} />
+                <Route path="/create-broker" element={<AddBrokerForm onBack={() => setView('brokers')} onSave={() => handleActionSuccess('Broker created successfully', 'brokers')} />} />
+                <Route path="/edit-broker/:id" element={<EditBrokerPage onSave={() => handleActionSuccess('Broker updated successfully', 'brokers')} onBack={() => setView('brokers')} />} />
+                <Route path="/view-broker/:id" element={<ViewBrokerPage onBack={() => setView('brokers')} />} />
                 <Route path="/broker-accounts" element={<ProtectedRoute viewId="broker-accounts"><BrokerAccountsPage /></ProtectedRoute>} />
                 
-                <Route path="/create-fund-deposit" element={<CreateFundForm onBack={() => setView('users')} onSave={(data) => { console.log('Deposit Saved:', data); setView('users'); }} mode="deposit" initialUser={selectedClient} />} />
-                <Route path="/create-fund-withdraw" element={<CreateFundForm onBack={() => setView('users')} onSave={(data) => { console.log('Withdraw Saved:', data); setView('users'); }} mode="withdraw" initialUser={selectedClient} />} />
+                <Route path="/create-fund-deposit" element={<CreateFundForm onBack={() => setView('users')} onSave={(data) => handleActionSuccess('Deposit successful', 'users')} mode="deposit" initialUser={selectedClient} />} />
+                <Route path="/create-fund-withdraw" element={<CreateFundForm onBack={() => setView('users')} onSave={(data) => handleActionSuccess('Withdrawal successful', 'users')} mode="withdraw" initialUser={selectedClient} />} />
                 
                 <Route path="/client-details" element={<ClientDetailPage
                     client={selectedClient}
