@@ -51,7 +51,7 @@ import VoiceModulationPage from './pages/voice/VoiceModulationPage';
 import ClientDetailsForm from './components/ClientDetailsForm';
 import Toast from './components/common/Toast';
 
-import { useAuth } from './context/AuthContext';
+import { useAuth, ROLES } from './context/AuthContext';
 import * as api from './services/api';
 
 function App() {

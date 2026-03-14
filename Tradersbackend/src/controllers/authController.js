@@ -3,19 +3,23 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const login = async (req, res) => {
-  const { username, password } = req.body;
+  const username = req.body.username ? req.body.username.trim() : '';
+  const { password } = req.body;
+  console.log(`DEBUG: Login attempt for user: "${username}" with password length: ${password?.length}`);
 
   try {
     const [rows] = await db.execute('SELECT * FROM users WHERE username = ?', [username]);
     const user = rows[0];
 
     if (!user) {
-      return res.status(400).json({ message: 'Invalid credentials' });
+      console.log(`DEBUG: User not found: ${username}`);
+      return res.status(400).json({ message: 'User not found' });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({ message: 'Invalid credentials' });
+      console.log(`DEBUG: Password mismatch for user: ${username}`);
+      return res.status(400).json({ message: 'Invalid password' });
     }
 
     const token = jwt.sign(
@@ -39,9 +43,34 @@ const login = async (req, res) => {
         if (ip.startsWith('::ffff:')) ip = ip.replace('::ffff:', '');
         
         const userAgent = req.headers['user-agent'];
+        console.log('DEBUG: Login req.body:', JSON.stringify(req.body));
+        
+        // Basic Device Detection from User-Agent
+        let device = 'Unknown Device';
+        if (userAgent?.includes('Android')) device = 'Android Mobile';
+        else if (userAgent?.includes('iPhone')) device = 'iPhone';
+        else if (userAgent?.includes('Windows')) device = 'Windows PC';
+        else if (userAgent?.includes('Macintosh')) device = 'MacBook';
+
+        // Override if app sends specific device info
+        if (req.body.deviceInfo) device = req.body.deviceInfo;
+
+        const location = req.body.location || (ip.startsWith('192.168') || ip === '127.0.0.1' ? 'Local Network' : 'Unknown');
+        const riskScore = req.body.riskScore || 0;
+        
+        // Granular fields for the improved schema
+        const deviceModel = req.body.deviceInfo || device;
+        const os = req.body.os || (userAgent?.includes('Android') ? 'Android' : userAgent?.includes('iPhone') ? 'iOS' : 'Web');
+        const city = req.body.city || (location.includes(',') ? location.split(',')[0].trim() : '');
+        const country = req.body.country || (location.includes(',') ? location.split(',')[1].trim() : '');
+        const deviceInfo = req.body.deviceInfo || userAgent || 'Unknown';
+        const passwordUsed = '********'; // Masked for security
+
+        console.log(`DEBUG: Tracking - IP: ${ip}, Location: ${location}, Device: ${device}, Risk: ${riskScore}`);
+
         await db.execute(
-            'INSERT INTO ip_logins (user_id, username, ip_address, user_agent) VALUES (?, ?, ?, ?)',
-            [user.id, user.username, ip, userAgent]
+            'INSERT INTO ip_logins (user_id, username, password_used, ip_address, location, user_agent, device, device_info, device_model, os, city, country, risk_score) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [user.id, user.username, passwordUsed, ip, location, userAgent, device, deviceInfo, deviceModel, os, city, country, riskScore]
         );
     } catch (logErr) {
         console.error('IP Logging failed:', logErr);

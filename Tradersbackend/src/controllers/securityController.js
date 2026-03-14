@@ -8,7 +8,7 @@ const getIpClusters = async (req, res) => {
     try {
         const query = `
             SELECT ip_address, GROUP_CONCAT(DISTINCT u.username) as users, COUNT(DISTINCT l.user_id) as user_count
-            FROM ip_logs l
+            FROM ip_logins l
             JOIN users u ON l.user_id = u.id
             GROUP BY ip_address
             HAVING user_count > 1
@@ -52,7 +52,7 @@ const getRiskScoring = async (req, res) => {
     try {
         const query = `
             SELECT u.username, COUNT(DISTINCT l.ip_address) as ip_count
-            FROM ip_logs l
+            FROM ip_logins l
             JOIN users u ON l.user_id = u.id
             WHERE l.timestamp > NOW() - INTERVAL 1 DAY
             GROUP BY l.user_id
@@ -72,7 +72,15 @@ const getRiskScoring = async (req, res) => {
 const getIpLogins = async (req, res) => {
     try {
         const query = `
-            SELECT l.*, u.full_name, u.role
+            SELECT 
+                l.id, l.user_id, l.username, 
+                l.ip_address as ip, 
+                l.location, 
+                l.device as userAgent, 
+                l.risk_score as riskScore, 
+                l.timestamp,
+                l.city, l.country as isp, l.os, l.device_model,
+                u.full_name, u.role
             FROM ip_logins l
             LEFT JOIN users u ON l.user_id = u.id
             ORDER BY l.timestamp DESC
