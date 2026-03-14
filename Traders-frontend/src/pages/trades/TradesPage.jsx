@@ -1,27 +1,43 @@
 import React, { useState, useEffect } from 'react';
 import { Download } from 'lucide-react';
+import { getTrades } from '../../services/api';
 
-const TradesPage = ({ trades = [], onCreateClick }) => {
-    const [displayedTrades, setDisplayedTrades] = useState(trades);
+const TradesPage = ({ onCreateClick }) => {
+    const [displayedTrades, setDisplayedTrades] = useState([]);
+    const [allTrades, setAllTrades] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [selectedTrades, setSelectedTrades] = useState([]);
 
-    // Sync displayed trades when props change
-    useEffect(() => {
-        setDisplayedTrades(trades);
-    }, [trades]);
-
-    // Search State
     const [filters, setFilters] = useState({
-        fromDate: '',
-        toDate: '',
-        id: '',
-        scrip: '',
-        segment: 'All',
-        userId: '',
-        buyRate: '',
-        sellRate: '',
-        lots: ''
+        fromDate: '', toDate: '', id: '', scrip: '', segment: 'All',
+        userId: '', buyRate: '', sellRate: '', lots: ''
     });
+
+    useEffect(() => { fetchTrades(); }, []);
+
+    const fetchTrades = async () => {
+        setLoading(true);
+        try {
+            const data = await getTrades();
+            const mapped = data.map(t => ({
+                id: t.id,
+                scrip: t.symbol,
+                segment: t.segment || 'MCX',
+                userId: `${t.user_id}: ${t.username || ''}`,
+                buyRate: t.type === 'BUY' ? t.entry_price : (t.exit_price || '-'),
+                sellRate: t.type === 'SELL' ? t.entry_price : (t.exit_price || '-'),
+                lots: t.qty,
+                boughtAt: t.created_at ? new Date(t.created_at).toLocaleString() : '-',
+                soldAt: t.closed_at ? new Date(t.closed_at).toLocaleString() : '-',
+            }));
+            setAllTrades(mapped);
+            setDisplayedTrades(mapped);
+        } catch (err) {
+            console.error('Failed to fetch trades:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleFilterChange = (e) => {
         const { name, value } = e.target;
@@ -29,32 +45,19 @@ const TradesPage = ({ trades = [], onCreateClick }) => {
     };
 
     const handleSearch = () => {
-        const filtered = trades.filter(trade => {
+        const filtered = allTrades.filter(trade => {
             const matchId = filters.id ? trade.id.toString().includes(filters.id) : true;
-            const matchScrip = filters.scrip ? trade.symbol?.toLowerCase().includes(filters.scrip.toLowerCase()) : true;
+            const matchScrip = filters.scrip ? trade.scrip?.toLowerCase().includes(filters.scrip.toLowerCase()) : true;
             const matchSegment = filters.segment !== 'All' ? trade.segment === filters.segment : true;
-            const matchUser = filters.userId ? trade.user_id?.toString().includes(filters.userId) : true;
-            const matchBuy = filters.buyRate ? trade.entry_price?.toString().includes(filters.buyRate) : true;
-            const matchSell = filters.sellRate ? trade.exit_price?.toString().includes(filters.sellRate) : true;
-            const matchLots = filters.lots ? trade.qty?.toString().includes(filters.lots) : true;
-            return matchId && matchScrip && matchSegment && matchUser && matchBuy && matchSell && matchLots;
+            const matchUser = filters.userId ? trade.userId?.toString().includes(filters.userId) : true;
+            return matchId && matchScrip && matchSegment && matchUser;
         });
         setDisplayedTrades(filtered);
     };
 
     const handleReset = () => {
-        setFilters({
-            fromDate: '',
-            toDate: '',
-            id: '',
-            scrip: '',
-            segment: 'All',
-            userId: '',
-            buyRate: '',
-            sellRate: '',
-            lots: ''
-        });
-        setDisplayedTrades(trades);
+        setFilters({ fromDate: '', toDate: '', id: '', scrip: '', segment: 'All', userId: '', buyRate: '', sellRate: '', lots: '' });
+        setDisplayedTrades(allTrades);
     };
 
     const handleExport = () => {
@@ -256,7 +259,7 @@ const TradesPage = ({ trades = [], onCreateClick }) => {
                 {/* Showing items count */}
                 <div className="px-6 py-4 bg-[#151c2c] border-b border-white/10">
                     <span className="text-slate-400 text-sm">
-                        Showing <b className="text-white">{displayedTrades.length}</b> of <b className="text-white">{trades.length}</b> items.
+                        Showing <b className="text-white">{displayedTrades.length}</b> of <b className="text-white">{allTrades.length}</b> items.
                     </span>
                 </div>
 
@@ -301,14 +304,14 @@ const TradesPage = ({ trades = [], onCreateClick }) => {
                                             {/* Actions placeholder */}
                                         </td>
                                         <td className="px-4 py-4 text-white">{trade.id}</td>
-                                        <td className="px-4 py-4 text-[#00BCD4] font-bold">{trade.symbol}</td>
-                                        <td className="px-4 py-4">{trade.type || 'NSE'}</td>
-                                        <td className="px-4 py-4 font-mono">{trade.username || trade.user_id}</td>
-                                        <td className="px-4 py-4 font-mono text-green-400">{trade.entry_price}</td>
-                                        <td className="px-4 py-4 font-mono text-red-400">{trade.exit_price || '-'}</td>
-                                        <td className="px-4 py-4 font-bold">{trade.qty}</td>
-                                        <td className="px-4 py-4 text-xs">{new Date(trade.created_at).toLocaleString()}</td>
-                                        <td className="px-4 py-4 text-xs">{trade.closed_at ? new Date(trade.closed_at).toLocaleString() : '-'}</td>
+                                        <td className="px-4 py-4 text-[#00BCD4] font-bold">{trade.scrip}</td>
+                                        <td className="px-4 py-4">{trade.segment}</td>
+                                        <td className="px-4 py-4 font-mono">{trade.userId}</td>
+                                        <td className="px-4 py-4 font-mono text-green-400">{trade.buyRate}</td>
+                                        <td className="px-4 py-4 font-mono text-red-400">{trade.sellRate}</td>
+                                        <td className="px-4 py-4 font-bold">{trade.lots}</td>
+                                        <td className="px-4 py-4 text-xs">{trade.boughtAt}</td>
+                                        <td className="px-4 py-4 text-xs">{trade.soldAt}</td>
                                     </tr>
                                 ))
                             ) : (

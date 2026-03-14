@@ -32,30 +32,34 @@ const KiteDashboard = () => {
         return () => clearInterval(interval);
     }, []);
 
+    const kiteGet = (path) => {
+        const token = localStorage.getItem('traders_token');
+        return fetch(path, { headers: { Authorization: `Bearer ${token}` } }).then(res => res.json());
+    };
+
     const fetchKiteData = async () => {
         try {
-            // In a real scenario, we might need to handle token exchange first if not authenticated
             const [profileData, marginData, holdingsData, positionsData, ordersData, tradesData] = await Promise.all([
-                fetch('/api/kite/profile').then(res => res.json()),
-                fetch('/api/kite/margins').then(res => res.json()),
-                fetch('/api/kite/holdings').then(res => res.json()),
-                fetch('/api/kite/positions').then(res => res.json()),
-                fetch('/api/kite/orders').then(res => res.json()),
-                fetch('/api/kite/trades').then(res => res.json())
+                kiteGet('/api/kite/profile'),
+                kiteGet('/api/kite/margins'),
+                kiteGet('/api/kite/holdings'),
+                kiteGet('/api/kite/positions'),
+                kiteGet('/api/kite/orders'),
+                kiteGet('/api/kite/trades')
             ]);
 
             setProfile(profileData);
             setMargins(marginData);
-            setHoldings(holdingsData || []);
-            setPositions(positionsData?.net || []);
-            setOrders(ordersData || []);
-            setTrades(tradesData || []);
+            setHoldings(Array.isArray(holdingsData) ? holdingsData : []);
+            setPositions(Array.isArray(positionsData?.net) ? positionsData.net : []);
+            setOrders(Array.isArray(ordersData) ? ordersData : []);
+            setTrades(Array.isArray(tradesData) ? tradesData : []);
 
             // Fetch Quotes for Market Watch (example default instruments)
             const watchInstruments = ['NSE:RELIANCE', 'NSE:TCS', 'NSE:HDFCBANK', 'NSE:INFY'];
-            const quotesData = await fetch(`/api/kite/quote?i=${watchInstruments.join(',')}`).then(res => res.json());
-            setMarketWatch(quotesData || {});
-            
+            const quotesData = await kiteGet(`/api/kite/quote?i=${watchInstruments.join(',')}`);
+            setMarketWatch(quotesData && typeof quotesData === 'object' && !quotesData.message ? quotesData : {});
+
             setError(null);
         } catch (err) {
             console.error('Failed to fetch Kite data:', err);
@@ -96,8 +100,8 @@ const KiteDashboard = () => {
                         </div>
                         <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total P&L</span>
                     </div>
-                    <div className={`text-2xl font-bold ${holdings.reduce((a, b) => a + b.pnl, 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        ₹{holdings.reduce((a, b) => a + b.pnl, 0).toLocaleString()}
+                    <div className={`text-2xl font-bold ${holdings.reduce((a, b) => a + (b.pnl || 0), 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        ₹{holdings.reduce((a, b) => a + (b.pnl || 0), 0).toLocaleString()}
                     </div>
                     <div className="mt-2 text-[11px] text-slate-400">Current Day</div>
                 </div>

@@ -8,9 +8,13 @@ require('dotenv').config();
 const app = express();
 app.set('trust proxy', true);
 const server = http.createServer(app);
+const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
+  : ['http://localhost:5173', 'http://localhost:3000'];
+
 const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin: ALLOWED_ORIGINS,
     methods: ["GET", "POST"]
   }
 });
@@ -29,10 +33,11 @@ const portfolioRoutes = require('./routes/portfolioRoutes');
 const supportRoutes = require('./routes/supportRoutes');
 const aiRoutes = require('./routes/aiRoutes');
 const kiteRoutes = require('./routes/kiteRoutes');
+const bankRoutes = require('./routes/bankRoutes');
 const { logIp } = require('./middleware/logger');
 
 // Middleware
-app.use(cors());
+app.use(cors({ origin: ALLOWED_ORIGINS, credentials: true }));
 app.use(express.json());
 app.use(logIp); // Log IP for every authenticated request
 
@@ -55,6 +60,7 @@ app.use('/api/portfolio', portfolioRoutes);
 app.use('/api/support', supportRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/kite', kiteRoutes);
+app.use('/api/bank', bankRoutes);
 
 // Routes Placeholder
 app.get('/', (req, res) => {

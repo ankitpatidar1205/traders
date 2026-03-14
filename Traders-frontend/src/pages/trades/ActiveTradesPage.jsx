@@ -7,6 +7,8 @@ const ActiveTradesPage = () => {
     const { prices } = useMarket();
     const [trades, setTrades] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [view, setView] = useState('list');
+    const [selectedTrade, setSelectedTrade] = useState(null);
     useEffect(() => {
         fetchTrades();
     }, []);

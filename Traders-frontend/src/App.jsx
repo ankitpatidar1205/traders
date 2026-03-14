@@ -51,7 +51,7 @@ import VoiceModulationPage from './pages/voice/VoiceModulationPage';
 import ClientDetailsForm from './components/ClientDetailsForm';
 import Toast from './components/common/Toast';
 
-import { useAuth } from './context/AuthContext';
+import { useAuth, ROLES } from './context/AuthContext';
 import * as api from './services/api';
 
 function App() {
@@ -118,10 +118,10 @@ function App() {
         }
     };
 
-    const handleAddClient = () => {
+    const handleAddClient = (redirectTo = 'trading-clients') => {
         // Forms make API calls directly; this handles post-save navigation
         fetchInitialData();
-        setView('users');
+        setView(redirectTo);
         setToast({ message: 'Created successfully!', type: 'success' });
     };
 
@@ -196,7 +196,15 @@ function App() {
                     }}
                 />} />
 
-                <Route path="/edit" element={<ClientDetailsForm onBack={() => setView('users')} />} />
+                <Route path="/edit" element={<ClientDetailsForm
+                    initialData={selectedClient}
+                    onBack={() => {
+                        const role = selectedClient?.role;
+                        if (role === 'ADMIN') setView('admins');
+                        else if (role === 'BROKER') setView('brokers');
+                        else setView('trading-clients');
+                    }}
+                />} />
                 <Route path="/accounts" element={<ProtectedRoute viewId="accounts"><AccountsPage /></ProtectedRoute>} />
                 <Route path="/banned" element={<ProtectedRoute viewId="banned"><BannedLimitOrdersPage /></ProtectedRoute>} />
                 <Route path="/bank" element={<ProtectedRoute viewId="bank"><BankDetailsPage /></ProtectedRoute>} />
@@ -220,9 +228,9 @@ function App() {
                     onWithdrawClick={handleWithdraw}
                 />} />
 
-                <Route path="/create-client" element={<SimpleTraderForm onBack={() => setView('users')} onSave={handleAddClient} />} />
-                <Route path="/create-admin" element={<SimpleAddUserForm role="Admin" onBack={() => setView('users')} onSave={handleAddClient} />} />
-                <Route path="/create-broker" element={<AddBrokerForm onBack={() => setView('users')} onSave={handleAddClient} />} />
+                <Route path="/create-client" element={<SimpleTraderForm onBack={() => setView('trading-clients')} onSave={() => handleAddClient('trading-clients')} />} />
+                <Route path="/create-admin" element={<SimpleAddUserForm role="Admin" onBack={() => setView('admins')} onSave={() => handleAddClient('admins')} />} />
+                <Route path="/create-broker" element={<AddBrokerForm onBack={() => setView('brokers')} onSave={() => handleAddClient('brokers')} />} />
                 <Route path="/broker-accounts" element={<ProtectedRoute viewId="broker-accounts"><BrokerAccountsPage /></ProtectedRoute>} />
                 
                 <Route path="/create-fund-deposit" element={<CreateFundForm onBack={() => setView('users')} onSave={(data) => { console.log('Deposit Saved:', data); setView('users'); }} mode="deposit" initialUser={selectedClient} />} />
@@ -235,8 +243,9 @@ function App() {
                     onLogout={handleLogout}
                 />} />
 
-                <Route path="/admins" element={<ProtectedRoute viewId="admins"><UsersPage onNavigate={setView} roleFilter="ADMIN" /></ProtectedRoute>} />
-                <Route path="/trading-clients" element={<ProtectedRoute viewId="trading-clients"><UsersPage onNavigate={setView} roleFilter="BROKER" /></ProtectedRoute>} />
+                <Route path="/admins" element={<ProtectedRoute viewId="admins"><UsersPage onNavigate={(v, row) => { if (row) setSelectedClient(row); setView(v); }} roleFilter="ADMIN" /></ProtectedRoute>} />
+                <Route path="/brokers" element={<ProtectedRoute viewId="users"><UsersPage onNavigate={(v, row) => { if (row) setSelectedClient(row); setView(v); }} roleFilter="BROKER" /></ProtectedRoute>} />
+                <Route path="/trading-clients" element={<ProtectedRoute viewId="trading-clients"><UsersPage onNavigate={(v, row) => { if (row) setSelectedClient(row); setView(v); }} roleFilter="BROKER" /></ProtectedRoute>} />
                 <Route path="/new-client-bank" element={<ProtectedRoute viewId="new-client-bank"><NewClientBankDetailsPage /></ProtectedRoute>} />
                 <Route path="/create-trade" element={<CreateTradeForm onSave={handleAddTrade} onBack={() => setView('trades')} onLogout={handleLogout} onNavigate={setView} />} />
                 <Route path="/change-password" element={<ChangePasswordPage />} />

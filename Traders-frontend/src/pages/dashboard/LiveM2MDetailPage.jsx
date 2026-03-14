@@ -1,7 +1,40 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft } from 'lucide-react';
+import { getLiveM2M } from '../../services/api';
 
 const LiveM2MDetailPage = ({ selectedClient, onBack, onClientClick }) => {
+    const [subClients, setSubClients] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const data = await getLiveM2M();
+                // Group by user to build sub-client rows
+                const grouped = (data || []).reduce((acc, t) => {
+                    const key = `${t.user_id} : ${t.username}`;
+                    if (!acc[key]) acc[key] = { id: key, ledger: 0, m2m: 0, activePL: 0, trades: 0, margin: 0, holding: 0 };
+                    acc[key].trades += 1;
+                    acc[key].activePL += parseFloat(t.live_pnl || 0);
+                    acc[key].margin += parseFloat(t.margin_used || 0);
+                    return acc;
+                }, {});
+                setSubClients(Object.values(grouped).map(c => ({
+                    ...c,
+                    ledger: c.ledger.toFixed(2),
+                    m2m: c.m2m.toFixed(2),
+                    activePL: c.activePL.toFixed(2),
+                    margin: c.margin.toFixed(2),
+                    holding: '0',
+                })));
+            } catch (err) {
+                console.error('Failed to fetch M2M detail:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
+    }, [selectedClient]);
     const StatCard = ({ title, data }) => (
         <div className="bg-[#1f283e] rounded-md shadow-2xl relative mt-10 mb-6">
             {/* Offset Header */}
@@ -33,19 +66,6 @@ const LiveM2MDetailPage = ({ selectedClient, onBack, onClientClick }) => {
             </div>
         </div>
     );
-
-    const subClients = [
-        { id: '3703274 : Sweta namdev', ledger: '2941.98', m2m: '2935.33', activePL: '-6.65', trades: '2', margin: '2.43', holding: '0', segment: 'MCX' },
-        { id: '3703725 : Namdevji', ledger: '2556.97', m2m: '2534.74', activePL: '-22.23', trades: '3', margin: '7.59', holding: '0', segment: 'NSE Future' },
-        { id: '3703766 : Vinita jain', ledger: '631456.33', m2m: '617196.33', activePL: '-13760', trades: '2', margin: '15000', holding: '75000', segment: 'Options' },
-        { id: '3703942 : Manoj shrivastav', ledger: '32.66', m2m: '77.61', activePL: '44.95', trades: '1', margin: '14.66', holding: '25000', segment: 'NSE Future' },
-        { id: '3704249 : Sajjan', ledger: '19126.93', m2m: '16816.93', activePL: '-2310', trades: '2', margin: '4410.45', holding: '50000', segment: 'MCX' },
-        { id: '3704266 : Pankaj', ledger: '55090.94', m2m: '53190.94', activePL: '-2160', trades: '1', margin: '5000', holding: '25000', segment: 'Comex' },
-        { id: '3704330 : Kamlesh', ledger: '6411.15', m2m: '5671.15', activePL: '-700', trades: '2', margin: '1000', holding: '6000', segment: 'Forex' },
-        { id: '3704395 : Jitu0', ledger: '107923.06', m2m: '102088.06', activePL: '-5515', trades: '3', margin: '15000', holding: '140000', segment: 'Options' },
-        { id: '3704402 : Vinay sharma', ledger: '12620.38', m2m: '13495.38', activePL: '875', trades: '1', margin: '5000', holding: '25000', segment: 'Crypto' },
-        { id: '3704468 : Rakesh', ledger: '8562.18', m2m: '8370.71', activePL: '-191.47', trades: '21', margin: '80.02', holding: '475000', segment: 'MCX' },
-    ];
 
     const totals = subClients.reduce((acc, c) => ({
         ledger: acc.ledger + parseFloat(c.ledger),
@@ -129,6 +149,11 @@ const LiveM2MDetailPage = ({ selectedClient, onBack, onClientClick }) => {
                                 </tr>
                             </thead>
                             <tbody className="text-[14px]">
+                                {loading ? (
+                                    <tr><td colSpan="7" className="px-4 py-10 text-center text-slate-500">Loading...</td></tr>
+                                ) : subClients.length === 0 ? (
+                                    <tr><td colSpan="7" className="px-4 py-10 text-center text-slate-500">No active trades found.</td></tr>
+                                ) : null}
                                 {subClients.map((client, index) => (
                                     <tr key={index} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
                                         <td

@@ -54,7 +54,7 @@ const placeOrder = async (req, res) => {
  * Get Trades by Status (Active, Closed, Deleted)
  */
 const getTrades = async (req, res) => {
-    const { status } = req.query; // OPEN, CLOSED, DELETED, CANCELLED
+    const { status, user_id } = req.query; // OPEN, CLOSED, DELETED, CANCELLED
     try {
         let query = 'SELECT t.*, u.username FROM trades t JOIN users u ON t.user_id = u.id WHERE 1=1';
         const params = [];
@@ -69,8 +69,12 @@ const getTrades = async (req, res) => {
             params.push(req.query.is_pending === 'true' || req.query.is_pending === '1' ? 1 : 0);
         }
 
-        // Apply role hierarchy filtering
-        if (req.user.role !== 'SUPERADMIN') {
+        // Filter by specific user_id (for client detail views)
+        if (user_id) {
+            query += ' AND t.user_id = ?';
+            params.push(user_id);
+        } else if (req.user.role !== 'SUPERADMIN') {
+            // Apply role hierarchy filtering only when not filtering by specific user
             query += ' AND (u.id = ? OR u.parent_id = ?)';
             params.push(req.user.id, req.user.id);
         }

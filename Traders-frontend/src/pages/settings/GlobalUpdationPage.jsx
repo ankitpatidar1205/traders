@@ -4,17 +4,41 @@ import {
     CheckCircle2, Search, Activity, RotateCcw, ShieldAlert, Cpu, Lock, UserCheck,
     Database, MapPin, X, Info, Layers
 } from 'lucide-react';
+import { globalBatchUpdate } from '../../services/api';
 
 const GlobalUpdationPage = () => {
     const [step, setStep] = useState(1);
     const [isSimulating, setIsSimulating] = useState(false);
+    const [isExecuting, setIsExecuting] = useState(false);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [execResult, setExecResult] = useState(null);
     const [selection, setSelection] = useState({
         target: 'All Users',
         segment: 'MCX',
         parameter: 'Brokerage',
         newValue: ''
     });
+
+    const executeInjection = async () => {
+        setIsExecuting(true);
+        try {
+            const result = await globalBatchUpdate({
+                target: selection.target,
+                segment: selection.segment,
+                parameter: selection.parameter,
+                value: selection.newValue,
+            });
+            setExecResult({ success: true, message: result?.message || 'Batch update applied successfully' });
+            setShowConfirmModal(false);
+            setStep(1);
+            setSelection({ target: 'All Users', segment: 'MCX', parameter: 'Brokerage', newValue: '' });
+        } catch (err) {
+            setExecResult({ success: false, message: err.message || 'Execution failed' });
+            setShowConfirmModal(false);
+        } finally {
+            setIsExecuting(false);
+        }
+    };
 
     const steps = [
         { id: 1, title: 'Target', icon: Users, desc: 'Scope Selection' },
@@ -333,9 +357,18 @@ const GlobalUpdationPage = () => {
                                 </div>
                             </div>
 
+                            {execResult && (
+                                <div className={`p-4 rounded-xl text-sm font-bold text-center ${execResult.success ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
+                                    {execResult.message}
+                                </div>
+                            )}
                             <div className="flex flex-col gap-4">
-                                <button className="w-full bg-red-600 hover:bg-red-700 text-white font-black py-5 rounded-2xl uppercase tracking-[0.3em] text-sm shadow-xl shadow-red-600/20 active:scale-95 transition-all">
-                                    Execute Batch Injection
+                                <button
+                                    onClick={executeInjection}
+                                    disabled={isExecuting}
+                                    className="w-full bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-wait text-white font-black py-5 rounded-2xl uppercase tracking-[0.3em] text-sm shadow-xl shadow-red-600/20 active:scale-95 transition-all flex items-center justify-center gap-3"
+                                >
+                                    {isExecuting ? <><Activity className="w-4 h-4 animate-spin" /> Executing...</> : 'Execute Batch Injection'}
                                 </button>
                                 <button onClick={() => setShowConfirmModal(false)} className="w-full bg-[#2d3748] hover:bg-slate-700 text-white font-black py-5 rounded-2xl uppercase tracking-[0.3em] text-sm transition-all text-opacity-50 hover:text-opacity-100">
                                     Cancel & Return

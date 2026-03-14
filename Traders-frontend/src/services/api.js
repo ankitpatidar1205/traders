@@ -58,11 +58,20 @@ export const changePassword = async (newPassword) => {
     return handleResponse(res);
 };
 
-export const changeTransactionPassword = async (newPassword) => {
+export const changeTransactionPassword = async (newPassword, currentPassword) => {
     const res = await fetch(`${BASE_URL}/auth/change-transaction-password`, {
         method: 'POST',
         headers: getHeaders(),
-        body: JSON.stringify({ newPassword }),
+        body: JSON.stringify({ newPassword, currentPassword }),
+    });
+    return handleResponse(res);
+};
+
+export const verifyTransactionPassword = async (password) => {
+    const res = await fetch(`${BASE_URL}/auth/verify-transaction-password`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ password }),
     });
     return handleResponse(res);
 };
@@ -411,5 +420,86 @@ export const getIndices = async () => {
 
 export const getWatchlist = async () => {
     const res = await fetch(`${BASE_URL}/dashboard/watchlist`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const getLiveM2M = async () => {
+    const res = await fetch(`${BASE_URL}/dashboard/live-m2m`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const getBrokerM2M = async () => {
+    const res = await fetch(`${BASE_URL}/dashboard/broker-m2m`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const getHierarchyAccounts = async (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    const res = await fetch(`${BASE_URL}/accounts/hierarchy?${query}`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const getGroupTrades = async (filters = {}) => {
+    const query = new URLSearchParams(filters).toString();
+    const res = await fetch(`${BASE_URL}/trades/group?${query}`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const getTradeAudit = async () => {
+    const res = await fetch(`${BASE_URL}/security/trade-audit`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const globalBatchUpdate = async (data) => {
+    const res = await fetch(`${BASE_URL}/system/global-update`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify(data),
+    });
+    return handleResponse(res);
+};
+
+export const getNegativeBalances = async () => {
+    const res = await fetch(`${BASE_URL}/accounts/negative-alerts`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+// ─── BANK DETAILS ─────────────────────────────────────
+export const getBanks = async () => {
+    const res = await fetch(`${BASE_URL}/bank`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const createBank = async (data) => {
+    const res = await fetch(`${BASE_URL}/bank`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify(data),
+    });
+    return handleResponse(res);
+};
+
+export const updateBank = async (id, data) => {
+    const res = await fetch(`${BASE_URL}/bank/${id}`, {
+        method: 'PUT',
+        headers: getHeaders(),
+        body: JSON.stringify(data),
+    });
+    return handleResponse(res);
+};
+
+export const deleteBank = async (id) => {
+    const res = await fetch(`${BASE_URL}/bank/${id}`, {
+        method: 'DELETE',
+        headers: getHeaders(),
+    });
+    return handleResponse(res);
+};
+
+export const toggleBankStatus = async (id) => {
+    const res = await fetch(`${BASE_URL}/bank/${id}/toggle-status`, {
+        method: 'PATCH',
+        headers: getHeaders(),
+    });
     return handleResponse(res);
 };

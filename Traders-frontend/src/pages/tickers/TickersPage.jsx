@@ -47,9 +47,14 @@ const TickersPage = () => {
 
     const handleSave = async (e) => {
         e.preventDefault();
-        
+
         if (!formData.message) {
             showToast('Message is required', 'error');
+            return;
+        }
+
+        if (!formData.transactionPassword) {
+            showToast('Transaction password is required', 'error');
             return;
         }
 
@@ -58,6 +63,7 @@ const TickersPage = () => {
 
         setSubmitting(true);
         try {
+            await api.verifyTransactionPassword(formData.transactionPassword);
             await api.createTicker({
                 text: formData.message,
                 start_time: startTime,

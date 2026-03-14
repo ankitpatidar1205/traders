@@ -1,55 +1,68 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { getTrades, deleteTrade } from '../../services/api';
 
 const ClosedTradesPage = () => {
-    const [filters, setFilters] = useState({
-        timeDiff: '',
-        scrip: '',
-        username: ''
-    });
-
+    const [filters, setFilters] = useState({ timeDiff: '', scrip: '', username: '' });
     const [selectedTrades, setSelectedTrades] = useState([]);
-    const tradesData = [];
+    const [tradesData, setTradesData] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => { fetchTrades(); }, []);
+
+    const fetchTrades = async (params = {}) => {
+        setLoading(true);
+        try {
+            const data = await getTrades({ status: 'CLOSED', ...params });
+            setTradesData(data.map(t => ({
+                id: t.id,
+                scrip: t.symbol,
+                segment: t.segment || 'MCX',
+                userId: `${t.user_id}: ${t.username || ''}`,
+                buyRate: t.type === 'BUY' ? t.entry_price : t.exit_price,
+                sellRate: t.type === 'SELL' ? t.entry_price : t.exit_price,
+                lots: t.qty,
+                profitLoss: t.pnl,
+                timeDiff: t.closed_at && t.created_at ? Math.floor((new Date(t.closed_at) - new Date(t.created_at)) / 1000) + 's' : '-',
+                boughtAt: t.created_at ? new Date(t.created_at).toLocaleString() : '-',
+                soldAt: t.closed_at ? new Date(t.closed_at).toLocaleString() : '-',
+            })));
+        } catch (err) {
+            console.error('Failed to fetch closed trades:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleFilterChange = (e) => {
         const { name, value } = e.target;
         setFilters(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSearch = () => {
-        console.log('Search with filters:', filters);
-    };
+    const handleSearch = () => fetchTrades(filters);
 
     const handleReset = () => {
-        setFilters({
-            timeDiff: '',
-            scrip: '',
-            username: ''
-        });
+        setFilters({ timeDiff: '', scrip: '', username: '' });
+        fetchTrades();
     };
 
     const handleSelectAll = (e) => {
-        if (e.target.checked) {
-            setSelectedTrades(tradesData.map(trade => trade.id));
-        } else {
-            setSelectedTrades([]);
-        }
+        setSelectedTrades(e.target.checked ? tradesData.map(t => t.id) : []);
     };
 
     const handleSelectRow = (id) => {
-        if (selectedTrades.includes(id)) {
-            setSelectedTrades(selectedTrades.filter(tradeId => tradeId !== id));
-        } else {
-            setSelectedTrades([...selectedTrades, id]);
-        }
+        setSelectedTrades(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
     };
 
-    const handleDeleteTrades = () => {
-        if (selectedTrades.length === 0) {
-            alert('Please select trades to delete');
-            return;
+    const handleDeleteTrades = async () => {
+        if (selectedTrades.length === 0) return;
+        if (!window.confirm(`Delete ${selectedTrades.length} trade(s)?`)) return;
+        try {
+            await Promise.all(selectedTrades.map(id => deleteTrade(id)));
+            setSelectedTrades([]);
+            fetchTrades();
+        } catch (err) {
+            alert('Failed to delete: ' + err.message);
         }
-        console.log('Delete trades:', selectedTrades);
-        alert(`Deleting ${selectedTrades.length} trade(s)`);
     };
 
     return (
@@ -117,7 +130,7 @@ const ClosedTradesPage = () => {
                 {/* Showing items count */}
                 <div className="px-6 py-4 bg-[#151c2c] border-b border-white/10">
                     <span className="text-slate-400 text-sm">
-                        Showing <b className="text-white">{tradesData.length}</b> of <b className="text-white">{tradesData.length}</b> items.
+                        {loading ? 'Loading...' : <>Showing <b className="text-white">{tradesData.length}</b> items.</>}
                     </span>
                 </div>
 
