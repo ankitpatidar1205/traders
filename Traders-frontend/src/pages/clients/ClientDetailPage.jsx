@@ -706,6 +706,50 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
                                 </div>
                             </div>
 
+                            {/* Pending Orders Section */}
+                            <div className="bg-[#1a2035] rounded-sm p-6 border border-white/5">
+                                <h3 className="text-white text-[19px] font-normal mb-1">Pending Orders</h3>
+                                <p className="text-slate-400 text-[13px] mb-2 font-light italic">
+                                    {loading ? 'Loading...' : `Showing ${pendingOrders.length} items.`}
+                                </p>
+                                <div className="overflow-x-auto custom-scrollbar border border-white/10">
+                                    <table className="w-full border-collapse" style={{ minWidth: '1000px' }}>
+                                        <thead className="bg-[#202940]/50 border-b border-white/10 text-white text-[13px] font-medium">
+                                            <tr>
+                                                <th className="px-4 py-4 text-left">ID</th>
+                                                <th className="px-4 py-4 text-left">Type</th>
+                                                <th className="px-4 py-4 text-left">Qty / Lots</th>
+                                                <th className="px-4 py-4 text-left">Scrip</th>
+                                                <th className="px-4 py-4 text-left">Order Type</th>
+                                                <th className="px-4 py-4 text-left">Entry Price</th>
+                                                <th className="px-4 py-4 text-left">Date</th>
+                                                <th className="px-4 py-4 text-left">IP Address</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="text-[13px] text-slate-300">
+                                            {pendingOrders.length === 0 ? (
+                                                <tr><td colSpan="8" className="px-4 py-8 text-slate-500 font-light">{loading ? 'Loading...' : 'No records found'}</td></tr>
+                                            ) : pendingOrders.map((order) => (
+                                                <tr key={order.id} className="hover:bg-white/[0.03] transition-colors border-b border-white/5">
+                                                    <td className="px-4 py-3">{order.id}</td>
+                                                    <td className="px-4 py-3">
+                                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${order.type === 'BUY' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                                                            {order.type}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-4 py-3">{order.qty}</td>
+                                                    <td className="px-4 py-3 font-bold text-white">{order.symbol}</td>
+                                                    <td className="px-4 py-3">{order.order_type || 'LIMIT'}</td>
+                                                    <td className="px-4 py-3 font-mono">{order.entry_price}</td>
+                                                    <td className="px-4 py-3 text-[11px]">{order.entry_time || order.created_at || '-'}</td>
+                                                    <td className="px-4 py-3 text-[11px] font-mono">{showIp(order.trade_ip)}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
                             {/* Completed Orders Section */}
                             <div className="bg-[#1a2035] rounded-sm p-6 border border-white/5">
                                 <h3 className="text-white text-[19px] font-normal mb-1">Completed Orders</h3>
@@ -753,50 +797,6 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
                                                     <td className="px-4 py-3 text-[11px]">{trade.exit_time || '-'}</td>
                                                     <td className="px-4 py-3 text-[11px] font-mono">{showIp(trade.trade_ip)}</td>
                                                     <td className="px-4 py-3 text-[11px] font-mono">{showIp(trade.exit_ip || trade.trade_ip)}</td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-
-                            {/* Pending Orders Section */}
-                            <div className="bg-[#1a2035] rounded-sm p-6 border border-white/5">
-                                <h3 className="text-white text-[19px] font-normal mb-1">Pending Orders</h3>
-                                <p className="text-slate-400 text-[13px] mb-2 font-light italic">
-                                    {loading ? 'Loading...' : `Showing ${pendingOrders.length} items.`}
-                                </p>
-                                <div className="overflow-x-auto custom-scrollbar border border-white/10">
-                                    <table className="w-full border-collapse" style={{ minWidth: '1000px' }}>
-                                        <thead className="bg-[#202940]/50 border-b border-white/10 text-white text-[13px] font-medium">
-                                            <tr>
-                                                <th className="px-4 py-4 text-left">ID</th>
-                                                <th className="px-4 py-4 text-left">Type</th>
-                                                <th className="px-4 py-4 text-left">Qty / Lots</th>
-                                                <th className="px-4 py-4 text-left">Scrip</th>
-                                                <th className="px-4 py-4 text-left">Order Type</th>
-                                                <th className="px-4 py-4 text-left">Entry Price</th>
-                                                <th className="px-4 py-4 text-left">Date</th>
-                                                <th className="px-4 py-4 text-left">IP Address</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="text-[13px] text-slate-300">
-                                            {pendingOrders.length === 0 ? (
-                                                <tr><td colSpan="8" className="px-4 py-8 text-slate-500 font-light">{loading ? 'Loading...' : 'No records found'}</td></tr>
-                                            ) : pendingOrders.map((order) => (
-                                                <tr key={order.id} className="hover:bg-white/[0.03] transition-colors border-b border-white/5">
-                                                    <td className="px-4 py-3">{order.id}</td>
-                                                    <td className="px-4 py-3">
-                                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${order.type === 'BUY' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
-                                                            {order.type}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-4 py-3">{order.qty}</td>
-                                                    <td className="px-4 py-3 font-bold text-white">{order.symbol}</td>
-                                                    <td className="px-4 py-3">{order.order_type || 'LIMIT'}</td>
-                                                    <td className="px-4 py-3 font-mono">{order.entry_price}</td>
-                                                    <td className="px-4 py-3 text-[11px]">{order.entry_time || order.created_at || '-'}</td>
-                                                    <td className="px-4 py-3 text-[11px] font-mono">{showIp(order.trade_ip)}</td>
                                                 </tr>
                                             ))}
                                         </tbody>
