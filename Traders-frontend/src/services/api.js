@@ -239,8 +239,9 @@ export const rejectRequest = async (requestId, type) => {
 };
 
 // ─── IP / SECURITY ───────────────────────────────────
-export const getIpLogins = async () => {
-    const res = await fetch(`${BASE_URL}/security/ip-tracking`, { headers: getHeaders() });
+export const getIpLogins = async (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    const res = await fetch(`${BASE_URL}/security/ip-tracking?${query}`, { headers: getHeaders() });
     return handleResponse(res);
 };
 
