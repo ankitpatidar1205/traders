@@ -119,9 +119,12 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
         notifyPercentage: client?.notifyPercentage || '70',
         minTimeToBookProfit: client?.minTimeToBookProfit || '120',
         scalpingStopLoss: client?.scalpingStopLoss || 'Disabled',
+        banAllSegmentLimitOrder: client?.banAllSegmentLimitOrder || false,
 
         // 3. MCX Futures
         mcxTrading: client?.mcxTrading !== undefined ? client.mcxTrading : true,
+        banMcxLimitOrder: client?.banMcxLimitOrder || false,
+        mcxMinTimeToBookProfit: client?.mcxMinTimeToBookProfit || '120',
         mcxMinLot: client?.mcxMinLot || '1',
         mcxMaxLot: client?.mcxMaxLot || '100',
         mcxMaxLotScrip: client?.mcxMaxLotScrip || '1000',
@@ -170,6 +173,8 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
 
         // 4. Equity Futures
         equityTrading: client?.equityTrading !== undefined ? client.equityTrading : true,
+        banEquityLimitOrder: client?.banEquityLimitOrder || false,
+        equityMinTimeToBookProfit: client?.equityMinTimeToBookProfit || '120',
         equityBrokerage: client?.equityBrokerage || '800',
         equityMinLot: client?.equityMinLot || '1',
         equityMaxLot: client?.equityMaxLot || '100',
@@ -187,6 +192,8 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
         indexOptionsTrading: client?.indexOptionsTrading !== undefined ? client.indexOptionsTrading : true,
         equityOptionsTrading: client?.equityOptionsTrading !== undefined ? client.equityOptionsTrading : true,
         mcxOptionsTrading: client?.mcxOptionsTrading || false,
+        banOptionsLimitOrder: client?.banOptionsLimitOrder || false,
+        optionsMinTimeToBookProfit: client?.optionsMinTimeToBookProfit || '120',
         optionsIndexBrokerageType: client?.optionsIndexBrokerageType || 'per_lot',
         optionsIndexBrokerage: client?.optionsIndexBrokerage || '20.0000',
         optionsEquityBrokerageType: client?.optionsEquityBrokerageType || 'per_lot',
@@ -636,6 +643,7 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                             <CheckboxField label="Trade equity as units instead of lots." name="tradeEquityUnits" checked={formData.tradeEquityUnits} onChange={handleChange} />
                                             <CheckboxField label="Account Status" name="accountStatus" checked={formData.accountStatus} onChange={handleChange} />
                                             <CheckboxField label="Auto Close Trades if condition met" name="autoCloseTrades" checked={formData.autoCloseTrades} onChange={handleChange} />
+                                            <CheckboxField label="Ban All Segment Limit Order" name="banAllSegmentLimitOrder" checked={formData.banAllSegmentLimitOrder} onChange={handleChange} />
                                         </div>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 mt-4">
                                             <InputField label="auto-Close all active trades when the losses reach % of Ledger-balance" name="autoClosePercentage" value={formData.autoClosePercentage} onChange={handleChange} hint="Example: 95, will close when losses reach 95% of ledger balance" />
@@ -652,6 +660,8 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                         <SectionHeader title="MCX Futures:" />
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12">
                                             <CheckboxField label="MCX Trading" name="mcxTrading" checked={formData.mcxTrading} onChange={handleChange} />
+                                            <CheckboxField label="Ban All Segment Limit Order" name="banMcxLimitOrder" checked={formData.banMcxLimitOrder} onChange={handleChange} />
+                                            <InputField label="Min. Time to book profit (No. of Seconds)" name="mcxMinTimeToBookProfit" value={formData.mcxMinTimeToBookProfit} onChange={handleChange} hint="Example: 120, will hold the trade for 2 minutes before closing a trade in profit" />
                                             <InputField label="Minimum lot size required per single trade of MCX" name="mcxMinLot" value={formData.mcxMinLot} onChange={handleChange} />
                                             <InputField label="Maximum lot size allowed per single trade of MCX" name="mcxMaxLot" value={formData.mcxMaxLot} onChange={handleChange} />
                                             <InputField label="Maximum lot size allowed per script of MCX to be actively open at a time" name="mcxMaxLotScrip" value={formData.mcxMaxLotScrip} onChange={handleChange} />
@@ -727,6 +737,8 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                         <SectionHeader title="Equity Futures:" />
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12">
                                             <CheckboxField label="Equity Trading" name="equityTrading" checked={formData.equityTrading} onChange={handleChange} />
+                                            <CheckboxField label="Ban All Segment Limit Order" name="banEquityLimitOrder" checked={formData.banEquityLimitOrder} onChange={handleChange} />
+                                            <InputField label="Min. Time to book profit (No. of Seconds)" name="equityMinTimeToBookProfit" value={formData.equityMinTimeToBookProfit} onChange={handleChange} hint="Example: 120, will hold the trade for 2 minutes before closing a trade in profit" />
                                             <InputField label="Equity brokerage Per Crore" name="equityBrokerage" value={formData.equityBrokerage} onChange={handleChange} />
                                             <InputField label="Minimum lot size required per single trade of Equity" name="equityMinLot" value={formData.equityMinLot} onChange={handleChange} />
                                             <InputField label="Maximum lot size allowed per single trade of Equity" name="equityMaxLot" value={formData.equityMaxLot} onChange={handleChange} />
@@ -758,6 +770,14 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                         </div>
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12">
+                                            <div className="mb-10 px-2">
+                                                <label className="block text-[15px] mb-2 font-normal leading-tight text-[#bcc0cf]">Ban All Segment Limit Order</label>
+                                                <label className="flex items-center gap-3 cursor-pointer py-1.5">
+                                                    <input type="checkbox" name="banOptionsLimitOrder" checked={formData.banOptionsLimitOrder} onChange={handleChange} className="w-5 h-5 rounded accent-[#3b82f6] cursor-pointer" />
+                                                    <span className="text-[15px] text-white">{formData.banOptionsLimitOrder ? 'Enabled' : 'Disabled'}</span>
+                                                </label>
+                                            </div>
+                                            <InputField label="Min. Time to book profit (No. of Seconds)" name="optionsMinTimeToBookProfit" value={formData.optionsMinTimeToBookProfit} onChange={handleChange} hint="Example: 120, will hold the trade for 2 minutes before closing a trade in profit" />
                                             <SelectField label="Options Index Brokerage Type" name="optionsIndexBrokerageType" value={formData.optionsIndexBrokerageType} onChange={handleChange} options={[{ value: 'per_lot', label: 'Per Lot Basis' }, { value: 'per_crore', label: 'Per Crore Basis' }]} />
                                             <InputField label="Options Index brokerage" name="optionsIndexBrokerage" value={formData.optionsIndexBrokerage} onChange={handleChange} />
 

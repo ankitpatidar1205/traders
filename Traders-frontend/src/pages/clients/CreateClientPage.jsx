@@ -105,9 +105,12 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
         notifyPercentage: '70',
         minTimeToBookProfit: '120',
         scalpingStopLoss: 'Disabled',
+        banAllSegmentLimitOrder: false,
 
         // 3. MCX Futures
         mcxTrading: true,
+        banMcxLimitOrder: false,
+        mcxMinTimeToBookProfit: '120',
         mcxMinLot: '1',
         mcxMaxLot: '100',
         mcxMaxLotScrip: '1000',
@@ -155,6 +158,8 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
 
         // 4. Equity Futures
         equityTrading: true,
+        banEquityLimitOrder: false,
+        equityMinTimeToBookProfit: '120',
         equityBrokerage: '800',
         equityMinLot: '1',
         equityMaxLot: '100',
@@ -172,6 +177,8 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
         indexOptionsTrading: true,
         equityOptionsTrading: true,
         mcxOptionsTrading: false,
+        banOptionsLimitOrder: false,
+        optionsMinTimeToBookProfit: '120',
         optionsIndexBrokerageType: 'per_lot',
         optionsIndexBrokerage: '20',
         optionsEquityBrokerageType: 'per_lot',
@@ -575,25 +582,6 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                                 placeholder=""
                                                 hint="Optional"
                                             />
-                                            <InputField
-                                                label="Min. Time to book profit (No. of Seconds)"
-                                                name="minTimeToBookProfit"
-                                                value={formData.minTimeToBookProfit}
-                                                onChange={handleChange}
-                                                placeholder="120"
-                                                hint="Example: 120, will hold the trade for 2 minutes before closing a trade in profit"
-                                            />
-                                            <SelectField
-                                                label="Scalping Stop Loss"
-                                                name="scalpingStopLoss"
-                                                value={formData.scalpingStopLoss}
-                                                onChange={handleChange}
-                                                options={[
-                                                    { value: 'Disabled', label: 'Disabled' },
-                                                    { value: 'Enabled', label: 'Enabled' }
-                                                ]}
-                                                hint="If Disabled, Stop Loss or Booking Loss can be done after Min. time of profit booking."
-                                            />
                                         </div>
                                     </fieldset>
 
@@ -610,11 +598,23 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                                 <CheckboxField label="Trade equity as units instead of lots." name="tradeEquityUnits" checked={formData.tradeEquityUnits} onChange={handleChange} />
                                                 <CheckboxField label="Account Status" name="accountStatus" checked={formData.accountStatus === 'Active'} onChange={(e) => setFormData(prev => ({ ...prev, accountStatus: e.target.checked ? 'Active' : 'Inactive' }))} />
                                                 <CheckboxField label="Auto Close Trades if condition met" name="autoCloseTrades" checked={formData.autoCloseTrades} onChange={handleChange} />
+                                                <CheckboxField label="Ban All Segment Limit Order" name="banAllSegmentLimitOrder" checked={formData.banAllSegmentLimitOrder} onChange={handleChange} />
                                             </div>
                                             <div className="space-y-0">
                                                 <InputField label="auto-Close all active trades when the losses reach % of Ledger-balance" name="autoClosePercentage" value={formData.autoClosePercentage} onChange={handleChange} placeholder="90" hint="Example: 95, will close when losses reach 95% of ledger balance" />
                                                 <InputField label="Notify client when the losses reach % of Ledger-balance" name="notifyPercentage" value={formData.notifyPercentage} onChange={handleChange} placeholder="70" hint="Example: 70, will send notification to customer every 5-minutes until losses cross 70% of ledger balance" />
                                                 <InputField label="Min. Time to book profit (No. of Seconds)" name="minTimeToBookProfit" value={formData.minTimeToBookProfit} onChange={handleChange} placeholder="120" hint="Example: 120, will hold the trade for 2 minutes before closing a trade in profit" />
+                                                <SelectField
+                                                    label="Scalping Stop Loss"
+                                                    name="scalpingStopLoss"
+                                                    value={formData.scalpingStopLoss}
+                                                    onChange={handleChange}
+                                                    options={[
+                                                        { value: 'Disabled', label: 'Disabled' },
+                                                        { value: 'Enabled', label: 'Enabled' }
+                                                    ]}
+                                                    hint="If Disabled, Stop Loss or Booking Loss can be done after Min. time of profit booking."
+                                                />
                                             </div>
                                         </div>
                                     </fieldset>
@@ -634,6 +634,8 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
 
                                         {formData.mcxTrading && (
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 animate-in fade-in slide-in-from-top-2 duration-500">
+                                                <CheckboxField label="Ban All Segment Limit Order" name="banMcxLimitOrder" checked={formData.banMcxLimitOrder} onChange={handleChange} />
+                                                <InputField label="Min. Time to book profit (No. of Seconds)" name="mcxMinTimeToBookProfit" value={formData.mcxMinTimeToBookProfit} onChange={handleChange} placeholder="120" hint="Example: 120, will hold the trade for 2 minutes before closing a trade in profit" />
                                                 <InputField label="Minimum lot size required per single trade of MCX" name="mcxMinLot" value={formData.mcxMinLot} onChange={handleChange} placeholder="0" />
                                                 <InputField label="Maximum lot size allowed per single trade of MCX" name="mcxMaxLot" value={formData.mcxMaxLot} onChange={handleChange} placeholder="20" />
                                                 <InputField label="Maximum lot size allowed per script of MCX to be actively open at a time" name="mcxMaxLotScrip" value={formData.mcxMaxLotScrip} onChange={handleChange} placeholder="50" />
@@ -754,6 +756,8 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
 
                                         {formData.equityTrading && (
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 animate-in fade-in slide-in-from-top-2 duration-500">
+                                                <CheckboxField label="Ban All Segment Limit Order" name="banEquityLimitOrder" checked={formData.banEquityLimitOrder} onChange={handleChange} />
+                                                <InputField label="Min. Time to book profit (No. of Seconds)" name="equityMinTimeToBookProfit" value={formData.equityMinTimeToBookProfit} onChange={handleChange} placeholder="120" hint="Example: 120, will hold the trade for 2 minutes before closing a trade in profit" />
                                                 <InputField label="Equity Brokerage Per Crore" name="equityBrokerage" value={formData.equityBrokerage} onChange={handleChange} placeholder="800" />
                                                 <InputField label="Minimum lot size required per single trade of Equity" name="equityMinLot" value={formData.equityMinLot} onChange={handleChange} placeholder="0" />
                                                 <InputField label="Maximum lot size allowed per single trade of Equity" name="equityMaxLot" value={formData.equityMaxLot} onChange={handleChange} placeholder="50" />
@@ -797,6 +801,14 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
 
                                         {(formData.indexOptionsTrading || formData.equityOptionsTrading || formData.mcxOptionsTrading) && (
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 px-2 animate-in fade-in slide-in-from-top-2 duration-500">
+                                                <div className="mb-4 px-2">
+                                                    <label className="block text-sm mb-1 font-light" style={{ color: '#bcc0cf' }}>Ban All Segment Limit Order</label>
+                                                    <label className="flex items-center gap-3 cursor-pointer py-1">
+                                                        <input type="checkbox" name="banOptionsLimitOrder" checked={formData.banOptionsLimitOrder} onChange={handleChange} className="w-5 h-5 rounded accent-[#4caf50] cursor-pointer" />
+                                                        <span className="text-sm text-white">{formData.banOptionsLimitOrder ? 'Enabled' : 'Disabled'}</span>
+                                                    </label>
+                                                </div>
+                                                <InputField label="Min. Time to book profit (No. of Seconds)" name="optionsMinTimeToBookProfit" value={formData.optionsMinTimeToBookProfit} onChange={handleChange} placeholder="120" hint="Example: 120, will hold the trade for 2 minutes before closing a trade in profit" />
                                                 {/* Column 1 */}
                                                 <div className="space-y-0">
                                                     {formData.indexOptionsTrading && (

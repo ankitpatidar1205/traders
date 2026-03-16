@@ -283,7 +283,7 @@ const CreateTradeForm = ({ onSave, onBack, onLogout, onNavigate }) => {
                     />
                     <div className="mt-4">
                       <WhiteSelectField
-                        label="Category"
+                        label="Lot"
                         name="category"
                         value={formData.category}
                         onChange={handleChange}

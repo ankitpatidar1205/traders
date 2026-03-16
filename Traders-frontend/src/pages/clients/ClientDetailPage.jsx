@@ -20,6 +20,8 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
     const [pendingOrders, setPendingOrders] = useState([]);
     const [completedOrders, setCompletedOrders] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [pendingTab, setPendingTab] = useState('mcx');
+    const [showBackup, setShowBackup] = useState(false);
 
     // Fetch all client data on mount
     useEffect(() => {
@@ -138,6 +140,7 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
     };
 
     const showIp = (ip) => ip && ip !== '::1' && ip !== '127.0.0.1' ? ip : '152.58.28.60';
+    const fmtTime = (t) => { if (!t) return '-'; try { return new Date(t).toLocaleString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }); } catch { return t; } };
 
     const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString());
 
@@ -385,6 +388,165 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
                                 )}
                             </div>
 
+                            {/* Data Backup Button */}
+                            <div>
+                                <button
+                                    onClick={() => setShowBackup(!showBackup)}
+                                    className="w-full bg-[#00bcd4] hover:bg-[#00acc1] text-white font-bold py-3 px-6 rounded transition-all text-[12px] uppercase tracking-[0.2em] shadow-lg"
+                                >
+                                    {showBackup ? 'HIDE DATA BACKUP' : 'DATA BACKUP'}
+                                </button>
+                            </div>
+
+                            {/* Data Backup Section */}
+                            {showBackup && (
+                                <div className="bg-[#1a2035] rounded-sm p-6 border border-white/5 space-y-6">
+                                    <h3 className="text-white text-[19px] font-normal mb-4">Data Backup — {client?.full_name || client?.fullName || client?.username}</h3>
+
+                                    {/* Profile Info */}
+                                    <div className="bg-[#202940]/50 rounded p-4 border border-white/5">
+                                        <h4 className="text-cyan-400 text-sm font-bold uppercase tracking-wider mb-3">Profile Info</h4>
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                            <div><span className="text-slate-400">Username:</span> <span className="text-white ml-1">{profileData?.username || client?.username || '-'}</span></div>
+                                            <div><span className="text-slate-400">Name:</span> <span className="text-white ml-1">{profileData?.full_name || client?.full_name || '-'}</span></div>
+                                            <div><span className="text-slate-400">Role:</span> <span className="text-white ml-1">{profileData?.role || client?.role || '-'}</span></div>
+                                            <div><span className="text-slate-400">Status:</span> <span className="text-white ml-1">{profileData?.status || client?.status || '-'}</span></div>
+                                            <div><span className="text-slate-400">Mobile:</span> <span className="text-white ml-1">{profileData?.mobile || client?.mobile || '-'}</span></div>
+                                            <div><span className="text-slate-400">City:</span> <span className="text-white ml-1">{profileData?.city || client?.city || '-'}</span></div>
+                                            <div><span className="text-slate-400">Credit Limit:</span> <span className="text-white ml-1">{profileData?.credit_limit || client?.credit_limit || '-'}</span></div>
+                                            <div><span className="text-slate-400">Balance:</span> <span className="text-white ml-1">{profileData?.balance || client?.balance || '-'}</span></div>
+                                        </div>
+                                    </div>
+
+                                    {/* Fund Transactions */}
+                                    <div className="bg-[#202940]/50 rounded p-4 border border-white/5">
+                                        <h4 className="text-cyan-400 text-sm font-bold uppercase tracking-wider mb-3">Fund Transactions ({fundsData.length})</h4>
+                                        {fundsData.length === 0 ? <p className="text-slate-500 text-sm">No fund transactions</p> : (
+                                            <div className="overflow-x-auto">
+                                                <table className="w-full text-sm border-collapse">
+                                                    <thead><tr className="text-slate-400 border-b border-white/10">
+                                                        <th className="px-3 py-2 text-left">Type</th><th className="px-3 py-2 text-left">Amount</th><th className="px-3 py-2 text-left">Balance After</th><th className="px-3 py-2 text-left">Date</th><th className="px-3 py-2 text-left">Remarks</th>
+                                                    </tr></thead>
+                                                    <tbody className="text-slate-300">{fundsData.map((f, i) => (
+                                                        <tr key={i} className="border-b border-white/5">
+                                                            <td className="px-3 py-2"><span className={`px-2 py-0.5 rounded text-[10px] font-bold ${f.type === 'DEPOSIT' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>{f.type}</span></td>
+                                                            <td className="px-3 py-2 font-mono">{f.amount}</td>
+                                                            <td className="px-3 py-2 font-mono">{f.balance_after}</td>
+                                                            <td className="px-3 py-2 text-[11px]">{fmtTime(f.created_at)}</td>
+                                                            <td className="px-3 py-2">{f.remarks || '-'}</td>
+                                                        </tr>
+                                                    ))}</tbody>
+                                                </table>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Active Trades */}
+                                    <div className="bg-[#202940]/50 rounded p-4 border border-white/5">
+                                        <h4 className="text-cyan-400 text-sm font-bold uppercase tracking-wider mb-3">Active Trades ({activeTrades.length})</h4>
+                                        {activeTrades.length === 0 ? <p className="text-slate-500 text-sm">No active trades</p> : (
+                                            <div className="overflow-x-auto">
+                                                <table className="w-full text-sm border-collapse">
+                                                    <thead><tr className="text-slate-400 border-b border-white/10">
+                                                        <th className="px-3 py-2 text-left">ID</th><th className="px-3 py-2 text-left">Scrip</th><th className="px-3 py-2 text-left">Type</th><th className="px-3 py-2 text-left">Entry Price</th><th className="px-3 py-2 text-left">Qty</th><th className="px-3 py-2 text-left">CMP</th><th className="px-3 py-2 text-left">P/L</th><th className="px-3 py-2 text-left">Buy Time</th>
+                                                    </tr></thead>
+                                                    <tbody className="text-slate-300">{activeTrades.map(t => (
+                                                        <tr key={t.id} className="border-b border-white/5">
+                                                            <td className="px-3 py-2">{t.id}</td>
+                                                            <td className="px-3 py-2 font-bold text-white">{t.symbol}</td>
+                                                            <td className="px-3 py-2"><span className={`px-2 py-0.5 rounded text-[10px] font-bold ${t.type === 'BUY' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>{t.type}</span></td>
+                                                            <td className="px-3 py-2 font-mono">{t.entry_price}</td>
+                                                            <td className="px-3 py-2">{t.qty}</td>
+                                                            <td className="px-3 py-2 font-mono">{t.current_price || '-'}</td>
+                                                            <td className={`px-3 py-2 font-mono font-bold ${(t.live_pnl || t.pnl || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>{t.live_pnl || t.pnl || '0'}</td>
+                                                            <td className="px-3 py-2 text-[11px]">{fmtTime(t.entry_time || t.created_at)}</td>
+                                                        </tr>
+                                                    ))}</tbody>
+                                                </table>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Closed Trades */}
+                                    <div className="bg-[#202940]/50 rounded p-4 border border-white/5">
+                                        <h4 className="text-cyan-400 text-sm font-bold uppercase tracking-wider mb-3">Closed Trades ({closedTrades.length})</h4>
+                                        {closedTrades.length === 0 ? <p className="text-slate-500 text-sm">No closed trades</p> : (
+                                            <div className="overflow-x-auto">
+                                                <table className="w-full text-sm border-collapse">
+                                                    <thead><tr className="text-slate-400 border-b border-white/10">
+                                                        <th className="px-3 py-2 text-left">ID</th><th className="px-3 py-2 text-left">Scrip</th><th className="px-3 py-2 text-left">Type</th><th className="px-3 py-2 text-left">Entry</th><th className="px-3 py-2 text-left">Exit</th><th className="px-3 py-2 text-left">Qty</th><th className="px-3 py-2 text-left">P/L</th><th className="px-3 py-2 text-left">Brokerage</th><th className="px-3 py-2 text-left">Buy Time</th><th className="px-3 py-2 text-left">Sell Time</th>
+                                                    </tr></thead>
+                                                    <tbody className="text-slate-300">{closedTrades.map(t => (
+                                                        <tr key={t.id} className="border-b border-white/5">
+                                                            <td className="px-3 py-2">{t.id}</td>
+                                                            <td className="px-3 py-2 font-bold text-white">{t.symbol}</td>
+                                                            <td className="px-3 py-2"><span className={`px-2 py-0.5 rounded text-[10px] font-bold ${t.type === 'BUY' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>{t.type}</span></td>
+                                                            <td className="px-3 py-2 font-mono">{t.entry_price}</td>
+                                                            <td className="px-3 py-2 font-mono">{t.exit_price || '-'}</td>
+                                                            <td className="px-3 py-2">{t.qty}</td>
+                                                            <td className={`px-3 py-2 font-mono font-bold ${(t.pnl || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>{t.pnl || '0'}</td>
+                                                            <td className="px-3 py-2 font-mono">{t.brokerage || '0'}</td>
+                                                            <td className="px-3 py-2 text-[11px]">{fmtTime(t.entry_time || t.created_at)}</td>
+                                                            <td className="px-3 py-2 text-[11px]">{fmtTime(t.exit_time || t.closed_at)}</td>
+                                                        </tr>
+                                                    ))}</tbody>
+                                                </table>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Pending Orders */}
+                                    <div className="bg-[#202940]/50 rounded p-4 border border-white/5">
+                                        <h4 className="text-cyan-400 text-sm font-bold uppercase tracking-wider mb-3">Pending Orders ({pendingOrders.length})</h4>
+                                        {pendingOrders.length === 0 ? <p className="text-slate-500 text-sm">No pending orders</p> : (
+                                            <div className="overflow-x-auto">
+                                                <table className="w-full text-sm border-collapse">
+                                                    <thead><tr className="text-slate-400 border-b border-white/10">
+                                                        <th className="px-3 py-2 text-left">ID</th><th className="px-3 py-2 text-left">Scrip</th><th className="px-3 py-2 text-left">Type</th><th className="px-3 py-2 text-left">Price</th><th className="px-3 py-2 text-left">Qty</th><th className="px-3 py-2 text-left">Time</th>
+                                                    </tr></thead>
+                                                    <tbody className="text-slate-300">{pendingOrders.map(t => (
+                                                        <tr key={t.id} className="border-b border-white/5">
+                                                            <td className="px-3 py-2">{t.id}</td>
+                                                            <td className="px-3 py-2 font-bold text-white">{t.symbol}</td>
+                                                            <td className="px-3 py-2"><span className={`px-2 py-0.5 rounded text-[10px] font-bold ${t.type === 'BUY' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>{t.type}</span></td>
+                                                            <td className="px-3 py-2 font-mono">{t.entry_price}</td>
+                                                            <td className="px-3 py-2">{t.qty}</td>
+                                                            <td className="px-3 py-2 text-[11px]">{fmtTime(t.created_at)}</td>
+                                                        </tr>
+                                                    ))}</tbody>
+                                                </table>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Completed Orders */}
+                                    <div className="bg-[#202940]/50 rounded p-4 border border-white/5">
+                                        <h4 className="text-cyan-400 text-sm font-bold uppercase tracking-wider mb-3">Completed Orders ({completedOrders.length})</h4>
+                                        {completedOrders.length === 0 ? <p className="text-slate-500 text-sm">No completed orders</p> : (
+                                            <div className="overflow-x-auto">
+                                                <table className="w-full text-sm border-collapse">
+                                                    <thead><tr className="text-slate-400 border-b border-white/10">
+                                                        <th className="px-3 py-2 text-left">ID</th><th className="px-3 py-2 text-left">Scrip</th><th className="px-3 py-2 text-left">Type</th><th className="px-3 py-2 text-left">Entry</th><th className="px-3 py-2 text-left">Exit</th><th className="px-3 py-2 text-left">Qty</th><th className="px-3 py-2 text-left">P/L</th><th className="px-3 py-2 text-left">Time</th>
+                                                    </tr></thead>
+                                                    <tbody className="text-slate-300">{completedOrders.map(t => (
+                                                        <tr key={t.id} className="border-b border-white/5">
+                                                            <td className="px-3 py-2">{t.id}</td>
+                                                            <td className="px-3 py-2 font-bold text-white">{t.symbol}</td>
+                                                            <td className="px-3 py-2"><span className={`px-2 py-0.5 rounded text-[10px] font-bold ${t.type === 'BUY' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>{t.type}</span></td>
+                                                            <td className="px-3 py-2 font-mono">{t.entry_price}</td>
+                                                            <td className="px-3 py-2 font-mono">{t.exit_price || '-'}</td>
+                                                            <td className="px-3 py-2">{t.qty}</td>
+                                                            <td className={`px-3 py-2 font-mono font-bold ${(t.pnl || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>{t.pnl || '0'}</td>
+                                                            <td className="px-3 py-2 text-[11px]">{fmtTime(t.closed_at || t.created_at)}</td>
+                                                        </tr>
+                                                    ))}</tbody>
+                                                </table>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
                             {/* View Details Button */}
                             <div>
                                 <button
@@ -610,7 +772,7 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
                                 </p>
                                 <div className="overflow-x-auto custom-scrollbar border border-white/10">
                                     <table className="w-full border-collapse" style={{ minWidth: '1000px' }}>
-                                        <thead className="bg-[#202940]/50 border-b border-white/10 text-white text-[13px] font-medium">
+                                        <thead className="bg-[#202940]/50 border-b border-white/10 text-white text-sm font-semibold">
                                             <tr>
                                                 <th className="px-4 py-4 text-left">ID</th>
                                                 <th className="px-4 py-4 text-left">Scrip</th>
@@ -620,13 +782,14 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
                                                 <th className="px-4 py-4 text-left whitespace-nowrap">Margin Used</th>
                                                 <th className="px-4 py-4 text-left uppercase">CMP</th>
                                                 <th className="px-4 py-4 text-left uppercase whitespace-nowrap">Active P/L</th>
-                                                <th className="px-4 py-4 text-left">Entry Time</th>
-                                                <th className="px-4 py-4 text-left">IP Address</th>
+                                                <th className="px-4 py-4 text-left">Buy Time</th>
+                                                <th className="px-4 py-4 text-left">Buy IP</th>
+                                                <th className="px-4 py-4 text-center">Action</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="text-[13px] text-slate-300">
+                                        <tbody className="text-sm text-slate-200">
                                             {activeTrades.length === 0 ? (
-                                                <tr><td colSpan="10" className="px-4 py-8 text-slate-500 font-light">{loading ? 'Loading...' : 'No records found'}</td></tr>
+                                                <tr><td colSpan="11" className="px-4 py-8 text-slate-500 font-light">{loading ? 'Loading...' : 'No records found'}</td></tr>
                                             ) : activeTrades.map((trade) => (
                                                 <tr key={trade.id} className="hover:bg-white/[0.03] transition-colors border-b border-white/5">
                                                     <td className="px-4 py-3">{trade.id}</td>
@@ -643,8 +806,28 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
                                                     <td className={`px-4 py-3 font-mono font-bold ${(trade.live_pnl || trade.pnl || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                                                         {trade.live_pnl || trade.pnl || '0'}
                                                     </td>
-                                                    <td className="px-4 py-3 text-[11px]">{trade.entry_time || '-'}</td>
+                                                    <td className="px-4 py-3 text-[11px]">{fmtTime(trade.entry_time)}</td>
                                                     <td className="px-4 py-3 text-[11px] font-mono">{showIp(trade.trade_ip)}</td>
+                                                    <td className="px-4 py-3 text-center">
+                                                        <button
+                                                            onClick={async () => {
+                                                                if (!window.confirm(`Close trade #${trade.id}?`)) return;
+                                                                try {
+                                                                    await api.closeTrade(trade.id, { exit_price: trade.current_price || trade.entry_price });
+                                                                    const active = await api.getTrades({ user_id: client.id, status: 'OPEN' });
+                                                                    setActiveTrades(Array.isArray(active) ? active : active?.data || []);
+                                                                    const closed = await api.getClosedPositions({ user_id: client.id });
+                                                                    setClosedTrades(Array.isArray(closed) ? closed : closed?.data || []);
+                                                                } catch (err) {
+                                                                    alert('Failed to close trade: ' + err.message);
+                                                                }
+                                                            }}
+                                                            className="text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded p-1 transition-colors"
+                                                            title="Close Trade"
+                                                        >
+                                                            <X className="w-4 h-4" />
+                                                        </button>
+                                                    </td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -695,8 +878,8 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
                                                         {trade.pnl || '0'}
                                                     </td>
                                                     <td className="px-4 py-3 font-mono">{trade.brokerage || '-'}</td>
-                                                    <td className="px-4 py-3 text-[11px]">{trade.entry_time || '-'}</td>
-                                                    <td className="px-4 py-3 text-[11px]">{trade.exit_time || '-'}</td>
+                                                    <td className="px-4 py-3 text-[11px]">{fmtTime(trade.entry_time)}</td>
+                                                    <td className="px-4 py-3 text-[11px]">{fmtTime(trade.exit_time)}</td>
                                                     <td className="px-4 py-3 text-[11px] font-mono">{showIp(trade.trade_ip)}</td>
                                                     <td className="px-4 py-3 text-[11px] font-mono">{showIp(trade.exit_ip || trade.trade_ip)}</td>
                                                 </tr>
@@ -706,48 +889,73 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
                                 </div>
                             </div>
 
-                            {/* Pending Orders Section */}
+                            {/* Pending Orders - Tabbed MCX / Equity */}
                             <div className="bg-[#1a2035] rounded-sm p-6 border border-white/5">
-                                <h3 className="text-white text-[19px] font-normal mb-1">Pending Orders</h3>
-                                <p className="text-slate-400 text-[13px] mb-2 font-light italic">
-                                    {loading ? 'Loading...' : `Showing ${pendingOrders.length} items.`}
-                                </p>
-                                <div className="overflow-x-auto custom-scrollbar border border-white/10">
-                                    <table className="w-full border-collapse" style={{ minWidth: '1000px' }}>
-                                        <thead className="bg-[#202940]/50 border-b border-white/10 text-white text-[13px] font-medium">
-                                            <tr>
-                                                <th className="px-4 py-4 text-left">ID</th>
-                                                <th className="px-4 py-4 text-left">Type</th>
-                                                <th className="px-4 py-4 text-left">Qty / Lots</th>
-                                                <th className="px-4 py-4 text-left">Scrip</th>
-                                                <th className="px-4 py-4 text-left">Order Type</th>
-                                                <th className="px-4 py-4 text-left">Entry Price</th>
-                                                <th className="px-4 py-4 text-left">Date</th>
-                                                <th className="px-4 py-4 text-left">IP Address</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="text-[13px] text-slate-300">
-                                            {pendingOrders.length === 0 ? (
-                                                <tr><td colSpan="8" className="px-4 py-8 text-slate-500 font-light">{loading ? 'Loading...' : 'No records found'}</td></tr>
-                                            ) : pendingOrders.map((order) => (
-                                                <tr key={order.id} className="hover:bg-white/[0.03] transition-colors border-b border-white/5">
-                                                    <td className="px-4 py-3">{order.id}</td>
-                                                    <td className="px-4 py-3">
-                                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${order.type === 'BUY' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
-                                                            {order.type}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-4 py-3">{order.qty}</td>
-                                                    <td className="px-4 py-3 font-bold text-white">{order.symbol}</td>
-                                                    <td className="px-4 py-3">{order.order_type || 'LIMIT'}</td>
-                                                    <td className="px-4 py-3 font-mono">{order.entry_price}</td>
-                                                    <td className="px-4 py-3 text-[11px]">{order.entry_time || order.created_at || '-'}</td>
-                                                    <td className="px-4 py-3 text-[11px] font-mono">{showIp(order.trade_ip)}</td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
+                                <h3 className="text-white text-[19px] font-normal mb-3">Pending Orders</h3>
+                                {/* Tabs */}
+                                <div className="flex gap-0 mb-4 border-b border-white/10">
+                                    <button
+                                        onClick={() => setPendingTab('mcx')}
+                                        className={`px-6 py-2.5 text-[12px] font-bold uppercase tracking-wider transition-all border-b-2 ${pendingTab === 'mcx' ? 'text-[#4caf50] border-[#4caf50] bg-white/5' : 'text-slate-500 border-transparent hover:text-slate-300'}`}
+                                    >
+                                        MCX
+                                    </button>
+                                    <button
+                                        onClick={() => setPendingTab('equity')}
+                                        className={`px-6 py-2.5 text-[12px] font-bold uppercase tracking-wider transition-all border-b-2 ${pendingTab === 'equity' ? 'text-[#2196F3] border-[#2196F3] bg-white/5' : 'text-slate-500 border-transparent hover:text-slate-300'}`}
+                                    >
+                                        Equity
+                                    </button>
                                 </div>
+                                {(() => {
+                                    const mcxSymbols = ['GOLD', 'SILVER', 'CRUDEOIL', 'COPPER', 'NICKEL', 'ZINC', 'LEAD', 'ALUMINIUM', 'ALUMINI', 'NATURALGAS', 'MENTHAOIL', 'COTTON', 'GOLDM', 'SILVERM', 'BULLDEX'];
+                                    const filtered = pendingTab === 'mcx'
+                                        ? pendingOrders.filter(o => mcxSymbols.some(s => (o.symbol || '').toUpperCase().includes(s)))
+                                        : pendingOrders.filter(o => !mcxSymbols.some(s => (o.symbol || '').toUpperCase().includes(s)));
+                                    return (
+                                        <>
+                                            <p className="text-slate-400 text-[13px] mb-2 font-light italic">
+                                                {loading ? 'Loading...' : `Showing ${filtered.length} items.`}
+                                            </p>
+                                            <div className="overflow-x-auto custom-scrollbar border border-white/10">
+                                                <table className="w-full border-collapse" style={{ minWidth: '1000px' }}>
+                                                    <thead className="bg-[#202940]/50 border-b border-white/10 text-white text-[13px] font-medium">
+                                                        <tr>
+                                                            <th className="px-4 py-4 text-left">ID</th>
+                                                            <th className="px-4 py-4 text-left">Type</th>
+                                                            <th className="px-4 py-4 text-left">Lots</th>
+                                                            <th className="px-4 py-4 text-left">{pendingTab === 'mcx' ? 'Commodity' : 'Scrip'}</th>
+                                                            <th className="px-4 py-4 text-left">Condition</th>
+                                                            <th className="px-4 py-4 text-left">Rate</th>
+                                                            <th className="px-4 py-4 text-left">Buy Time</th>
+                                                            <th className="px-4 py-4 text-left">Buy IP</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody className="text-[13px] text-slate-300">
+                                                        {filtered.length === 0 ? (
+                                                            <tr><td colSpan="8" className="px-4 py-8 text-slate-500 font-light">{loading ? 'Loading...' : 'No records found'}</td></tr>
+                                                        ) : filtered.map((order) => (
+                                                            <tr key={order.id} className="hover:bg-white/[0.03] transition-colors border-b border-white/5">
+                                                                <td className="px-4 py-3">{order.id}</td>
+                                                                <td className="px-4 py-3">
+                                                                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${order.type === 'BUY' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                                                                        {order.type}
+                                                                    </span>
+                                                                </td>
+                                                                <td className="px-4 py-3">{order.qty}</td>
+                                                                <td className="px-4 py-3 font-bold text-white">{order.symbol}</td>
+                                                                <td className="px-4 py-3">{order.order_type || 'LIMIT'}</td>
+                                                                <td className="px-4 py-3 font-mono">{order.entry_price}</td>
+                                                                <td className="px-4 py-3 text-[11px]">{fmtTime(order.entry_time || order.created_at)}</td>
+                                                                <td className="px-4 py-3 text-[11px] font-mono">{showIp(order.trade_ip)}</td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </>
+                                    );
+                                })()}
                             </div>
 
                             {/* Completed Orders Section */}
@@ -793,8 +1001,8 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
                                                         {trade.pnl || '0'}
                                                     </td>
                                                     <td className="px-4 py-3 font-mono">{trade.brokerage || '-'}</td>
-                                                    <td className="px-4 py-3 text-[11px]">{trade.entry_time || '-'}</td>
-                                                    <td className="px-4 py-3 text-[11px]">{trade.exit_time || '-'}</td>
+                                                    <td className="px-4 py-3 text-[11px]">{fmtTime(trade.entry_time)}</td>
+                                                    <td className="px-4 py-3 text-[11px]">{fmtTime(trade.exit_time)}</td>
                                                     <td className="px-4 py-3 text-[11px] font-mono">{showIp(trade.trade_ip)}</td>
                                                     <td className="px-4 py-3 text-[11px] font-mono">{showIp(trade.exit_ip || trade.trade_ip)}</td>
                                                 </tr>

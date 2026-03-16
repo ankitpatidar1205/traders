@@ -155,6 +155,15 @@ export const placeOrder = async (data) => {
     return handleResponse(res);
 };
 
+export const closeTrade = async (id, data = {}) => {
+    const res = await fetch(`${BASE_URL}/trades/${id}/close`, {
+        method: 'PUT',
+        headers: getHeaders(),
+        body: JSON.stringify(data),
+    });
+    return handleResponse(res);
+};
+
 export const deleteTrade = async (id) => {
     const res = await fetch(`${BASE_URL}/trades/${id}`, {
         method: 'DELETE',

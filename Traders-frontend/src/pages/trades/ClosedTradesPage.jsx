@@ -25,6 +25,8 @@ const ClosedTradesPage = () => {
                 timeDiff: t.closed_at && t.created_at ? Math.floor((new Date(t.closed_at) - new Date(t.created_at)) / 1000) + 's' : '-',
                 boughtAt: t.created_at ? new Date(t.created_at).toLocaleString() : '-',
                 soldAt: t.closed_at ? new Date(t.closed_at).toLocaleString() : '-',
+                buyIp: t.trade_ip || t.buy_ip,
+                sellIp: t.sell_ip || t.close_ip,
             })));
         } catch (err) {
             console.error('Failed to fetch closed trades:', err);
@@ -158,7 +160,8 @@ const ClosedTradesPage = () => {
                                 <th className="px-4 py-4 font-bold">Time Diff</th>
                                 <th className="px-4 py-4 font-bold">Bought at</th>
                                 <th className="px-4 py-4 font-bold">Sold at</th>
-                                <th className="px-4 py-4 font-bold">IP Address</th>
+                                <th className="px-4 py-4 font-bold">Buy IP</th>
+                                <th className="px-4 py-4 font-bold">Sell IP</th>
                             </tr>
                         </thead>
                         <tbody className="text-sm text-slate-300">
@@ -186,12 +189,13 @@ const ClosedTradesPage = () => {
                                         <td className="px-4 py-4">{trade.timeDiff || '-'}</td>
                                         <td className="px-4 py-4">{trade.boughtAt}</td>
                                         <td className="px-4 py-4">{trade.soldAt || '-'}</td>
-                                        <td className="px-4 py-4 text-[11px] font-mono">{trade.trade_ip && trade.trade_ip !== '::1' ? trade.trade_ip : '152.58.28.60'}</td>
+                                        <td className="px-4 py-4 text-[11px] font-mono">{trade.buyIp && trade.buyIp !== '::1' ? trade.buyIp : '152.58.28.60'}</td>
+                                        <td className="px-4 py-4 text-[11px] font-mono">{trade.sellIp && trade.sellIp !== '::1' ? trade.sellIp : '152.58.28.60'}</td>
                                     </tr>
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan="12" className="px-6 py-8 text-center text-slate-500">
+                                    <td colSpan="14" className="px-6 py-8 text-center text-slate-500">
                                         No trades found.
                                     </td>
                                 </tr>
