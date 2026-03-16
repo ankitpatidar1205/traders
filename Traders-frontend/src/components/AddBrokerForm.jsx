@@ -260,14 +260,16 @@ const AddBrokerForm = ({ onBack, onSave, brokerId, mode = 'add' }) => {
                     ...prev,
                     firstName,
                     lastName,
-                    username: user.username,
+                    email: user.email || '',
+                    mobile: user.mobile || '',
+                    username: user.username || '',
                     accountStatus: user.status || 'Active',
-                    sharePL: data.share_pl_pct || '0',
-                    shareBrokerage: data.share_brokerage_pct || '50',
-                    shareSwap: data.share_swap_pct || '10',
+                    sharePL: String(data.share_pl_pct ?? '0'),
+                    shareBrokerage: String(data.share_brokerage_pct ?? '50'),
+                    shareSwap: String(data.share_swap_pct ?? '10'),
                     brokerageShareType: data.brokerage_type || 'Percentage',
-                    tradingClientsLimit: data.trading_clients_limit || '10',
-                    subBrokersLimit: data.sub_brokers_limit || '3',
+                    tradingClientsLimit: String(data.trading_clients_limit ?? '10'),
+                    subBrokersLimit: String(data.sub_brokers_limit ?? '3'),
                     permissions: data.permissions || prev.permissions,
                     segments: (data.segments && data.segments.segmentConfig) ? data.segments.segmentConfig : prev.segments,
                     mcxMargins: (data.segments && data.segments.mcxMargins) ? data.segments.mcxMargins : prev.mcxMargins,
@@ -335,48 +337,62 @@ const AddBrokerForm = ({ onBack, onSave, brokerId, mode = 'add' }) => {
             let userId = brokerId;
 
             if (!isEditMode) {
-                // Step 1: Create broker user
-                const result = await api.createClient({
-                    fullName: `${formData.firstName} ${formData.lastName}`.trim(),
-                    email: formData.email,
-                    mobile: formData.mobile,
-                    username: formData.username,
-                    password: formData.password,
-                    role: 'BROKER'
-                });
+                // ── CREATE: build user ──
+                const createPayload = {
+                    fullName: `${formData.firstName} ${formData.lastName}`.trim() || undefined,
+                    email:    formData.email    || undefined,
+                    mobile:   formData.mobile   || undefined,
+                    username: formData.username || undefined,
+                    password: formData.password || undefined,
+                    role: 'BROKER',
+                };
+                const result = await api.createClient(createPayload);
                 userId = result.id;
+
+                // Set account status if not Active
+                if (formData.accountStatus && formData.accountStatus !== 'Active') {
+                    await api.updateUser(userId, { status: formData.accountStatus });
+                }
             } else {
-                // Update basic user info
-                await api.updateUser(userId, {
-                    fullName: `${formData.firstName} ${formData.lastName}`.trim(),
-                    email: formData.email,
-                    mobile: formData.mobile,
-                    status: formData.accountStatus
-                });
+                // ── EDIT: update basic info ──
+                const updatePayload = {};
+                const fullName = `${formData.firstName} ${formData.lastName}`.trim();
+                if (fullName)                  updatePayload.fullName = fullName;
+                if (formData.email)            updatePayload.email    = formData.email;
+                if (formData.mobile)           updatePayload.mobile   = formData.mobile;
+                if (formData.accountStatus)    updatePayload.status   = formData.accountStatus;
+
+                if (Object.keys(updatePayload).length > 0) {
+                    await api.updateUser(userId, updatePayload);
+                }
+
+                // Optional password change in edit mode
+                if (formData.password) {
+                    await api.updateUserPasswords(userId, { newPassword: formData.password });
+                }
             }
 
-            // Step 2: Update user profile (status)
-            await api.updateUser(userId, {
-                status: formData.accountStatus
-            });
-
-            // Step 3: Set transaction password if provided
+            // ── Set broker's transaction password if provided ──
             if (formData.transactionPasswordSet) {
                 await api.updateUserPasswords(userId, {
                     transactionPassword: formData.transactionPasswordSet
                 });
             }
 
-            // Step 4: Save broker shares + permissions + segments + MCX config
+            // ── Save broker shares + permissions + segments + MCX config ──
             await api.updateBrokerShares(userId, {
-                sharePL: formData.sharePL,
-                shareBrokerage: formData.shareBrokerage,
-                shareSwap: formData.shareSwap,
-                brokerageType: formData.brokerageShareType,
+                sharePL:             formData.sharePL,
+                shareBrokerage:      formData.shareBrokerage,
+                shareSwap:           formData.shareSwap,
+                brokerageType:       formData.brokerageShareType,
                 tradingClientsLimit: formData.tradingClientsLimit,
-                subBrokersLimit: formData.subBrokersLimit,
-                permissions: formData.permissions,
-                segments: { segmentConfig: formData.segments, mcxMargins: formData.mcxMargins, mcxBrokerage: formData.mcxBrokerage }
+                subBrokersLimit:     formData.subBrokersLimit,
+                permissions:         formData.permissions,
+                segments: {
+                    segmentConfig: formData.segments,
+                    mcxMargins:    formData.mcxMargins,
+                    mcxBrokerage:  formData.mcxBrokerage,
+                },
             });
 
             if (onSave) onSave({ id: userId });
@@ -437,8 +453,16 @@ const AddBrokerForm = ({ onBack, onSave, brokerId, mode = 'add' }) => {
                                 <InputGroup label="Email" name="email" type="email" value={formData.email} onChange={handleChange} placeholder="email@example.com" disabled={isViewOnly} />
                                 <InputGroup label="Mobile" name="mobile" value={formData.mobile} onChange={handleChange} placeholder="10-digit mobile number" disabled={isViewOnly} />
                                 <InputGroup label="Username" subtext="username for loggin-in with, is not case sensitive. must be unique for every trader. should not contain symbols." name="username" value={formData.username} onChange={handleChange} disabled={isViewOnly} />
-                                {!isEditMode && !isViewOnly && (
-                                    <InputGroup label="Password" subtext="password for loggin-in with, is case sensitive." name="password" type="password" value={formData.password} onChange={handleChange} disabled={isViewOnly} />
+                                {!isViewOnly && (
+                                    <InputGroup
+                                        label={isEditMode ? "New Password (optional)" : "Password"}
+                                        subtext={isEditMode ? "Leave blank to keep current password" : "Password for logging in, is case sensitive."}
+                                        name="password"
+                                        type="password"
+                                        value={formData.password}
+                                        onChange={handleChange}
+                                        disabled={isViewOnly}
+                                    />
                                 )}
                                 {!isViewOnly && (
                                     <InputGroup label="Transaction Password to set" name="transactionPasswordSet" type="password" value={formData.transactionPasswordSet} onChange={handleChange} disabled={isViewOnly} />
