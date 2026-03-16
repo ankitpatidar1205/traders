@@ -8,6 +8,17 @@ const LoginPage = ({ onLogin }) => {
     const [role, setRole] = useState('admin');
     const [error, setError] = useState('');
 
+    const QUICK_LOGIN = [
+        { label: 'Super Admin', user: 'superadmin', pass: 'superadmin123', color: '#f59e0b' },
+        { label: 'Admin',       user: 'admin',      pass: 'admin123',      color: '#4caf50' },
+        { label: 'Broker',      user: 'broker',     pass: 'broker123',     color: '#3b82f6' },
+    ];
+
+    const fillCredentials = (item) => {
+        setUsername(item.user);
+        setPassword(item.pass);
+    };
+
     const handleSubmit = (e) => {
         e.preventDefault();
         setError('');
@@ -201,6 +212,45 @@ const LoginPage = ({ onLogin }) => {
                                         />
                                     </div>
                                 ))}
+                            </div>
+
+                            {/* Quick login shortcuts */}
+                            <div style={{ marginBottom: '18px' }}>
+                                <p style={{
+                                    color: '#64748b',
+                                    fontSize: '10px',
+                                    fontWeight: '700',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.08em',
+                                    marginBottom: '8px',
+                                }}>Quick Fill</p>
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                    {QUICK_LOGIN.map(item => (
+                                        <button
+                                            key={item.user}
+                                            type="button"
+                                            onClick={() => fillCredentials(item)}
+                                            style={{
+                                                flex: 1,
+                                                padding: '6px 4px',
+                                                borderRadius: '5px',
+                                                fontSize: '10px',
+                                                fontWeight: '700',
+                                                textTransform: 'uppercase',
+                                                letterSpacing: '0.03em',
+                                                cursor: 'pointer',
+                                                background: 'transparent',
+                                                color: item.color,
+                                                border: `1px solid ${item.color}55`,
+                                                transition: 'all 0.2s',
+                                            }}
+                                            onMouseOver={e => { e.currentTarget.style.background = item.color + '22'; }}
+                                            onMouseOut={e => { e.currentTarget.style.background = 'transparent'; }}
+                                        >
+                                            {item.label}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
 
                             {/* SIGN IN button — centered, full width */}
