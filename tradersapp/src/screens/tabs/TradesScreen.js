@@ -73,7 +73,53 @@ const TradeItem = ({ item, activeTab, livePrice, meta, onOpenCloseModal, onCance
         );
     }
 
-    // --- ACTIVE/PENDING TRADE UI ---
+    // --- PENDING TRADE UI (MATCH WATCHLIST GRID) ---
+    if (isPending) {
+        const isUp1 = true; // Placeholder or calculate from livePrice vs open
+        const buyColor = '#2D864D';
+        const sellColor = '#C64756';
+
+        return (
+            <View style={styles.tradeItemGrid}>
+                <View style={styles.itemRow}>
+                    <View style={styles.leftCol}>
+                        <Text style={styles.symbolNameGrid}>{formattedName}</Text>
+                        <Text style={styles.dateTextGrid}>{item.time || '17:17:39'}</Text>
+                        <Text style={styles.labelsBottomGrid}>
+                            Qty: {item.qty} {item.type}
+                        </Text>
+                    </View>
+
+                    <View style={styles.priceColGrid}>
+                        <View style={[styles.priceBoxGrid, { backgroundColor: isUp1 ? buyColor : sellColor }]}>
+                            <Text style={styles.priceValTextGrid}>{livePrice ? livePrice.toFixed(2) : '---'}</Text>
+                        </View>
+                        <Text style={styles.labelSmallGrid}>LTP</Text>
+                    </View>
+
+                    <View style={styles.priceColGrid}>
+                        <View style={[styles.priceBoxGrid, { backgroundColor: sellColor }]}>
+                            <Text style={styles.priceValTextGrid}>{item.entryPrice}</Text>
+                        </View>
+                        <Text style={styles.labelSmallGrid}>Order Price</Text>
+                    </View>
+                </View>
+
+                <View style={styles.actionRowGrid}>
+                    <TouchableOpacity 
+                        style={styles.cancelActionBtn} 
+                        onPress={onCancel}
+                    >
+                        <Text style={styles.cancelActionText}>CANCEL ORDER</Text>
+                    </TouchableOpacity>
+                </View>
+
+                <View style={styles.separatorGrid} />
+            </View>
+        );
+    }
+
+    // --- ACTIVE TRADE UI ---
     return (
         <View style={styles.tradeItem}>
             <View style={styles.activeCompactRow}>
@@ -87,26 +133,18 @@ const TradeItem = ({ item, activeTab, livePrice, meta, onOpenCloseModal, onCance
                     </View>
                 </View>
                 <View style={styles.activeRight}>
-                    <Text style={styles.ltpText}>{isPending ? item.entryPrice : (livePrice ? livePrice.toFixed(2) : '---')}</Text>
-                    {isPending ? (
-                        <TouchableOpacity style={[styles.closeTradeBtn, { backgroundColor: '#757575' }]} onPress={onCancel}>
-                            <Text style={styles.closeTradeBtnText}>Cancel</Text>
-                        </TouchableOpacity>
-                    ) : (
-                        <TouchableOpacity style={styles.closeTradeBtn} onPress={onOpenCloseModal}>
-                            <Text style={styles.closeTradeBtnText}>Close Trade</Text>
-                        </TouchableOpacity>
-                    )}
+                    <Text style={styles.ltpText}>{livePrice ? livePrice.toFixed(2) : '---'}</Text>
+                    <TouchableOpacity style={styles.closeTradeBtn} onPress={onOpenCloseModal}>
+                        <Text style={styles.closeTradeBtnText}>Close Trade</Text>
+                    </TouchableOpacity>
                 </View>
             </View>
 
             <View style={styles.activeSubRow}>
-                <Text style={styles.traderText}>{isPending ? 'Limit Price' : `${item.type === 'BUY' ? 'Bought' : 'Sold'} at ${item.entryPrice}`}</Text>
-                {!isPending && (
-                    <TouchableOpacity style={styles.setTargetBtn} onPress={onSetTargetSL}>
-                        <Text style={styles.setTargetBtnText}>Set Target/SL</Text>
-                    </TouchableOpacity>
-                )}
+                <Text style={styles.traderText}>{`${item.type === 'BUY' ? 'Bought' : 'Sold'} at ${item.entryPrice}`}</Text>
+                <TouchableOpacity style={styles.setTargetBtn} onPress={onSetTargetSL}>
+                    <Text style={styles.setTargetBtnText}>Set Target/SL</Text>
+                </TouchableOpacity>
             </View>
 
             <View style={styles.activeMarginRow}>
@@ -544,6 +582,80 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 16,
         fontWeight: 'bold',
+    },
+    // --- Grid Layout Styles (Matched with Dashboard) ---
+    tradeItemGrid: {
+        paddingTop: 10,
+        paddingHorizontal: 15,
+    },
+    itemRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        marginBottom: 8,
+    },
+    leftCol: {
+        flex: 1.2,
+        justifyContent: 'center',
+    },
+    priceColGrid: {
+        flex: 1.1,
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+    },
+    symbolNameGrid: {
+        color: 'white',
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    dateTextGrid: {
+        color: 'white',
+        fontSize: 14,
+        marginVertical: 2,
+    },
+    labelsBottomGrid: {
+        color: 'white',
+        fontSize: 14,
+    },
+    priceBoxGrid: {
+        paddingHorizontal: 0,
+        paddingVertical: 8,
+        borderRadius: 6,
+        width: '90%',
+        maxWidth: 100,
+        alignItems: 'center',
+        marginBottom: 6,
+    },
+    priceValTextGrid: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    labelSmallGrid: {
+        color: 'white',
+        fontSize: 15,
+        opacity: 0.9,
+    },
+    actionRowGrid: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        marginTop: 4,
+        marginBottom: 10,
+    },
+    cancelActionBtn: {
+        backgroundColor: '#757575',
+        paddingHorizontal: 15,
+        paddingVertical: 6,
+        borderRadius: 4,
+    },
+    cancelActionText: {
+        color: 'white',
+        fontSize: 12,
+        fontWeight: 'bold',
+    },
+    separatorGrid: {
+        height: 0.5,
+        backgroundColor: 'rgba(255,255,255,0.3)',
     }
 });
 

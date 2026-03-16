@@ -102,6 +102,11 @@ const AccountScreen = ({ navigation }) => {
                         onPress={() => navigation.navigate('ProfileDetails')}
                     />
                     <MenuItem
+                        title="Support"
+                        icon={LifeBuoy}
+                        onPress={() => navigation.navigate('Support')}
+                    />
+                    <MenuItem
                         title="Deposit Request"
                         icon={Key} // Icon looked like a key or tool
                         onPress={() => navigation.navigate('DepositRequest')}
@@ -130,11 +135,6 @@ const AccountScreen = ({ navigation }) => {
                         title="Learning Module"
                         icon={BookOpen}
                         onPress={() => navigation.navigate('Learning')}
-                    />
-                    <MenuItem
-                        title="Support"
-                        icon={LifeBuoy}
-                        onPress={() => navigation.navigate('Support')}
                     />
                     <MenuItem
                         title="Log Out"

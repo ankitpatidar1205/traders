@@ -119,7 +119,7 @@ export const AuthProvider = ({ children }) => {
     const isSuperAdmin = () => user?.role === ROLES.SUPERADMIN;
     const isAdmin = () => [ROLES.SUPERADMIN, ROLES.ADMIN].includes(user?.role);
     const isBroker = () => user?.role === ROLES.BROKER;
-    const isClient = () => user?.role === ROLES.CLIENT;
+    const isClient = () => user?.role === ROLES.TRADER;
 
     return (
         <AuthContext.Provider value={{

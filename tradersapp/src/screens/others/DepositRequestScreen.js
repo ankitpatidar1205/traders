@@ -1,39 +1,47 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, StatusBar, ScrollView, Alert, ImageBackground, Image, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, StatusBar, ScrollView, Alert, ImageBackground, Image, ActivityIndicator, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useTrades } from '../../context/TradeContext';
+import * as api from '../../services/api';
 
 import ScreenWrapper from '../../components/ScreenWrapper';
 
 const DepositRequestScreen = ({ navigation }) => {
     const { addNotification } = useTrades();
     const [image, setImage] = useState(null);
+    const [amount, setAmount] = useState('');
     const [isUploading, setIsUploading] = useState(false);
 
-    const handleUpload = () => {
+    const handleUpload = async () => {
+        if (!amount || isNaN(parseFloat(amount))) {
+            Alert.alert("Error", "Please enter a valid amount.");
+            return;
+        }
         if (!image) {
             Alert.alert("Error", "Please select a screenshot first.");
             return;
         }
 
         setIsUploading(true);
-
-        // Simulate upload
-        setTimeout(() => {
+        try {
+            await api.createDeposit(amount, image);
+            
             // Add Notification
             addNotification({
                 title: 'Deposit Screenshot Uploaded',
-                message: 'Your payment screenshot has been submitted. Funds will be added after verification.',
+                message: `Your payment screenshot for ₹${amount} has been submitted. Funds will be added after verification.`,
                 type: 'info'
             });
 
-            setIsUploading(false);
-            setImage(null);
             Alert.alert("Success", "Screenshot uploaded successfully! Funds will be added shortly.");
             navigation.goBack();
-        }, 2000);
+        } catch (err) {
+            Alert.alert("Error", err.message || "Failed to submit request");
+        } finally {
+            setIsUploading(false);
+        }
     };
 
 
@@ -76,6 +84,21 @@ const DepositRequestScreen = ({ navigation }) => {
                     >
                         <Text style={styles.addFundsBtnText}>Add funds online</Text>
                     </TouchableOpacity>
+
+                    <Text style={styles.sectionLabel}>OR Upload Deposit Proof</Text>
+
+                    <View style={styles.inputContainer}>
+                        <Text style={styles.label}>Amount (₹)</Text>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Enter Amount"
+                            placeholderTextColor="#B0BEC5"
+                            keyboardType="numeric"
+                            value={amount}
+                            onChangeText={setAmount}
+                            cursorColor="white"
+                        />
+                    </View>
 
                     <TouchableOpacity
                         style={styles.uploadBox}
@@ -143,8 +166,8 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
         paddingHorizontal: 30,
         borderRadius: 4,
-        marginBottom: 20, // Reduced
-        width: '85%',
+        marginBottom: 20,
+        width: '100%',
         alignItems: 'center',
     },
     addFundsBtnText: {
@@ -152,15 +175,42 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: 'bold',
     },
+    sectionLabel: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginVertical: 15,
+        opacity: 0.8,
+    },
+    inputContainer: {
+        width: '100%',
+        marginBottom: 20,
+    },
+    label: {
+        color: '#B0BEC5',
+        fontSize: 16,
+        marginBottom: 8,
+    },
+    input: {
+        backgroundColor: '#597794',
+        borderRadius: 4,
+        paddingHorizontal: 15,
+        height: 50,
+        color: 'white',
+        fontSize: 18,
+    },
     uploadBox: {
-        backgroundColor: '#CFD1C4', // beige like account
-        width: 150,
-        height: 150,
+        backgroundColor: '#CFD1C4',
+        width: '100%',
+        height: 180,
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: 20, // Reduced
-        borderRadius: 6,
+        marginBottom: 25,
+        borderRadius: 4,
         overflow: 'hidden',
+        borderWidth: 2,
+        borderColor: 'rgba(255,255,255,0.1)',
+        borderStyle: 'dashed',
     },
     uploadBoxText: {
         color: 'black',

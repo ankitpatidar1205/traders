@@ -1,14 +1,51 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft } from 'lucide-react';
+import { getTrades } from '../../services/api';
 
 const ClientActivePositionsPage = ({ client, onBack, onNavigateToAccount }) => {
-    // Mock data from the screenshot
-    const positions = [
-        { scrip: 'IRFC26FEBFUT', buy: '0 (1.00000000)', sell: '0 (0)', avgBuy: '114.4', avgSell: '0', total: '0', net: '0', m2m: '-4.09', margin: '1.70746269', cmp: '' },
-        { scrip: 'SUZLON26FEBFUT', buy: '0 (1.00000000)', sell: '0 (0)', avgBuy: '48.19', avgSell: '0', total: '0', net: '0', m2m: '-2.56', margin: '0.71925373', cmp: '' },
-    ];
+    const [positions, setPositions] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    const clientName = client?.id?.split(' : ')[1] || 'SHRE077';
+    const clientId = client?.id ? String(client.id).split(' : ')[0].trim() : null;
+    const clientName = client?.id ? String(client.id).split(' : ')[1] || String(client.id) : (client?.username || 'Client');
+
+    useEffect(() => {
+        if (!clientId) { setLoading(false); return; }
+        const fetchPositions = async () => {
+            try {
+                const data = await getTrades({ user_id: clientId, status: 'OPEN' });
+                // Group by symbol to create position rows
+                const grouped = data.reduce((acc, t) => {
+                    if (!acc[t.symbol]) acc[t.symbol] = { scrip: t.symbol, buyQty: 0, sellQty: 0, buyTotal: 0, sellTotal: 0 };
+                    if (t.type === 'BUY') { acc[t.symbol].buyQty += t.qty; acc[t.symbol].buyTotal += t.entry_price * t.qty; }
+                    else { acc[t.symbol].sellQty += t.qty; acc[t.symbol].sellTotal += t.entry_price * t.qty; }
+                    return acc;
+                }, {});
+                setPositions(Object.values(grouped).map(p => ({
+                    scrip: p.scrip,
+                    buy: p.buyQty,
+                    sell: p.sellQty,
+                    avgBuy: p.buyQty > 0 ? (p.buyTotal / p.buyQty).toFixed(2) : '0',
+                    avgSell: p.sellQty > 0 ? (p.sellTotal / p.sellQty).toFixed(2) : '0',
+                    total: p.buyQty + p.sellQty,
+                    net: p.buyQty - p.sellQty,
+                    m2m: '0',
+                    margin: '0',
+                    cmp: '-',
+                })));
+            } catch (err) {
+                console.error('Failed to fetch client positions:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchPositions();
+    }, [clientId]);
+
+    const totals = positions.reduce((acc, p) => ({
+        buy: acc.buy + p.buy, sell: acc.sell + p.sell,
+        total: acc.total + p.total, net: acc.net + p.net,
+    }), { buy: 0, sell: 0, total: 0, net: 0 });
 
     return (
         <div className="flex flex-col h-full bg-[#1a2035] p-6 space-y-8 overflow-y-auto custom-scrollbar">
@@ -42,7 +79,11 @@ const ClientActivePositionsPage = ({ client, onBack, onNavigateToAccount }) => {
                             </tr>
                         </thead>
                         <tbody className="text-[14px] text-slate-300">
-                            {positions.map((pos, index) => (
+                            {loading ? (
+                                <tr><td colSpan="10" className="px-6 py-10 text-center text-slate-500">Loading positions...</td></tr>
+                            ) : positions.length === 0 ? (
+                                <tr><td colSpan="10" className="px-6 py-10 text-center text-slate-500">No active positions.</td></tr>
+                            ) : positions.map((pos, index) => (
                                 <tr key={index} className="border-b border-white/5 hover:bg-white/[0.01] transition-colors">
                                     <td className="px-6 py-5 text-slate-200">{pos.scrip}</td>
                                     <td className="px-6 py-5">{pos.buy}</td>
@@ -56,19 +97,20 @@ const ClientActivePositionsPage = ({ client, onBack, onNavigateToAccount }) => {
                                     <td className="px-6 py-5">{pos.cmp}</td>
                                 </tr>
                             ))}
-                            {/* Total Row */}
-                            <tr className="bg-white/[0.03] font-black text-slate-100">
-                                <td className="px-6 py-6 uppercase">Total</td>
-                                <td className="px-6 py-6 text-white text-base">0</td>
-                                <td className="px-6 py-6 text-white text-base">0</td>
-                                <td className="px-6 py-6"></td>
-                                <td className="px-6 py-6"></td>
-                                <td className="px-6 py-6 text-white text-base">0</td>
-                                <td className="px-6 py-6 text-white text-base">0</td>
-                                <td className="px-6 py-6 text-right text-red-500 text-base">-6.65</td>
-                                <td className="px-6 py-6 text-right text-white text-base">2.43</td>
-                                <td className="px-6 py-6"></td>
-                            </tr>
+                            {positions.length > 0 && (
+                                <tr className="bg-white/[0.03] font-black text-slate-100">
+                                    <td className="px-6 py-6 uppercase">Total</td>
+                                    <td className="px-6 py-6 text-white text-base">{totals.buy}</td>
+                                    <td className="px-6 py-6 text-white text-base">{totals.sell}</td>
+                                    <td className="px-6 py-6"></td>
+                                    <td className="px-6 py-6"></td>
+                                    <td className="px-6 py-6 text-white text-base">{totals.total}</td>
+                                    <td className="px-6 py-6 text-white text-base">{totals.net}</td>
+                                    <td className="px-6 py-6 text-right text-red-500 text-base">0</td>
+                                    <td className="px-6 py-6 text-right text-white text-base">0</td>
+                                    <td className="px-6 py-6"></td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>

@@ -1,45 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { getHierarchyAccounts } from '../../services/api';
 
 const BrokerAccountsPage = () => {
-    const [filters, setFilters] = useState({
-        fromDate: '02/02/2026',
-        toDate: '02/02/2026'
-    });
+    const [fromDate, setFromDate] = useState('');
+    const [toDate, setToDate] = useState('');
+    const [tableData, setTableData] = useState([]);
+    const [loading, setLoading] = useState(false);
 
-    const handleFilterChange = (e) => {
-        const { name, value } = e.target;
-        setFilters(prev => ({ ...prev, [name]: value }));
+    useEffect(() => {
+        fetchData();
+    }, []);
+
+    const fetchData = async (params = {}) => {
+        setLoading(true);
+        try {
+            const data = await getHierarchyAccounts(params);
+            setTableData(data || []);
+        } catch (err) {
+            console.error('Failed to fetch broker accounts:', err);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleCalculate = (e) => {
         e.preventDefault();
-        console.log('Calculating for:', filters);
+        fetchData({ fromDate, toDate });
     };
-
-    const tableData = [
-        {
-            broker: 'All',
-            sumPL: '',
-            sumBrokerage: '',
-            sumSwap: '',
-            sumNet: '',
-            plShare: '',
-            brokerageShare: '',
-            swapShare: '',
-            netShare: ''
-        },
-        {
-            broker: '3761: demo001',
-            sumPL: '0',
-            sumBrokerage: '0',
-            sumSwap: '0',
-            sumNet: '0',
-            plShare: '0',
-            brokerageShare: '0',
-            swapShare: '0',
-            netShare: '0'
-        }
-    ];
 
     return (
         <div className="flex flex-col h-full bg-[#1a2035] space-y-6 overflow-y-auto">
@@ -48,23 +35,17 @@ const BrokerAccountsPage = () => {
             <div className="flex flex-col md:flex-row gap-4 items-center">
                 <div className="flex bg-white rounded shadow-md overflow-hidden">
                     <input
-                        type="text"
-                        name="fromDate"
+                        type="date"
                         placeholder="From Date"
-                        value={filters.fromDate}
-                        onChange={handleFilterChange}
-                        onFocus={(e) => (e.target.type = "date")}
-                        onBlur={(e) => (e.target.type = "text")}
+                        value={fromDate}
+                        onChange={e => setFromDate(e.target.value)}
                         className="px-4 py-2 text-slate-800 text-sm focus:outline-none border-r border-slate-200 min-w-[140px]"
                     />
                     <input
-                        type="text"
-                        name="toDate"
+                        type="date"
                         placeholder="To Date"
-                        value={filters.toDate}
-                        onChange={handleFilterChange}
-                        onFocus={(e) => (e.target.type = "date")}
-                        onBlur={(e) => (e.target.type = "text")}
+                        value={toDate}
+                        onChange={e => setToDate(e.target.value)}
                         className="px-4 py-2 text-slate-800 text-sm focus:outline-none min-w-[140px]"
                     />
                 </div>
@@ -94,6 +75,11 @@ const BrokerAccountsPage = () => {
                             </tr>
                         </thead>
                         <tbody className="text-white/80 text-[13px]">
+                            {loading ? (
+                                <tr><td colSpan="9" className="px-4 py-8 text-center text-slate-500">Loading...</td></tr>
+                            ) : tableData.length === 0 ? (
+                                <tr><td colSpan="9" className="px-4 py-8 text-center text-slate-500">No data. Select date range and calculate.</td></tr>
+                            ) : null}
                             {tableData.map((row, index) => (
                                 <tr key={index} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                                     <td className="px-4 py-5 border-r border-white/5">{row.broker}</td>

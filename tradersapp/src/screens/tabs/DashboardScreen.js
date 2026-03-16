@@ -4,19 +4,19 @@ import {
     Text,
     StyleSheet,
     TouchableOpacity,
-    FlatList,
     StatusBar,
-    ImageBackground,
     Image,
+    FlatList,
     Animated,
     Easing
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Search, Filter, Bell, ShoppingCart } from 'lucide-react-native';
+import { Search, Filter, Bell, Wallet, Sparkles } from 'lucide-react-native';
 import { useTrades } from '../../context/TradeContext';
 
 import ScreenWrapper from '../../components/ScreenWrapper';
 import TickerTape from '../../components/TickerTape';
+import CuteBot from '../../components/CuteBot';
 import MarketUpdatePopup from '../../components/MarketUpdatePopup';
 
 const CATEGORIES = ['MCX Futures', 'NSE Futures', 'Options'];
@@ -125,13 +125,12 @@ const DashboardScreen = ({ navigation }) => {
             {/* Center Title */}
             <View style={styles.headerTitleContainer}>
                 <View style={styles.headerSideContainer}>
-                    <TouchableOpacity style={styles.aiBtn} onPress={() => {/* AI Action */}}>
+                    <TouchableOpacity 
+                        style={styles.aiBtn} 
+                        onPress={() => navigation.navigate('AiAssistant')}
+                    >
                         <Animated.View style={{ transform: [{ translateY: floatAnim }] }}>
-                            <Image 
-                                source={require('../../assets/ai_icon.png')} 
-                                style={styles.aiIconImage} 
-                                resizeMode="contain"
-                            />
+                            <CuteBot size={42} />
                         </Animated.View>
                     </TouchableOpacity>
                 </View>
@@ -140,17 +139,17 @@ const DashboardScreen = ({ navigation }) => {
 
                 <View style={[styles.headerSideContainer, { alignItems: 'flex-end' }]}>
                     <View style={styles.rightIcons}>
-                        <TouchableOpacity style={styles.bucketBtn} onPress={() => {/* Bucket Action */}}>
-                            <ShoppingCart size={24} color="white" fill="white" />
-                            <View style={styles.bucketBadge}>
-                                <Text style={styles.bucketBadgeText}>6</Text>
+                        <TouchableOpacity style={styles.headerIconButton} onPress={() => {/* Wallet Action */}}>
+                            <Wallet size={24} color="white" strokeWidth={2} />
+                            <View style={styles.iconBadge}>
+                                <Text style={styles.badgeText}>6</Text>
                             </View>
                         </TouchableOpacity>
-                        <TouchableOpacity style={styles.bellBtn} onPress={() => navigation.navigate('Notifications')}>
-                            <Bell size={24} color="white" />
+                        <TouchableOpacity style={styles.headerIconButton} onPress={() => navigation.navigate('Notifications')}>
+                            <Bell size={24} color="white" strokeWidth={2} />
                             {unreadAdminCount > 0 && (
-                                <View style={styles.bellBadge}>
-                                    <Text style={styles.bellBadgeText}>
+                                <View style={styles.iconBadge}>
+                                    <Text style={styles.badgeText}>
                                         {unreadAdminCount > 9 ? '9+' : String(unreadAdminCount)}
                                     </Text>
                                 </View>
@@ -244,60 +243,39 @@ const styles = StyleSheet.create({
         fontSize: 26,
         fontWeight: 'bold',
     },
-    bellBtn: {
-        padding: 5,
+    headerIconButton: {
+        width: 42,
+        height: 42,
+        borderRadius: 21,
+        backgroundColor: 'rgba(255,255,255,0.12)', // Refined glassmorphism
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginLeft: 10,
         position: 'relative',
     },
     aiBtn: {
         padding: 5,
     },
-    aiIconImage: {
-        width: 45, // Larger size
-        height: 45,
-    },
     rightIcons: {
         flexDirection: 'row',
         alignItems: 'center',
     },
-    bucketBtn: {
-        padding: 5,
-        marginRight: 15,
-        position: 'relative',
-    },
-    bucketBadge: {
+    iconBadge: {
         position: 'absolute',
-        top: -2,
-        right: -2,
-        minWidth: 16,
-        height: 16,
-        borderRadius: 8,
-        backgroundColor: '#E53E3E',
+        top: -1,
+        right: -1,
+        minWidth: 18,
+        height: 18,
+        borderRadius: 9,
+        backgroundColor: '#FF3B30', 
         justifyContent: 'center',
         alignItems: 'center',
-        paddingHorizontal: 2,
+        borderWidth: 1.5,
+        borderColor: '#061A37',
     },
-    bucketBadgeText: {
+    badgeText: {
         color: 'white',
         fontSize: 10,
-        fontWeight: '900',
-    },
-    bellBadge: {
-        position: 'absolute',
-        top: 0,
-        right: 0,
-        minWidth: 17,
-        height: 17,
-        borderRadius: 9,
-        backgroundColor: '#E53E3E',
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingHorizontal: 3,
-        borderWidth: 1.5,
-        borderColor: 'transparent',
-    },
-    bellBadgeText: {
-        color: 'white',
-        fontSize: 9,
         fontWeight: '900',
     },
     tabBar: {

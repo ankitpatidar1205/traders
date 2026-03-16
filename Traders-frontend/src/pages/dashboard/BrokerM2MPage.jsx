@@ -175,19 +175,26 @@
 
 
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { getBrokerM2M } from '../../services/api';
 
 const BrokerM2MPage = () => {
-  const brokerMetrics = [
-    { id: '3274 : Sweta namdev', ledger: '30134.83', m2m: '30234.53', pl: '99.65', trades: '24', margin: '32.77', holding: '97.76' },
-    { id: '3343 : Ar0', ledger: '14000', m2m: '6925', pl: '-7075', trades: '1', margin: '500', holding: '2500' },
-    { id: '3725 : Namdevji', ledger: '2398.8', m2m: '2481.04', pl: '82.24', trades: '17', margin: '18.72', holding: '55.85' },
-    { id: '4249 : Sajjan', ledger: '13216.93', m2m: '12616.93', pl: '-600', trades: '2', margin: '1447.95', holding: '4322.24' },
-    { id: '4334 : Subhash bhavar', ledger: '131679.63', m2m: '124899.63', pl: '-6780', trades: '1', margin: '2000', holding: '8000' },
-    { id: '4372 : Pardeep kumar', ledger: '58118.96', m2m: '54538.96', pl: '-3580', trades: '1', margin: '1000', holding: '5000' },
-    { id: '4378 : Arjun jain', ledger: '282153.54', m2m: '276628.54', pl: '-5525', trades: '2', margin: '3000', holding: '15000' },
-    { id: '4395 : Jitu0', ledger: '132489.06', m2m: '133189.06', pl: '700', trades: '2', margin: '40000', holding: '50000' },
-  ];
+  const [brokerMetrics, setBrokerMetrics] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const data = await getBrokerM2M();
+        setBrokerMetrics(data || []);
+      } catch (err) {
+        console.error('Failed to fetch broker M2M:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   const InfoCard = ({ title, data }) => (
     <div className="bg-[#1f283e] rounded-lg border border-white/5 shadow-xl overflow-hidden flex flex-col">
@@ -231,30 +238,34 @@ const BrokerM2MPage = () => {
               </tr>
             </thead>
             <tbody className="text-[11px] text-slate-300">
-              {brokerMetrics.map((row, idx) => (
-                <tr key={row.id} className="border-b border-white/5 hover:bg-[#1a2035]/50 transition-colors">
+              {loading ? (
+                <tr><td colSpan="4" className="px-6 py-6 text-center text-slate-500">Loading...</td></tr>
+              ) : brokerMetrics.length === 0 ? (
+                <tr><td colSpan="4" className="px-6 py-6 text-center text-slate-500">No data available</td></tr>
+              ) : brokerMetrics.map((row, idx) => (
+                <tr key={row.user_id || idx} className="border-b border-white/5 hover:bg-[#1a2035]/50 transition-colors">
                   <td className="px-6 py-3">
                     <span className="text-[#01B4EA] font-bold cursor-pointer hover:underline">
-                      {row.id}
+                      {row.user_id}: {row.username}
                     </span>
                   </td>
-                  <td className={`px-6 py-3 font-bold ${parseFloat(row.pl) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                    {row.pl}
+                  <td className={`px-6 py-3 font-bold ${parseFloat(row.live_pnl || 0) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                    {parseFloat(row.live_pnl || 0).toFixed(2)}
                   </td>
-                  <td className="px-6 py-3 text-slate-300">
-                    {row.trades}
-                  </td>
-                  <td className="px-6 py-3 text-slate-300">
-                    {row.margin}
-                  </td>
+                  <td className="px-6 py-3 text-slate-300">{row.active_trades || 0}</td>
+                  <td className="px-6 py-3 text-slate-300">{row.margin_used || 0}</td>
                 </tr>
               ))}
-              <tr className="border-b border-white/10 bg-[#1a2035] font-bold text-white">
-                <td className="px-6 py-3 text-slate-400">Total</td>
-                <td className="px-6 py-3">0</td>
-                <td className="px-6 py-3">0</td>
-                <td className="px-6 py-3">0</td>
-              </tr>
+              {brokerMetrics.length > 0 && (
+                <tr className="border-b border-white/10 bg-[#1a2035] font-bold text-white">
+                  <td className="px-6 py-3 text-slate-400">Total</td>
+                  <td className={`px-6 py-3 font-bold ${brokerMetrics.reduce((s, r) => s + parseFloat(r.live_pnl || 0), 0) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                    {brokerMetrics.reduce((s, r) => s + parseFloat(r.live_pnl || 0), 0).toFixed(2)}
+                  </td>
+                  <td className="px-6 py-3">{brokerMetrics.reduce((s, r) => s + (r.active_trades || 0), 0)}</td>
+                  <td className="px-6 py-3">{brokerMetrics.reduce((s, r) => s + parseFloat(r.margin_used || 0), 0).toFixed(2)}</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

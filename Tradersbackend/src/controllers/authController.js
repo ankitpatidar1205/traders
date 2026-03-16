@@ -188,4 +188,23 @@ const changePassword = async (req, res) => {
     }
 };
 
-module.exports = { login, createUser, updateTransactionPassword, changePassword };
+const verifyTransactionPassword = async (req, res) => {
+    const { password } = req.body;
+    try {
+        const [rows] = await db.execute('SELECT transaction_password FROM users WHERE id = ?', [req.user.id]);
+        const user = rows[0];
+        if (!user || !user.transaction_password) {
+            return res.status(400).json({ message: 'Transaction password not set' });
+        }
+        const isMatch = await bcrypt.compare(password, user.transaction_password);
+        if (!isMatch) {
+            return res.status(400).json({ message: 'Transaction password invalid' });
+        }
+        res.json({ message: 'OK' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+};
+
+module.exports = { login, createUser, updateTransactionPassword, changePassword, verifyTransactionPassword };

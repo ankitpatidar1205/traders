@@ -203,7 +203,8 @@ const SegmentFields = ({ segmentKey, label, formData, onChange, handleSegmentCha
   );
 };
 
-const ClientDetailsForm = ({ onBack, onSave, mode = 'edit' }) => {
+const ClientDetailsForm = ({ onBack, onSave, mode = 'edit', initialData = null }) => {
+  const roleLabel = initialData?.role === 'ADMIN' ? 'Admin' : initialData?.role === 'BROKER' ? 'Broker' : 'Trading Client';
   const [openSections, setOpenSections] = useState({
     personal: true,
     config: true,
@@ -221,12 +222,12 @@ const ClientDetailsForm = ({ onBack, onSave, mode = 'edit' }) => {
 
   const [formData, setFormData] = useState({
     // Basic Details
-    name: '',
-    username: '',
-    email: '',
-    mobile: '',
+    name: initialData?.full_name || '',
+    username: initialData?.username || '',
+    email: initialData?.email || '',
+    mobile: initialData?.mobile || '',
     password: '',
-    city: '',
+    city: initialData?.city || '',
     accountStatus: true,
     clientGroup: 'Default',
     dealerMapping: 'Admin',
@@ -341,7 +342,7 @@ const ClientDetailsForm = ({ onBack, onSave, mode = 'edit' }) => {
         <div className="flex items-center gap-4">
           <div className="w-2 h-8 bg-[#4CAF50] rounded-full" />
           <h2 className="text-xl font-bold text-white uppercase tracking-wider">
-            {mode === 'create' ? 'Create Trading Client' : 'Update Trading Client'}
+            {mode === 'create' ? `Create ${roleLabel}` : `Update ${roleLabel}`}
           </h2>
         </div>
         <button onClick={onBack} className="bg-[#2d3748] hover:bg-slate-700 text-slate-300 hover:text-white px-4 py-2 rounded-md text-xs font-bold uppercase transition-all border border-slate-600">Close</button>

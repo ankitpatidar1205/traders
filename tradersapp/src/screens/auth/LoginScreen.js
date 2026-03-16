@@ -25,6 +25,7 @@ const LoginScreen = ({ navigation }) => {
     const { fetchInitialData } = useTrades();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [isLoginSuccessVisible, setIsLoginSuccessVisible] = useState(false);
     const [loading, setLoading] = useState(false);
 
@@ -95,10 +96,20 @@ const LoginScreen = ({ navigation }) => {
                                 onChangeText={setPassword}
                                 placeholder="Password"
                                 placeholderTextColor="#75a1cb"
-                                secureTextEntry={true}
+                                secureTextEntry={!showPassword}
                                 cursorColor="#7ba6a9"
                                 underlineColorAndroid="transparent"
                             />
+                            <TouchableOpacity 
+                                style={styles.eyeIcon} 
+                                onPress={() => setShowPassword(!showPassword)}
+                            >
+                                {showPassword ? (
+                                    <EyeOff size={20} color="#75a1cb" />
+                                ) : (
+                                    <Eye size={20} color="#75a1cb" />
+                                )}
+                            </TouchableOpacity>
                         </View>
 
                         <TouchableOpacity
@@ -228,6 +239,13 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 18,
         paddingBottom: 2,
+        paddingRight: 35, // Space for the eye icon
+    },
+    eyeIcon: {
+        position: 'absolute',
+        right: 0,
+        bottom: 10,
+        padding: 5,
     },
     loginButton: {
         backgroundColor: 'white',

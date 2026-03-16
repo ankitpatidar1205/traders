@@ -91,26 +91,62 @@ export const getWatchlist = async () => {
 };
 
 export const createWithdrawal = async (data) => {
-    const res = await fetch(`${BASE_URL}/request/withdrawal`, {
+    const res = await fetch(`${BASE_URL}/requests`, {
         method: 'POST',
         headers: await getHeaders(),
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+            amount: data.amount,
+            type: 'WITHDRAW',
+            bankName: data.bankName,
+            accountHolder: data.accountHolder,
+            accountNumber: data.accountNumber,
+            ifscCode: data.ifsc,
+            upiId: data.upiId,
+            paymentMethod: data.method
+        }),
     });
     return handleResponse(res);
 };
 
 export const getWithdrawals = async () => {
-    const res = await fetch(`${BASE_URL}/request/list`, {
+    const res = await fetch(`${BASE_URL}/requests?type=WITHDRAW`, {
         headers: await getHeaders(),
     });
     return handleResponse(res);
 };
 
-export const changePassword = async (newPassword) => {
+export const changePassword = async (currentPassword, newPassword) => {
     const res = await fetch(`${BASE_URL}/auth/change-password`, {
         method: 'POST',
         headers: await getHeaders(),
-        body: JSON.stringify({ newPassword }),
+        body: JSON.stringify({ currentPassword, newPassword }),
+    });
+    return handleResponse(res);
+};
+
+export const createDeposit = async (amount, screenshotUri) => {
+    const formData = new FormData();
+    formData.append('amount', amount);
+    formData.append('type', 'DEPOSIT');
+
+    if (screenshotUri) {
+        const filename = screenshotUri.split('/').pop();
+        const match = /\.(\w+)$/.exec(filename);
+        const type = match ? `image/${match[1]}` : `image`;
+        formData.append('screenshot', {
+            uri: screenshotUri,
+            name: filename,
+            type
+        });
+    }
+
+    const headers = await getHeaders();
+    delete headers['Content-Type'];
+
+    const res = await fetch(`${BASE_URL}/requests`, {
+        method: 'POST',
+        headers: headers,
+        body: formData,
     });
     return handleResponse(res);
 };

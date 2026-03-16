@@ -21,6 +21,21 @@ async function checkSchema() {
         console.log('\nclient_settings table does not exist.');
     }
 
+    // Auto-create bank_details table if not exists
+    await connection.execute(`
+        CREATE TABLE IF NOT EXISTS bank_details (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            bank_name VARCHAR(100) NOT NULL,
+            account_holder VARCHAR(150) NOT NULL,
+            account_number VARCHAR(50) NOT NULL,
+            ifsc VARCHAR(20) NOT NULL,
+            branch VARCHAR(150) NOT NULL,
+            status ENUM('Active','Inactive') DEFAULT 'Active',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+    console.log('\nbank_details table ensured.');
+
     await connection.end();
 }
 

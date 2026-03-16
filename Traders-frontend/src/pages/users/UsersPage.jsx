@@ -1,20 +1,29 @@
 import React, { useState, useEffect } from 'react';
-import { UserPlus, RotateCcw, Trash2 } from 'lucide-react';
-import { useAuth, ROLES } from '../../context/AuthContext';
+import { RotateCcw, X, User, Mail, Lock, Phone } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 import DataTable from '../../components/common/DataTable';
 import ConfirmModal from '../../components/modals/ConfirmModal';
 import Toast from '../../components/common/Toast';
 import * as api from '../../services/api';
 
 const UsersPage = ({ onNavigate, roleFilter }) => {
-    const { user, isSuperAdmin, isAdmin, isBroker } = useAuth();
+    const { isSuperAdmin, isAdmin } = useAuth();
     const [filters, setFilters] = useState({ username: '', status: '' });
     const [resetModal, setResetModal] = useState({ open: false, user: null });
     const [deleteModal, setDeleteModal] = useState({ open: false, user: null });
     const [toast, setToast] = useState({ message: '', type: 'success' });
-
     const [usersData, setUsersData] = useState([]);
     const [loading, setLoading] = useState(false);
+
+    // View modal
+    const [viewModal, setViewModal] = useState({ open: false, user: null });
+
+    // Edit modal
+    const [editModal, setEditModal] = useState({ open: false, user: null });
+    const [editForm, setEditForm] = useState({ full_name: '', email: '', mobile: '', password: '' });
+    const [editLoading, setEditLoading] = useState(false);
+
+    const roleLabel = roleFilter === 'ADMIN' ? 'Admin' : 'Broker';
 
     useEffect(() => {
         fetchUsers();
@@ -36,15 +45,6 @@ const UsersPage = ({ onNavigate, roleFilter }) => {
         setFilters(prev => ({ ...prev, [e.target.name]: e.target.value }));
     };
 
-    const handleSearch = () => {
-        fetchUsers(); 
-    };
-
-    const handleReset = () => {
-        setFilters({ username: '', status: '' });
-        fetchUsers();
-    };
-
     const toggleStatus = async (userId, currentStatus) => {
         const newStatus = currentStatus === 'Active' ? 'Inactive' : 'Active';
         try {
@@ -52,24 +52,54 @@ const UsersPage = ({ onNavigate, roleFilter }) => {
             setToast({ message: `Status updated to ${newStatus}`, type: 'success' });
             fetchUsers();
         } catch (err) {
-            console.error('Failed to update status:', err);
             setToast({ message: 'Failed to update status', type: 'error' });
         }
     };
 
+    const openEditModal = (row) => {
+        setEditForm({
+            full_name: row.full_name || '',
+            email: row.email || '',
+            mobile: row.mobile || '',
+            password: '',
+        });
+        setEditModal({ open: true, user: row });
+    };
+
+    const handleEditSave = async () => {
+        setEditLoading(true);
+        try {
+            const payload = { full_name: editForm.full_name, email: editForm.email, mobile: editForm.mobile };
+            if (editForm.password) payload.password = editForm.password;
+            await api.updateUser(editModal.user.id, payload);
+            setToast({ message: `${roleLabel} updated successfully`, type: 'success' });
+            setEditModal({ open: false, user: null });
+            fetchUsers();
+        } catch (err) {
+            setToast({ message: 'Failed to update: ' + err.message, type: 'error' });
+        } finally {
+            setEditLoading(false);
+        }
+    };
+
     const handleResetPassword = async () => {
-        setToast({ message: `Password reset for ${resetModal.user?.username}`, type: 'success' });
-        setResetModal({ open: false, user: null });
+        try {
+            await api.resetPassword(resetModal.user?.id);
+            setToast({ message: `Password reset for ${resetModal.user?.username}`, type: 'success' });
+        } catch (err) {
+            setToast({ message: 'Failed to reset password: ' + err.message, type: 'error' });
+        } finally {
+            setResetModal({ open: false, user: null });
+        }
     };
 
     const handleDeleteUser = async () => {
         try {
             await api.deleteUser(deleteModal.user?.id);
-            setToast({ message: `${roleFilter === 'ADMIN' ? 'Admin' : 'Broker'} ${deleteModal.user?.username} deleted successfully`, type: 'success' });
+            setToast({ message: `${roleLabel} ${deleteModal.user?.username} deleted successfully`, type: 'success' });
             fetchUsers();
         } catch (err) {
-            console.error('Failed to delete user:', err);
-            setToast({ message: 'Failed to delete user: ' + err.message, type: 'error' });
+            setToast({ message: 'Failed to delete: ' + err.message, type: 'error' });
         } finally {
             setDeleteModal({ open: false, user: null });
         }
@@ -86,7 +116,7 @@ const UsersPage = ({ onNavigate, roleFilter }) => {
         },
         {
             key: 'status', label: 'Status', render: (val, row) => (
-                <button 
+                <button
                     onClick={() => toggleStatus(row.id, val)}
                     title={`Click to change to ${val === 'Active' ? 'Inactive' : 'Active'}`}
                     className={`badge ${val === 'Active' ? 'badge-active' : 'badge-inactive'} badge-interactive flex items-center gap-1.5`}
@@ -96,14 +126,12 @@ const UsersPage = ({ onNavigate, roleFilter }) => {
                 </button>
             )
         },
-        { 
-            key: 'created_at', label: 'Created At', render: (val) => val ? new Date(val).toLocaleString() : '-' 
-        },
+        { key: 'created_at', label: 'Created At', render: (val) => val ? new Date(val).toLocaleString() : '-' },
     ];
 
     const actions = {
-        onView: (row) => onNavigate('client-details'),
-        onEdit: (row) => onNavigate('edit'),
+        onView: (row) => setViewModal({ open: true, user: row }),
+        onEdit: (row) => openEditModal(row),
         onDelete: (row) => setDeleteModal({ open: true, user: row }),
     };
 
@@ -116,6 +144,7 @@ const UsersPage = ({ onNavigate, roleFilter }) => {
 
     return (
         <div className="flex flex-col h-full bg-[#1a2035] space-y-6 overflow-y-auto">
+            {/* Filters */}
             <div className="bg-[#1f283e] p-10 rounded shadow-2xl border border-white/5 mx-6">
                 <div className="flex flex-col md:flex-row gap-10 md:gap-24 mb-6">
                     <div className="flex-1 max-w-sm">
@@ -130,28 +159,27 @@ const UsersPage = ({ onNavigate, roleFilter }) => {
                         />
                         <div className="flex gap-2 mt-8">
                             <button
-                                onClick={handleSearch}
+                                onClick={fetchUsers}
                                 className="text-white px-8 py-2.5 rounded text-sm font-bold uppercase tracking-wider transition-all shadow-[0_4px_10px_rgba(76,175,80,0.3)] hover:shadow-[0_4px_20px_rgba(76,175,80,0.5)] active:scale-95"
                                 style={{ background: 'linear-gradient(60deg, #288c6c, #4ea752)' }}
                             >
                                 SEARCH
                             </button>
                             <button
-                                onClick={handleReset}
+                                onClick={() => { setFilters({ username: '', status: '' }); fetchUsers(); }}
                                 className="bg-[#808080] hover:bg-[#707070] text-white px-8 py-2.5 rounded text-sm font-bold uppercase tracking-wider flex items-center gap-2 transition-all"
                             >
                                 <RotateCcw className="w-4 h-4" /> RESET
                             </button>
                         </div>
                     </div>
-
                     <div className="flex-1 max-w-sm">
                         <label className="block text-sm text-slate-300 mb-2">Account Status</label>
                         <select
                             name="status"
                             value={filters.status}
                             onChange={handleFilterChange}
-                            className="bg-white text-slate-900 w-full px-4 py-2 rounded border border-slate-300 text-sm outline-none cursor-pointer focus:ring-2 focus:ring-[#5cb85c]/50"
+                            className="bg-white text-slate-900 w-full px-4 py-2 rounded border border-slate-300 text-sm outline-none cursor-pointer"
                         >
                             <option value="">All</option>
                             <option value="Inactive">Inactive</option>
@@ -161,6 +189,7 @@ const UsersPage = ({ onNavigate, roleFilter }) => {
                 </div>
             </div>
 
+            {/* Add buttons */}
             <div className="px-6 flex flex-wrap gap-4">
                 {roleFilter === 'ADMIN' && isSuperAdmin() && (
                     <button
@@ -174,7 +203,7 @@ const UsersPage = ({ onNavigate, roleFilter }) => {
                 {roleFilter === 'BROKER' && isAdmin() && (
                     <button
                         onClick={() => onNavigate('create-broker')}
-                        className="text-white px-6 py-2.5 rounded font-bold text-xs uppercase tracking-widest transition-all shadow-[0_4px_10px_rgba(76,175,80,0.3)] hover:shadow-[0_4_20px_rgba(76,175,80,0.5)] active:scale-95"
+                        className="text-white px-6 py-2.5 rounded font-bold text-xs uppercase tracking-widest transition-all shadow-[0_4px_10px_rgba(76,175,80,0.3)] hover:shadow-[0_4px_20px_rgba(76,175,80,0.5)] active:scale-95"
                         style={{ background: 'linear-gradient(60deg, #288c6c, #4ea752)' }}
                     >
                         ADD BROKER
@@ -182,15 +211,146 @@ const UsersPage = ({ onNavigate, roleFilter }) => {
                 )}
             </div>
 
+            {/* Table */}
             <div className="mx-6 bg-[#1f283e] rounded border border-white/5 p-8 text-slate-400 text-sm">
                 {loading ? (
-                    <div className="text-left font-medium">Loading {roleFilter === 'ADMIN' ? 'Admins' : 'Brokers'}...</div>
+                    <div className="text-left font-medium">Loading {roleLabel}s...</div>
                 ) : filteredUsers.length > 0 ? (
-                    <DataTable columns={columns} data={filteredUsers} actions={actions} searchable={false} emptyMessage={`${roleFilter === 'ADMIN' ? 'Admins' : 'Brokers'} Not Found`} />
+                    <DataTable columns={columns} data={filteredUsers} actions={actions} searchable={false} emptyMessage={`${roleLabel}s Not Found`} />
                 ) : (
-                    <div className="text-left font-medium">{roleFilter === 'ADMIN' ? 'Admins' : 'Brokers'} Not Found</div>
+                    <div className="text-left font-medium">{roleLabel}s Not Found</div>
                 )}
             </div>
+
+            {/* ── VIEW MODAL ── */}
+            {viewModal.open && viewModal.user && (
+                <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+                    <div className="bg-[#1f283e] rounded-xl border border-white/10 shadow-2xl w-full max-w-md">
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10" style={{ background: 'linear-gradient(60deg, #288c6c, #4ea752)', borderRadius: '12px 12px 0 0' }}>
+                            <h2 className="text-white text-lg font-bold uppercase tracking-wider">{roleLabel} Details</h2>
+                            <button onClick={() => setViewModal({ open: false, user: null })} className="text-white hover:bg-black/20 p-1 rounded-full transition-colors">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            {[
+                                { label: 'ID', value: viewModal.user.id },
+                                { label: 'Username', value: viewModal.user.username },
+                                { label: 'Full Name', value: viewModal.user.full_name || '—' },
+                                { label: 'Email', value: viewModal.user.email || '—' },
+                                { label: 'Mobile', value: viewModal.user.mobile || '—' },
+                                { label: 'Role', value: viewModal.user.role },
+                                { label: 'Status', value: viewModal.user.status || '—' },
+                                { label: 'Created At', value: viewModal.user.created_at ? new Date(viewModal.user.created_at).toLocaleString() : '—' },
+                            ].map(({ label, value }) => (
+                                <div key={label} className="flex justify-between items-center py-2 border-b border-white/5">
+                                    <span className="text-slate-400 text-sm font-medium uppercase tracking-wider">{label}</span>
+                                    <span className="text-white text-sm font-bold">{value}</span>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="px-6 pb-6">
+                            <button
+                                onClick={() => setViewModal({ open: false, user: null })}
+                                className="w-full bg-white/10 hover:bg-white/20 text-white py-2.5 rounded font-bold text-sm uppercase tracking-wider transition-all"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ── EDIT MODAL ── */}
+            {editModal.open && editModal.user && (
+                <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+                    <div className="bg-[#1f283e] rounded-xl border border-white/10 shadow-2xl w-full max-w-lg">
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10" style={{ background: 'linear-gradient(60deg, #288c6c, #4ea752)', borderRadius: '12px 12px 0 0' }}>
+                            <h2 className="text-white text-lg font-bold uppercase tracking-wider">Edit {roleLabel}: {editModal.user.username}</h2>
+                            <button onClick={() => setEditModal({ open: false, user: null })} className="text-white hover:bg-black/20 p-1 rounded-full transition-colors">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="p-6 space-y-5" autoComplete="off">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div className="space-y-1">
+                                    <label className="text-slate-400 text-[11px] font-bold uppercase tracking-wider">Full Name</label>
+                                    <div className="relative">
+                                        <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                        <input
+                                            type="text"
+                                            value={editForm.full_name}
+                                            onChange={e => setEditForm(p => ({ ...p, full_name: e.target.value }))}
+                                            className="w-full bg-white border border-slate-200 rounded px-10 py-2.5 text-slate-900 font-bold focus:outline-none focus:border-[#4caf50] text-sm"
+                                            placeholder="Full name"
+                                            autoComplete="off"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-slate-400 text-[11px] font-bold uppercase tracking-wider">Email Address</label>
+                                    <div className="relative">
+                                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                        <input
+                                            type="email"
+                                            value={editForm.email}
+                                            onChange={e => setEditForm(p => ({ ...p, email: e.target.value }))}
+                                            className="w-full bg-white border border-slate-200 rounded px-10 py-2.5 text-slate-900 font-bold focus:outline-none focus:border-[#4caf50] text-sm"
+                                            placeholder="Email"
+                                            autoComplete="off"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-slate-400 text-[11px] font-bold uppercase tracking-wider">Mobile Number</label>
+                                    <div className="relative">
+                                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                        <input
+                                            type="tel"
+                                            value={editForm.mobile}
+                                            onChange={e => setEditForm(p => ({ ...p, mobile: e.target.value }))}
+                                            className="w-full bg-white border border-slate-200 rounded px-10 py-2.5 text-slate-900 font-bold focus:outline-none focus:border-[#4caf50] text-sm"
+                                            placeholder="10-digit mobile"
+                                            maxLength={10}
+                                            autoComplete="off"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-slate-400 text-[11px] font-bold uppercase tracking-wider">New Password <span className="normal-case text-slate-500">(optional)</span></label>
+                                    <div className="relative">
+                                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                        <input
+                                            type="password"
+                                            value={editForm.password}
+                                            onChange={e => setEditForm(p => ({ ...p, password: e.target.value }))}
+                                            className="w-full bg-white border border-slate-200 rounded px-10 py-2.5 text-slate-900 font-bold focus:outline-none focus:border-[#4caf50] text-sm"
+                                            placeholder="Leave blank to keep current"
+                                            autoComplete="new-password"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="px-6 pb-6 flex gap-3">
+                            <button
+                                onClick={handleEditSave}
+                                disabled={editLoading}
+                                className="flex-1 text-white py-3 rounded font-bold text-sm uppercase tracking-wider transition-all disabled:opacity-60 active:scale-[0.98]"
+                                style={{ background: 'linear-gradient(60deg, #288c6c, #4ea752)' }}
+                            >
+                                {editLoading ? 'SAVING...' : `UPDATE ${roleLabel.toUpperCase()}`}
+                            </button>
+                            <button
+                                onClick={() => setEditModal({ open: false, user: null })}
+                                className="px-6 bg-white/10 hover:bg-white/20 text-white py-3 rounded font-bold text-sm uppercase tracking-wider transition-all"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <ConfirmModal
                 isOpen={resetModal.open}
@@ -206,16 +366,16 @@ const UsersPage = ({ onNavigate, roleFilter }) => {
                 isOpen={deleteModal.open}
                 onClose={() => setDeleteModal({ open: false, user: null })}
                 onConfirm={handleDeleteUser}
-                title={`Delete ${roleFilter === 'ADMIN' ? 'Admin' : 'Broker'}`}
-                message={`Are you sure you want to delete ${roleFilter === 'ADMIN' ? 'admin' : 'broker'} "${deleteModal.user?.username}"? This action cannot be undone.`}
-                confirmText={`Delete ${roleFilter === 'ADMIN' ? 'Admin' : 'Broker'}`}
+                title={`Delete ${roleLabel}`}
+                message={`Are you sure you want to delete ${roleLabel.toLowerCase()} "${deleteModal.user?.username}"? This action cannot be undone.`}
+                confirmText={`Delete ${roleLabel}`}
                 type="danger"
             />
 
-            <Toast 
-                message={toast.message} 
-                type={toast.type} 
-                onClose={() => setToast({ message: '', type: 'success' })} 
+            <Toast
+                message={toast.message}
+                type={toast.type}
+                onClose={() => setToast({ message: '', type: 'success' })}
             />
         </div>
     );

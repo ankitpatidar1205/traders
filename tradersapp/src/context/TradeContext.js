@@ -437,11 +437,7 @@ export const TradeProvider = ({ children }) => {
 
     const addWithdrawalRequest = async (formData) => {
         try {
-            await api.createWithdrawal({
-                amount: formData.amount,
-                method: formData.method,
-                details: formData
-            });
+            await api.createWithdrawal(formData);
             addNotification({
                 title: 'Withdrawal Requested',
                 message: `Your request for ₹${formData.amount} has been submitted for admin review.`,

@@ -70,8 +70,10 @@ const getRiskScoring = async (req, res) => {
  * General Login History
  */
 const getIpLogins = async (req, res) => {
+    const { startDate, endDate, location, search } = req.query;
+    console.log('DEBUG: IP Logins Filters received:', { startDate, endDate, location, search });
     try {
-        const query = `
+        let query = `
             SELECT 
                 l.id, l.user_id, l.username, 
                 l.ip_address as ip, 
@@ -83,14 +85,39 @@ const getIpLogins = async (req, res) => {
                 u.full_name, u.role
             FROM ip_logins l
             LEFT JOIN users u ON l.user_id = u.id
-            ORDER BY l.timestamp DESC
-            LIMIT 200
+            WHERE 1=1
         `;
-        const [rows] = await db.execute(query);
+        const params = [];
+
+        if (startDate) {
+            query += ' AND l.timestamp >= ?';
+            params.push(`${startDate} 00:00:00`);
+        }
+        if (endDate) {
+            query += ' AND l.timestamp <= ?';
+            params.push(`${endDate} 23:59:59`);
+        }
+        if (location) {
+            query += ' AND (l.location LIKE ? OR l.city LIKE ? OR l.country LIKE ?)';
+            const locVal = `%${location}%`;
+            params.push(locVal, locVal, locVal);
+        }
+        if (search) {
+            query += ' AND (l.username LIKE ? OR l.ip_address LIKE ? OR l.city LIKE ? OR u.full_name LIKE ?)';
+            const searchVal = `%${search}%`;
+            params.push(searchVal, searchVal, searchVal, searchVal);
+        }
+
+        query += ' ORDER BY l.timestamp DESC LIMIT 500';
+
+        console.log('DEBUG: Executing Query:', query);
+        console.log('DEBUG: With Params:', params);
+
+        const [rows] = await db.execute(query, params);
         res.json(rows);
     } catch (err) {
         console.error(err);
-        res.status(500).send('Server Error');
+        res.status(500).json({ message: 'Internal Server Error' });
     }
 };
 

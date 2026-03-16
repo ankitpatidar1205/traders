@@ -26,9 +26,50 @@ import WithdrawalRequestScreen from '../screens/others/WithdrawalRequestScreen';
 import LearningScreen from '../screens/others/LearningScreen';
 import AlertsScreen from '../screens/others/AlertsScreen';
 import SupportScreen from '../screens/others/SupportScreen';
+import AiAssistantScreen from '../screens/others/AiAssistantScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
+
+const WatchlistStack = () => (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="WatchlistHome" component={DashboardScreen} />
+        <Stack.Screen name="Search" component={SearchScreen} />
+        <Stack.Screen name="Notifications" component={NotificationsScreen} />
+        <Stack.Screen name="AiAssistant" component={AiAssistantScreen} />
+        <Stack.Screen name="OrderDetail" component={OrderDetailScreen} />
+    </Stack.Navigator>
+);
+
+const TradesStack = () => (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="TradesHome" component={TradesScreen} />
+        <Stack.Screen name="ExitTrade" component={ExitTradeScreen} />
+        <Stack.Screen name="OrderDetail" component={OrderDetailScreen} />
+    </Stack.Navigator>
+);
+
+const PortfolioStack = () => (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="PortfolioHome" component={PortfolioScreen} />
+        <Stack.Screen name="OrderDetail" component={OrderDetailScreen} />
+    </Stack.Navigator>
+);
+
+const AccountStack = () => (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="AccountHome" component={AccountScreen} />
+        <Stack.Screen name="ProfileDetails" component={ProfileDetailsScreen} />
+        <Stack.Screen name="Funds" component={FundsScreen} />
+        <Stack.Screen name="DepositRequest" component={DepositRequestScreen} />
+        <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
+        <Stack.Screen name="EconomicCalendar" component={EconomicCalendarScreen} />
+        <Stack.Screen name="WithdrawalRequest" component={WithdrawalRequestScreen} />
+        <Stack.Screen name="Learning" component={LearningScreen} />
+        <Stack.Screen name="Alerts" component={AlertsScreen} />
+        <Stack.Screen name="Support" component={SupportScreen} />
+    </Stack.Navigator>
+);
 
 const MainTabs = () => {
     return (
@@ -42,7 +83,6 @@ const MainTabs = () => {
                     };
 
                     if (route.name === 'Watchlist') {
-                        // Watchlist is just the Rupee symbol font
                         return <Text style={{ color, fontSize: 24, fontWeight: 'bold' }}>₹</Text>;
                     } else if (route.name === 'Trades') {
                         icon = <BookText {...iconProps} />;
@@ -54,13 +94,13 @@ const MainTabs = () => {
                     return icon;
                 },
                 tabBarActiveTintColor: '#ffffff',
-                tabBarInactiveTintColor: '#597895', // Using your requested color for inactive icons
+                tabBarInactiveTintColor: '#597895',
                 tabBarStyle: {
                     backgroundColor: 'black',
                     borderTopWidth: 0,
-                    height: 85, // Premium height
+                    height: 85,
                     paddingBottom: 25,
-                    paddingTop: 10,
+                    paddingTop: 0,
                 },
                 tabBarLabelStyle: {
                     fontSize: 14,
@@ -69,10 +109,10 @@ const MainTabs = () => {
                 headerShown: false,
             })}
         >
-            <Tab.Screen name="Watchlist" component={DashboardScreen} />
-            <Tab.Screen name="Trades" component={TradesScreen} />
-            <Tab.Screen name="Portfolio" component={PortfolioScreen} />
-            <Tab.Screen name="Account" component={AccountScreen} />
+            <Tab.Screen name="Watchlist" component={WatchlistStack} />
+            <Tab.Screen name="Trades" component={TradesStack} />
+            <Tab.Screen name="Portfolio" component={PortfolioStack} />
+            <Tab.Screen name="Account" component={AccountStack} />
         </Tab.Navigator>
     );
 };
@@ -87,19 +127,6 @@ const AppNavigator = () => {
                 <Stack.Screen name="Login" component={LoginScreen} />
                 <Stack.Screen name="SignUp" component={SignUpScreen} />
                 <Stack.Screen name="Main" component={MainTabs} />
-                <Stack.Screen name="OrderDetail" component={OrderDetailScreen} />
-                <Stack.Screen name="ProfileDetails" component={ProfileDetailsScreen} />
-                <Stack.Screen name="Funds" component={FundsScreen} />
-                <Stack.Screen name="DepositRequest" component={DepositRequestScreen} />
-                <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
-                <Stack.Screen name="Notifications" component={NotificationsScreen} />
-                <Stack.Screen name="EconomicCalendar" component={EconomicCalendarScreen} />
-                <Stack.Screen name="Search" component={SearchScreen} />
-                <Stack.Screen name="ExitTrade" component={ExitTradeScreen} />
-                <Stack.Screen name="WithdrawalRequest" component={WithdrawalRequestScreen} />
-                <Stack.Screen name="Learning" component={LearningScreen} />
-                <Stack.Screen name="Alerts" component={AlertsScreen} />
-                <Stack.Screen name="Support" component={SupportScreen} />
             </Stack.Navigator>
         </NavigationContainer>
     );

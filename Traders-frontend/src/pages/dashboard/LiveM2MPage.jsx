@@ -1,9 +1,29 @@
-import React from 'react';
-import { Search, RotateCcw, TrendingUp, TrendingDown, Users, DollarSign, Activity, FileText } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
 import SegmentDashboard from '../../components/dashboard/SegmentDashboard';
+import * as api from '../../services/api';
 
 const LiveM2MPage = ({ onNavigate, user }) => {
-  const isClient = user?.role === 'client';
+  const isClient = user?.role === 'TRADER';
+  const [clients, setClients] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!isClient) fetchM2M();
+  }, []);
+
+  const fetchM2M = async () => {
+    setLoading(true);
+    try {
+      const data = await api.getLiveM2M();
+      setClients(data.clients || []);
+      setStats(data.stats || null);
+    } catch (err) {
+      console.error('Failed to fetch live M2M:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (isClient) {
     return (
@@ -18,18 +38,6 @@ const LiveM2MPage = ({ onNavigate, user }) => {
       </div>
     );
   }
-
-  const clients = [
-    { id: '323 : rk002', activePL: '-22678.11', activeTrades: '50', margin: '47999.42' },
-    { id: '324 : rr001', activePL: '9018', activeTrades: '11', margin: '2157.13' },
-    { id: '337 : gg001', activePL: '-320', activeTrades: '1', margin: '3883.6' },
-    { id: '339 : sp001', activePL: '-74600', activeTrades: '1', margin: '10000' },
-    { id: '352 : rus001', activePL: '100740.1', activeTrades: '19', margin: '34474.41' },
-    { id: '390 : jp001', activePL: '181794.05', activeTrades: '18', margin: '50409.66' },
-    { id: '399 : ar001', activePL: '45000', activeTrades: '5', margin: '12000' },
-    { id: '410 : rs001', activePL: '-1200', activeTrades: '2', margin: '5000' },
-    { id: '423 : nh001', activePL: '8900', activeTrades: '8', margin: '15000' },
-  ];
 
   const StatCard = ({ title, data }) => (
     <div className="bg-[#1f283e] rounded-md shadow-2xl relative mt-10 mb-6">
@@ -90,33 +98,38 @@ const LiveM2MPage = ({ onNavigate, user }) => {
                 </tr>
               </thead>
               <tbody className="text-[13px] text-slate-300">
-                {clients.map((client, index) => (
-                  <tr
-                    key={index}
-                    className="border-b border-white/5 hover:bg-white/5 transition-colors"
-                  >
+                {loading ? (
+                  <tr><td colSpan="4" className="px-4 py-8 text-center text-slate-500">Loading...</td></tr>
+                ) : clients.length === 0 ? (
+                  <tr><td colSpan="4" className="px-4 py-8 text-center text-slate-500">No active traders</td></tr>
+                ) : clients.map((client, index) => (
+                  <tr key={client.id || index} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                     <td className="px-4 py-3">
                       <button
                         onClick={() => onNavigate('live-m2m-detail', client)}
                         className="inline-block px-4 py-1 rounded-full text-[11px] font-bold text-white shadow-[0_4px_10px_rgba(76,175,80,0.4)] hover:shadow-[0_4px_20px_rgba(76,175,80,0.6)] transition-all cursor-pointer border border-white/10"
                         style={{ background: 'linear-gradient(60deg, #288c6c, #4ea752)' }}
                       >
-                        {client.id}
+                        {client.id} : {client.username}
                       </button>
                     </td>
                     <td className={`px-4 py-4 font-bold ${parseFloat(client.activePL) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                      {client.activePL}
+                      {parseFloat(client.activePL || 0).toFixed(2)}
                     </td>
-                    <td className="px-4 py-4">{client.activeTrades}</td>
-                    <td className="px-4 py-4">{client.margin}</td>
+                    <td className="px-4 py-4">{client.activeTrades || 0}</td>
+                    <td className="px-4 py-4">{parseFloat(client.margin || 0).toFixed(2)}</td>
                   </tr>
                 ))}
-                <tr className="bg-black/10 font-bold text-white uppercase text-[11px] tracking-widest">
-                  <td className="px-4 py-4 uppercase">Total</td>
-                  <td className="px-4 py-4 text-green-500">2,46,654</td>
-                  <td className="px-4 py-4">115</td>
-                  <td className="px-4 py-4">1,80,924</td>
-                </tr>
+                {!loading && clients.length > 0 && (
+                  <tr className="bg-black/10 font-bold text-white uppercase text-[11px] tracking-widest">
+                    <td className="px-4 py-4">Total</td>
+                    <td className={`px-4 py-4 ${clients.reduce((s, c) => s + parseFloat(c.activePL || 0), 0) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                      {clients.reduce((s, c) => s + parseFloat(c.activePL || 0), 0).toFixed(2)}
+                    </td>
+                    <td className="px-4 py-4">{clients.reduce((s, c) => s + parseInt(c.activeTrades || 0), 0)}</td>
+                    <td className="px-4 py-4">{clients.reduce((s, c) => s + parseFloat(c.margin || 0), 0).toFixed(2)}</td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

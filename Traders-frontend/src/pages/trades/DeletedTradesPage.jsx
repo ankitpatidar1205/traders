@@ -1,25 +1,47 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { getTrades } from '../../services/api';
 
 const DeletedTradesPage = () => {
-    const [filters, setFilters] = useState({
-        username: ''
-    });
+    const [filters, setFilters] = useState({ username: '' });
+    const [tradesData, setTradesData] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    const tradesData = [];
+    useEffect(() => { fetchTrades(); }, []);
+
+    const fetchTrades = async (params = {}) => {
+        setLoading(true);
+        try {
+            const data = await getTrades({ status: 'DELETED', ...params });
+            setTradesData(data.map(t => ({
+                id: t.id,
+                scrip: t.symbol,
+                segment: t.segment || 'MCX',
+                userId: `${t.user_id}: ${t.username || ''}`,
+                buyRate: t.type === 'BUY' ? t.entry_price : t.exit_price,
+                sellRate: t.type === 'SELL' ? t.entry_price : t.exit_price,
+                lots: t.qty,
+                profitLoss: t.pnl,
+                timeDiff: t.closed_at && t.created_at ? Math.floor((new Date(t.closed_at) - new Date(t.created_at)) / 1000) + 's' : '-',
+                boughtAt: t.created_at ? new Date(t.created_at).toLocaleString() : '-',
+                soldAt: t.closed_at ? new Date(t.closed_at).toLocaleString() : '-',
+            })));
+        } catch (err) {
+            console.error('Failed to fetch deleted trades:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleFilterChange = (e) => {
         const { name, value } = e.target;
         setFilters(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSearch = () => {
-        console.log('Search with filters:', filters);
-    };
+    const handleSearch = () => fetchTrades(filters);
 
     const handleReset = () => {
-        setFilters({
-            username: ''
-        });
+        setFilters({ username: '' });
+        fetchTrades();
     };
 
     return (
@@ -63,7 +85,7 @@ const DeletedTradesPage = () => {
                 {/* Showing items count */}
                 <div className="px-6 py-4 bg-[#151c2c] border-b border-white/10">
                     <span className="text-slate-400 text-sm">
-                        Showing <b className="text-white">{tradesData.length}</b> of <b className="text-white">{tradesData.length}</b> items.
+                        {loading ? 'Loading...' : <>Showing <b className="text-white">{tradesData.length}</b> items.</>}
                     </span>
                 </div>
 

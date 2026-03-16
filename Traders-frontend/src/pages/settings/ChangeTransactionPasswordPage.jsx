@@ -26,7 +26,7 @@ const ChangeTransactionPasswordPage = () => {
         const newErrors = {};
         if (!formData.newPassword) {
             newErrors.newPassword = 'New transaction password is required.';
-        } else if (formData.newPassword.length < 4) { // Typical for trading pins/passwords
+        } else if (formData.newPassword.length < 4) {
             newErrors.newPassword = 'Password must be at least 4 characters.';
         }
         if (!formData.confirmPassword) {
@@ -132,7 +132,7 @@ const ChangeTransactionPasswordPage = () => {
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="btn-success-gradient text-white font-bold py-2.5 px-8 rounded uppercase text-[11px] tracking-widest min-w-[160px] h-[40px] flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-70"
+                                    className="btn-success-gradient text-white font-bold py-2.5 px-8 rounded uppercase text-[11px] tracking-widest min-w-40 h-10 flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-70"
                                     style={{
                                         background: 'linear-gradient(60deg, #288c6c, #4ea752)',
                                         boxShadow: '0 4px 20px 0 rgba(0,0,0,0.14), 0 7px 10px -5px rgba(76,175,80,0.4)'

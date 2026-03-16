@@ -1,17 +1,20 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, StatusBar, ScrollView, Alert, ImageBackground, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronLeft } from 'lucide-react-native';
+import { ChevronLeft, Eye, EyeOff } from 'lucide-react-native';
 import * as api from '../../services/api';
 
 import ScreenWrapper from '../../components/ScreenWrapper';
 
 const ChangePasswordScreen = ({ navigation }) => {
-    const [passwords, setPasswords] = useState({ new: '', confirm: '' });
+    const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
+    const [showCurrent, setShowCurrent] = useState(false);
+    const [showNew, setShowNew] = useState(false);
+    const [showConfirm, setShowConfirm] = useState(false);
     const [loading, setLoading] = useState(false);
 
     const handleUpdate = async () => {
-        if (!passwords.new || !passwords.confirm) {
+        if (!passwords.current || !passwords.new || !passwords.confirm) {
             Alert.alert("Error", "Please fill all fields");
             return;
         }
@@ -26,7 +29,7 @@ const ChangePasswordScreen = ({ navigation }) => {
 
         setLoading(true);
         try {
-            await api.changePassword(passwords.new);
+            await api.changePassword(passwords.current, passwords.new);
             Alert.alert("Success", "Password updated successfully");
             navigation.goBack();
         } catch (err) {
@@ -50,17 +53,38 @@ const ChangePasswordScreen = ({ navigation }) => {
                 <View style={styles.formContainer}>
 
                     <View style={styles.inputGroup}>
+                        <Text style={styles.label}>Current Password</Text>
+                        <View style={styles.inputContainer}>
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Enter Current Password"
+                                placeholderTextColor="#B0BEC5"
+                                secureTextEntry={!showCurrent}
+                                value={passwords.current}
+                                onChangeText={(val) => setPasswords(prev => ({ ...prev, current: val }))}
+                                cursorColor="white"
+                            />
+                            <TouchableOpacity onPress={() => setShowCurrent(!showCurrent)} style={styles.eyeBtn}>
+                                {showCurrent ? <EyeOff size={20} color="#B0BEC5" /> : <Eye size={20} color="#B0BEC5" />}
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+
+                    <View style={styles.inputGroup}>
                         <Text style={styles.label}>New Password</Text>
                         <View style={styles.inputContainer}>
                             <TextInput
                                 style={styles.input}
                                 placeholder="Enter New Password"
                                 placeholderTextColor="#B0BEC5"
-                                secureTextEntry={true}
+                                secureTextEntry={!showNew}
                                 value={passwords.new}
                                 onChangeText={(val) => setPasswords(prev => ({ ...prev, new: val }))}
                                 cursorColor="white"
                             />
+                            <TouchableOpacity onPress={() => setShowNew(!showNew)} style={styles.eyeBtn}>
+                                {showNew ? <EyeOff size={20} color="#B0BEC5" /> : <Eye size={20} color="#B0BEC5" />}
+                            </TouchableOpacity>
                         </View>
                     </View>
 
@@ -71,11 +95,14 @@ const ChangePasswordScreen = ({ navigation }) => {
                                 style={styles.input}
                                 placeholder="Enter Confirm New Password"
                                 placeholderTextColor="#B0BEC5"
-                                secureTextEntry={true}
+                                secureTextEntry={!showConfirm}
                                 value={passwords.confirm}
                                 onChangeText={(val) => setPasswords(prev => ({ ...prev, confirm: val }))}
                                 cursorColor="white"
                             />
+                            <TouchableOpacity onPress={() => setShowConfirm(!showConfirm)} style={styles.eyeBtn}>
+                                {showConfirm ? <EyeOff size={20} color="#B0BEC5" /> : <Eye size={20} color="#B0BEC5" />}
+                            </TouchableOpacity>
                         </View>
                     </View>
 
@@ -146,6 +173,9 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 16,
         height: '100%',
+    },
+    eyeBtn: {
+        padding: 5,
     },
     submitBtn: {
         backgroundColor: '#EF4444',

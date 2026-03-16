@@ -45,7 +45,7 @@ const SimpleAddUserForm = ({ role, onBack, onSave }) => {
                     </div>
                 </div>
 
-                <form onSubmit={handleSubmit} className="p-8 space-y-8 bg-[#1f283e]">
+                <form onSubmit={handleSubmit} className="p-8 space-y-8 bg-[#1f283e]" autoComplete="off">
                     {error && (
                         <div className="bg-red-500/10 border border-red-500/30 text-red-400 rounded px-4 py-3 text-sm">
                             {error}
@@ -114,6 +114,7 @@ const SimpleAddUserForm = ({ role, onBack, onSave }) => {
                                     value={formData.password}
                                     onChange={handleChange}
                                     required
+                                    autoComplete="new-password"
                                     className="w-full bg-white border border-slate-200 rounded px-10 py-3 text-slate-900 font-bold focus:outline-none focus:ring-2 focus:ring-[#4caf50]/20 focus:border-[#4caf50] transition-all placeholder:font-normal placeholder:text-slate-400"
                                     placeholder="••••••••"
                                 />

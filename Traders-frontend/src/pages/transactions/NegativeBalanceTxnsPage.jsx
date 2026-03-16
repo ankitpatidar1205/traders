@@ -109,7 +109,7 @@ const NegativeBalanceTxnsPage = () => {
             {/* Table Results Section */}
             <div className="bg-[#1f283e] rounded-lg shadow-2xl border border-white/5 overflow-hidden">
                 <div className="px-8 py-4 bg-[#212a41] border-b border-white/5">
-                    <span className="text-slate-400 text-sm">Showing <b className="text-white">0</b> of <b className="text-white">0</b> items.</span>
+                    <span className="text-slate-400 text-sm">Showing <b className="text-white">{data.length}</b> of <b className="text-white">{data.length}</b> items.</span>
                 </div>
 
                 <div className="overflow-x-auto min-h-[100px]">
@@ -127,7 +127,24 @@ const NegativeBalanceTxnsPage = () => {
                             </tr>
                         </thead>
                         <tbody className="text-[13px] text-slate-400">
-                            {/* Empty as per screenshot "Showing 0 of 0" */}
+                            {loading ? (
+                                <tr><td colSpan="8" className="px-8 py-10 text-center">Loading...</td></tr>
+                            ) : data.length === 0 ? (
+                                <tr><td colSpan="8" className="px-8 py-10 text-center">No records found.</td></tr>
+                            ) : data.map((row, i) => (
+                                <tr key={row.id || i} className="border-t border-white/5 hover:bg-white/[0.02] transition-colors">
+                                    <td className="px-8 py-4">{i + 1}</td>
+                                    <td className="px-8 py-4 text-white font-bold">{row.id}</td>
+                                    <td className="px-8 py-4 text-[#00BCD4]">{row.username}</td>
+                                    <td className="px-8 py-4">{row.full_name || '-'}</td>
+                                    <td className={`px-8 py-4 font-bold ${parseFloat(row.amount) < 0 ? 'text-red-400' : 'text-green-400'}`}>
+                                        ₹{parseFloat(row.amount || 0).toLocaleString()}
+                                    </td>
+                                    <td className="px-8 py-4">{row.txn_type || row.type || '-'}</td>
+                                    <td className="px-8 py-4">{row.notes || row.remarks || '-'}</td>
+                                    <td className="px-8 py-4">{row.created_at ? new Date(row.created_at).toLocaleString() : '-'}</td>
+                                </tr>
+                            ))}
                         </tbody>
                     </table>
                 </div>

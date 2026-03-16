@@ -1,37 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { getGroupTrades } from '../../services/api';
 
 const GroupTradesPage = () => {
-    const [filters, setFilters] = useState({
-        id: '',
-        scrip: '',
-        segment: 'All',
-        userId: '',
-        buyRate: '',
-        sellRate: '',
-        lots: ''
-    });
+    const [filters, setFilters] = useState({ id: '', scrip: '', segment: 'All', userId: '', buyRate: '', sellRate: '', lots: '' });
+    const [tradesData, setTradesData] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    const tradesData = [];
+    useEffect(() => { fetchTrades(); }, []);
+
+    const fetchTrades = async (params = {}) => {
+        setLoading(true);
+        try {
+            const data = await getGroupTrades(params);
+            setTradesData(data.map(t => ({
+                id: t.id,
+                scrip: t.symbol,
+                segment: t.segment || 'MCX',
+                userId: `${t.user_id}: ${t.username || ''}`,
+                buyRate: t.type === 'BUY' ? t.entry_price : '-',
+                sellRate: t.type === 'SELL' ? t.entry_price : '-',
+                lots: t.qty,
+                boughtAt: t.created_at ? new Date(t.created_at).toLocaleString() : '-',
+                soldAt: t.closed_at ? new Date(t.closed_at).toLocaleString() : '-',
+            })));
+        } catch (err) {
+            console.error('Failed to fetch group trades:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleFilterChange = (e) => {
         const { name, value } = e.target;
         setFilters(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSearch = () => {
-        console.log('Search with filters:', filters);
-    };
+    const handleSearch = () => fetchTrades(filters);
 
     const handleReset = () => {
-        setFilters({
-            id: '',
-            scrip: '',
-            segment: 'All',
-            userId: '',
-            buyRate: '',
-            sellRate: '',
-            lots: ''
-        });
+        setFilters({ id: '', scrip: '', segment: 'All', userId: '', buyRate: '', sellRate: '', lots: '' });
+        fetchTrades();
     };
 
     return (
@@ -141,7 +149,7 @@ const GroupTradesPage = () => {
                 {/* Showing items count */}
                 <div className="px-6 py-4 bg-[#151c2c] border-b border-white/10">
                     <span className="text-slate-400 text-sm">
-                        Showing <b className="text-white">{tradesData.length}</b> of <b className="text-white">{tradesData.length}</b> items.
+                        {loading ? 'Loading...' : <>Showing <b className="text-white">{tradesData.length}</b> items.</>}
                     </span>
                 </div>
 

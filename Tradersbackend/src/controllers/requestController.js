@@ -14,6 +14,12 @@ const getRequests = async (req, res) => {
 
         if (type) { query += ' AND r.type = ?'; params.push(type); }
         if (status) { query += ' AND r.status = ?'; params.push(status); }
+        
+        // If not admin, only show own requests
+        if (req.user.role !== 'SUPERADMIN' && req.user.role !== 'ADMIN') {
+            query += ' AND r.user_id = ?';
+            params.push(req.user.id);
+        }
 
         query += ' ORDER BY r.created_at DESC';
 
@@ -21,7 +27,7 @@ const getRequests = async (req, res) => {
         res.json(rows);
     } catch (err) {
         console.error(err);
-        res.status(500).send('Server Error');
+        res.status(500).json({ message: 'Internal Server Error' });
     }
 };
 
@@ -41,6 +47,12 @@ const updateRequestStatus = async (req, res) => {
         if (status === 'APPROVED') {
             // 2. Update User Balance
             const operator = request.type === 'DEPOSIT' ? '+' : '-';
+            // For withdrawals, check if user has enough balance
+            if (request.type === 'WITHDRAW') {
+                const [userRows] = await connection.execute('SELECT balance FROM users WHERE id = ?', [request.user_id]);
+                if (userRows[0].balance < request.amount) throw new Error('Insufficient balance');
+            }
+            
             await connection.execute(`UPDATE users SET balance = balance ${operator} ? WHERE id = ?`, [request.amount, request.user_id]);
 
             // 3. Get New Balance for Ledger
@@ -70,4 +82,41 @@ const updateRequestStatus = async (req, res) => {
     }
 };
 
-module.exports = { getRequests, updateRequestStatus };
+const createRequest = async (req, res) => {
+    const { 
+        amount, 
+        type, 
+        bankName, 
+        accountHolder, 
+        accountNumber, 
+        ifscCode, 
+        upiId, 
+        paymentMethod 
+    } = req.body; // type: DEPOSIT or WITHDRAW
+    const userId = req.user.id;
+    let screenshotUrl = null;
+
+    if (req.file) {
+        // Assume file is uploaded to /uploads/
+        screenshotUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    }
+
+    try {
+        const [result] = await db.execute(
+            'INSERT INTO payment_requests (user_id, amount, type, screenshot_url, bank_name, account_holder, account_number, ifsc_code, upi_id, payment_method, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "PENDING")',
+            [userId, amount, type, screenshotUrl, bankName, accountHolder, accountNumber, ifscCode, upiId, paymentMethod]
+        );
+        
+        await logAction(userId, `CREATE_${type}_REQUEST`, 'payment_requests', `User created ${type} request of ${amount}`);
+        
+        res.status(201).json({ 
+            message: 'Request created successfully', 
+            id: result.insertId 
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+};
+
+module.exports = { getRequests, updateRequestStatus, createRequest };

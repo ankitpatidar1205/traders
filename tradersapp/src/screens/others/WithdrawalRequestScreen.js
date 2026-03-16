@@ -227,31 +227,31 @@ const WithdrawalRequestScreen = ({ navigation }) => {
                             <View style={styles.historyTop}>
                                 <View>
                                     <Text style={styles.historyAmount}>₹{Number(req.amount).toLocaleString('en-IN')}</Text>
-                                    <Text style={styles.historyMethod}>{req.method}</Text>
+                                    <Text style={styles.historyMethod}>{req.payment_method || req.method}</Text>
                                 </View>
                                 <StatusBadge status={req.status} />
                             </View>
 
                             {/* Details */}
-                            {req.method === 'Bank Transfer' ? (
+                            {(req.payment_method || req.method) === 'Bank Transfer' ? (
                                 <View style={styles.historyDetails}>
-                                    <Text style={styles.historyDetailText}>Bank: {req.bankName}</Text>
-                                    <Text style={styles.historyDetailText}>A/C: {req.accountNumber}</Text>
-                                    <Text style={styles.historyDetailText}>IFSC: {req.ifsc}</Text>
+                                    <Text style={styles.historyDetailText}>Bank: {req.bank_name || req.bankName}</Text>
+                                    <Text style={styles.historyDetailText}>A/C: {req.account_number || req.accountNumber}</Text>
+                                    <Text style={styles.historyDetailText}>IFSC: {req.ifsc_code || req.ifsc}</Text>
                                 </View>
                             ) : (
                                 <View style={styles.historyDetails}>
-                                    <Text style={styles.historyDetailText}>UPI: {req.upiId}</Text>
+                                    <Text style={styles.historyDetailText}>UPI: {req.upi_id || req.upiId}</Text>
                                 </View>
                             )}
 
                             <View style={styles.historyFooter}>
                                 <Text style={styles.historyDate}>
-                                    Submitted: {formatDate(req.submittedAt)}
+                                    Submitted: {formatDate(req.created_at || req.submittedAt)}
                                 </Text>
-                                {req.statusUpdatedAt && (
+                                {(req.updated_at || req.statusUpdatedAt) && (
                                     <Text style={styles.historyDate}>
-                                        Updated: {formatDate(req.statusUpdatedAt)}
+                                        Updated: {formatDate(req.updated_at || req.statusUpdatedAt)}
                                     </Text>
                                 )}
                                 {req.remark ? (
