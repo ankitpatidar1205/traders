@@ -4,7 +4,7 @@ import { ROLE_MENU_ACCESS } from '../context/AuthContext';
 
 const ALL_MENU_ITEMS = [
     { id: 'live-m2m', label: 'Dashboard', icon: 'fa-table-columns' },
-    { id: 'kite-dashboard', label: 'Kite Dashboard', icon: 'fa-chart-line text-green-400' },
+    // { id: 'kite-dashboard', label: 'Kite Dashboard', icon: 'fa-chart-line text-green-400' },
     { id: 'market-watch', label: 'Market Watch', icon: 'fa-arrow-trend-up' },
     { id: 'notifications', label: 'Notifications', icon: 'fa-bell' },
     { id: 'action-ledger', label: 'Action Ledger', icon: 'fa-podcast' },

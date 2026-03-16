@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Save, ArrowLeft, Info, Check, ChevronDown, Settings, User, Lock, Key, FileUp, ShieldCheck, Eye, FileText } from 'lucide-react';
+import { X, Save, ArrowLeft, Info, Check, ChevronDown, Settings, User, Lock, Key, FileUp, ShieldCheck, Eye, FileText, Globe } from 'lucide-react';
 import * as api from '../../services/api';
 
 const InputField = ({ label, name, value, onChange, type = "text", placeholder, hint, className = "" }) => (
@@ -122,36 +122,36 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
 
         // 3. MCX Futures
         mcxTrading: client?.mcxTrading !== undefined ? client.mcxTrading : true,
-        mcxMinLot: client?.mcxMinLot || '0',
-        mcxMaxLot: client?.mcxMaxLot || '20',
-        mcxMaxLotScrip: client?.mcxMaxLotScrip || '50',
-        mcxMaxSizeAll: client?.mcxMaxSizeAll || '100',
-        mcxBrokerageType: client?.mcxBrokerageType || 'per_lot',
-        mcxBrokerage: client?.mcxBrokerage || '800.0000',
-        mcxExposureType: client?.mcxExposureType || 'per_lot',
+        mcxMinLot: client?.mcxMinLot || '1',
+        mcxMaxLot: client?.mcxMaxLot || '100',
+        mcxMaxLotScrip: client?.mcxMaxLotScrip || '1000',
+        mcxMaxSizeAll: client?.mcxMaxSizeAll || '5000',
+        mcxBrokerageType: client?.mcxBrokerageType || 'per_crore',
+        mcxBrokerage: client?.mcxBrokerage || '800',
+        mcxExposureType: client?.mcxExposureType || 'per_turnover',
         mcxIntradayMargin: client?.mcxIntradayMargin || '500',
         mcxHoldingMargin: client?.mcxHoldingMargin || '100',
         mcxLotMargins: client?.mcxLotMargins || {
-            BULLDEX: { INTRADAY: '10000', HOLDING: '10000' },
-            GOLD: { INTRADAY: '10000', HOLDING: '10000' },
-            SILVER: { INTRADAY: '15000', HOLDING: '40000' },
-            CRUDEOIL: { INTRADAY: '10000', HOLDING: '10000' },
-            'CRUDEOIL MINI': { INTRADAY: '10000', HOLDING: '10000' },
-            COPPER: { INTRADAY: '10000', HOLDING: '10000' },
-            NICKEL: { INTRADAY: '10000', HOLDING: '10000' },
-            ZINC: { INTRADAY: '10000', HOLDING: '10000' },
-            ZINCMINI: { INTRADAY: '1000', HOLDING: '1000' },
-            LEAD: { INTRADAY: '1000', HOLDING: '1000' },
-            LEADMINI: { INTRADAY: '1000', HOLDING: '1000' },
-            ALUMINIUM: { INTRADAY: '1000', HOLDING: '1000' },
-            ALUMINI: { INTRADAY: '1000', HOLDING: '1000' },
-            NATURALGAS: { INTRADAY: '1000', HOLDING: '1000' },
-            'NATURALGAS MINI': { INTRADAY: '1000', HOLDING: '1000' },
-            MENTHAOIL: { INTRADAY: '1000', HOLDING: '1000' },
-            COTTON: { INTRADAY: '1000', HOLDING: '1000' },
-            GOLDM: { INTRADAY: '1000', HOLDING: '1000' },
-            SILVERM: { INTRADAY: '1000', HOLDING: '1000' },
-            'SILVER MIC': { INTRADAY: '1000', HOLDING: '1000' }
+            BULLDEX: { INTRADAY: '10000', HOLDING: '10000', LOT: '1' },
+            GOLD: { INTRADAY: '10000', HOLDING: '10000', LOT: '1' },
+            SILVER: { INTRADAY: '15000', HOLDING: '40000', LOT: '1' },
+            CRUDEOIL: { INTRADAY: '10000', HOLDING: '10000', LOT: '1' },
+            'CRUDEOIL MINI': { INTRADAY: '10000', HOLDING: '10000', LOT: '1' },
+            COPPER: { INTRADAY: '10000', HOLDING: '10000', LOT: '1' },
+            NICKEL: { INTRADAY: '10000', HOLDING: '10000', LOT: '1' },
+            ZINC: { INTRADAY: '10000', HOLDING: '10000', LOT: '1' },
+            ZINCMINI: { INTRADAY: '1000', HOLDING: '1000', LOT: '1' },
+            LEAD: { INTRADAY: '1000', HOLDING: '1000', LOT: '1' },
+            LEADMINI: { INTRADAY: '1000', HOLDING: '1000', LOT: '1' },
+            ALUMINIUM: { INTRADAY: '1000', HOLDING: '1000', LOT: '1' },
+            ALUMINI: { INTRADAY: '1000', HOLDING: '1000', LOT: '1' },
+            NATURALGAS: { INTRADAY: '1000', HOLDING: '1000', LOT: '1' },
+            'NATURALGAS MINI': { INTRADAY: '1000', HOLDING: '1000', LOT: '1' },
+            MENTHAOIL: { INTRADAY: '1000', HOLDING: '1000', LOT: '1' },
+            COTTON: { INTRADAY: '1000', HOLDING: '1000', LOT: '1' },
+            GOLDM: { INTRADAY: '1000', HOLDING: '1000', LOT: '1' },
+            SILVERM: { INTRADAY: '1000', HOLDING: '1000', LOT: '1' },
+            'SILVER MIC': { INTRADAY: '1000', HOLDING: '1000', LOT: '1' }
         },
         mcxLotBrokerage: client?.mcxLotBrokerage || {
             GOLDM: '100.0000', SILVERM: '100.0000', BULLDEX: '500.0000', GOLD: '200.0000', SILVER: '150.0000',
@@ -170,18 +170,18 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
 
         // 4. Equity Futures
         equityTrading: client?.equityTrading !== undefined ? client.equityTrading : true,
-        equityBrokerage: client?.equityBrokerage || '800.0000',
-        equityMinQty: client?.equityMinQty || '0',
-        equityMaxQty: client?.equityMaxQty || '50',
-        equityMinIndexQty: client?.equityMinIndexQty || '0',
-        equityMaxIndexQty: client?.equityMaxIndexQty || '20',
-        equityMaxScrip: client?.equityMaxScrip || '100',
-        equityMaxIndexScrip: client?.equityMaxIndexScrip || '100',
-        equityMaxSizeAll: client?.equityMaxSizeAll || '100',
-        equityMaxSizeAllIndex: client?.equityMaxSizeAllIndex || '100',
+        equityBrokerage: client?.equityBrokerage || '800',
+        equityMinLot: client?.equityMinLot || '1',
+        equityMaxLot: client?.equityMaxLot || '100',
+        equityMinIndexLot: client?.equityMinIndexLot || '1',
+        equityMaxIndexLot: client?.equityMaxIndexLot || '100',
+        equityMaxScrip: client?.equityMaxScrip || '500',
+        equityMaxIndexScrip: client?.equityMaxIndexScrip || '500',
+        equityMaxSizeAll: client?.equityMaxSizeAll || '2000',
+        equityMaxSizeAllIndex: client?.equityMaxSizeAllIndex || '2000',
         equityIntradayMargin: client?.equityIntradayMargin || '500',
         equityHoldingMargin: client?.equityHoldingMargin || '100',
-        equityOrdersAway: client?.equityOrdersAway || '0.00',
+        equityOrdersAway: client?.equityOrdersAway || '5',
 
         // 5. Options Config
         indexOptionsTrading: client?.indexOptionsTrading !== undefined ? client.indexOptionsTrading : true,
@@ -217,7 +217,23 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
         optionsMcxHolding: client?.optionsMcxHolding || '2',
         optionsOrdersAway: client?.optionsOrdersAway || '0.00',
 
-        // 7. Other
+        // 6. Expiry Rules
+        autoSquareOff: 'No',
+        expirySquareOffTime: '11:30',
+        allowExpiringScrip: 'No',
+        daysBeforeExpiry: '0',
+        mcxOptionsAwayPoints: {
+            MCXBULLDEX: '0', GOLD: '0', SILVER: '0', CRUDEOIL: '0', COPPER: '0',
+            NICKEL: '0', ZINC: '0', LEAD: '0', NATURALGAS: '0', MENTHAOIL: '0',
+            COTTON: '0', GOLDM: '0', SILVERM: '0', 'SILVER MIC': '0'
+        },
+
+        // 7. International Segments
+        comexTrading: client?.comexTrading || false,
+        forexTrading: client?.forexTrading || false,
+        cryptoTrading: client?.cryptoTrading || false,
+
+        // 8. Other
         notes: client?.notes || '',
         broker: client?.broker || '',
         transactionPassword: '',
@@ -228,8 +244,9 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
             aadhaarFront: null,
             aadhaarBack: null,
             bankStatement: null,
-            addressProof: null
-        }
+            additionalDoc: null
+        },
+        kycStatus: 'Pending'
     });
 
     // Load full profile from API on mount
@@ -286,10 +303,10 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                         bidGaps: config.bidGaps ?? prev.bidGaps,
                         equityTrading: config.equityTrading ?? prev.equityTrading,
                         equityBrokerage: config.equityBrokerage ?? prev.equityBrokerage,
-                        equityMinLot: config.equityMinLot ?? prev.equityMinLot,
-                        equityMaxLot: config.equityMaxLot ?? prev.equityMaxLot,
-                        equityMinIndexLot: config.equityMinIndexLot ?? prev.equityMinIndexLot,
-                        equityMaxIndexLot: config.equityMaxIndexLot ?? prev.equityMaxIndexLot,
+                        equityMinLot: config.equityMinLot ?? config.equityMinQty ?? prev.equityMinLot,
+                        equityMaxLot: config.equityMaxLot ?? config.equityMaxQty ?? prev.equityMaxLot,
+                        equityMinIndexLot: config.equityMinIndexLot ?? config.equityMinIndexQty ?? prev.equityMinIndexLot,
+                        equityMaxIndexLot: config.equityMaxIndexLot ?? config.equityMaxIndexQty ?? prev.equityMaxIndexLot,
                         equityMaxScrip: config.equityMaxScrip ?? prev.equityMaxScrip,
                         equityMaxIndexScrip: config.equityMaxIndexScrip ?? prev.equityMaxIndexScrip,
                         equityMaxSizeAll: config.equityMaxSizeAll ?? prev.equityMaxSizeAll,
@@ -333,6 +350,7 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                         expirySquareOffTime: config.expirySquareOffTime ?? prev.expirySquareOffTime,
                         allowExpiringScrip: config.allowExpiringScrip ?? prev.allowExpiringScrip,
                         daysBeforeExpiry: config.daysBeforeExpiry ?? prev.daysBeforeExpiry,
+                        mcxOptionsAwayPoints: config.mcxOptionsAwayPoints ?? prev.mcxOptionsAwayPoints,
                         notes: config.notes ?? prev.notes,
                         broker: config.broker ?? prev.broker,
                     } : {})
@@ -653,7 +671,7 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                         {formData.mcxExposureType === 'per_lot' && (
                                             <div className="mt-8">
                                                 <h4 className="text-[17px] font-normal mb-10 px-4 border-l-2 border-[#4caf50] text-[#bcc0cf]" >MCX Exposure Lot wise:</h4>
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 px-2">
+                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 px-2">
                                                     {[
                                                         'BULLDEX', 'GOLD', 'SILVER', 'CRUDEOIL', 'CRUDEOIL MINI', 'COPPER', 'NICKEL', 'ZINC',
                                                         'ZINCMINI', 'LEAD', 'LEADMINI', 'ALUMINIUM', 'ALUMINI', 'NATURALGAS', 'NATURALGAS MINI',
@@ -662,6 +680,7 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                                         <React.Fragment key={scrip}>
                                                             <ScripField label={`${scrip} INTRADAY`} value={formData.mcxLotMargins[scrip]?.INTRADAY || '0'} onChange={(e) => handleNestedChange('mcxLotMargins', scrip, e.target.value, 'INTRADAY')} />
                                                             <ScripField label={`${scrip} HOLDING`} value={formData.mcxLotMargins[scrip]?.HOLDING || '0'} onChange={(e) => handleNestedChange('mcxLotMargins', scrip, e.target.value, 'HOLDING')} />
+                                                            <ScripField label={`${scrip} LOT`} value={formData.mcxLotMargins[scrip]?.LOT || '1'} onChange={(e) => handleNestedChange('mcxLotMargins', scrip, e.target.value, 'LOT')} />
                                                         </React.Fragment>
                                                     ))}
                                                 </div>
@@ -709,10 +728,10 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12">
                                             <CheckboxField label="Equity Trading" name="equityTrading" checked={formData.equityTrading} onChange={handleChange} />
                                             <InputField label="Equity brokerage Per Crore" name="equityBrokerage" value={formData.equityBrokerage} onChange={handleChange} />
-                                            <InputField label="Minimum quantity size required per single trade of Equity" name="equityMinQty" value={formData.equityMinQty} onChange={handleChange} />
-                                            <InputField label="Maximum quantity size allowed per single trade of Equity" name="equityMaxQty" value={formData.equityMaxQty} onChange={handleChange} />
-                                            <InputField label="Minimum quantity size required per single trade of Equity INDEX" name="equityMinIndexQty" value={formData.equityMinIndexQty} onChange={handleChange} />
-                                            <InputField label="Maximum quantity size allowed per single trade of Equity INDEX" name="equityMaxIndexQty" value={formData.equityMaxIndexQty} onChange={handleChange} />
+                                            <InputField label="Minimum lot size required per single trade of Equity" name="equityMinLot" value={formData.equityMinLot} onChange={handleChange} />
+                                            <InputField label="Maximum lot size allowed per single trade of Equity" name="equityMaxLot" value={formData.equityMaxLot} onChange={handleChange} />
+                                            <InputField label="Minimum lot size required per single trade of Equity INDEX" name="equityMinIndexLot" value={formData.equityMinIndexLot} onChange={handleChange} />
+                                            <InputField label="Maximum lot size allowed per single trade of Equity INDEX" name="equityMaxIndexLot" value={formData.equityMaxIndexLot} onChange={handleChange} />
                                             <InputField label="Maximum quantity size allowed per script of Equity to be actively open at a time" name="equityMaxScrip" value={formData.equityMaxScrip} onChange={handleChange} />
                                             <InputField label="Maximum quantity size allowed per script of Equity INDEX to be actively open at a time" name="equityMaxIndexScrip" value={formData.equityMaxIndexScrip} onChange={handleChange} />
                                             <InputField label="Max Size All Equity" name="equityMaxSizeAll" value={formData.equityMaxSizeAll} onChange={handleChange} />
@@ -822,6 +841,93 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                             />
 
                                             <InputField label="Orders to be away by % from current price in Options" name="optionsOrdersAway" value={formData.optionsOrdersAway} onChange={handleChange} />
+                                        </div>
+                                    </fieldset>
+
+                                    <hr className="border-white/5" />
+
+                                    {/* EXPIRY RULES */}
+                                    <fieldset className="border-none p-0 m-0">
+                                        <SectionHeader title="Expiry Rules:" />
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12">
+                                            <SelectField label="Auto Square-off on Expiry Day" name="autoSquareOff" value={formData.autoSquareOff} onChange={handleChange} options={[{ value: 'No', label: 'No' }, { value: 'Yes', label: 'Yes' }]} />
+                                            <InputField label="Square-off Time" name="expirySquareOffTime" value={formData.expirySquareOffTime} onChange={handleChange} hint="Time in HH:MM format (e.g. 11:30)" />
+                                            <SelectField label="Allow buying of expiring scrip" name="allowExpiringScrip" value={formData.allowExpiringScrip} onChange={handleChange} options={[{ value: 'No', label: 'No' }, { value: 'Yes', label: 'Yes' }]} />
+                                            <InputField label="Days before expiry to stop buying" name="daysBeforeExpiry" value={formData.daysBeforeExpiry} onChange={handleChange} />
+                                        </div>
+
+                                        {/* MCX Options Away Points */}
+                                        <div className="mt-6">
+                                            <h4 className="text-[14px] text-slate-400 uppercase font-bold tracking-wider mb-4 px-2">MCX Options Away Points:</h4>
+                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 px-2">
+                                                {Object.keys(formData.mcxOptionsAwayPoints || {}).map(scrip => (
+                                                    <ScripField
+                                                        key={scrip}
+                                                        label={`${scrip}:`}
+                                                        value={formData.mcxOptionsAwayPoints[scrip] || '0'}
+                                                        onChange={(e) => handleNestedChange('mcxOptionsAwayPoints', scrip, e.target.value)}
+                                                    />
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </fieldset>
+
+                                    <hr className="border-white/5" />
+
+                                    {/* INTERNATIONAL SEGMENTS */}
+                                    <fieldset className="border-none p-0 m-0">
+                                        <div className="flex items-center gap-3 mb-8 px-2">
+                                            <h3 className="text-[20px] font-black text-white uppercase tracking-tight">International Segments (Comex, Forex, Crypto):</h3>
+                                        </div>
+
+                                        <div className="space-y-6 px-2">
+                                            {/* COMEX */}
+                                            <div className="bg-[#1a2035]/50 rounded-xl p-6 border border-white/5">
+                                                <div className="flex justify-between items-center mb-4">
+                                                    <div>
+                                                        <h4 className="text-[16px] font-black text-cyan-400 uppercase tracking-wider border-l-2 border-cyan-400 pl-3">Comex Commodities</h4>
+                                                        <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-1 pl-3">Global Commodity Exchange Settings</p>
+                                                    </div>
+                                                    <div className="flex items-center gap-3 bg-[#202940] px-4 py-2 rounded-lg border border-white/5">
+                                                        <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Status</span>
+                                                        <input type="checkbox" name="comexTrading" checked={formData.comexTrading} onChange={handleChange} className="w-5 h-5 rounded accent-[#4caf50] cursor-pointer" />
+                                                        <span className={`text-[11px] font-black uppercase tracking-wider ${formData.comexTrading ? 'text-green-400' : 'text-slate-500'}`}>{formData.comexTrading ? 'ENABLED' : 'DISABLED'}</span>
+                                                    </div>
+                                                </div>
+                                                <hr className="border-white/5" />
+                                            </div>
+
+                                            {/* FOREX */}
+                                            <div className="bg-[#1a2035]/50 rounded-xl p-6 border border-white/5">
+                                                <div className="flex justify-between items-center mb-4">
+                                                    <div>
+                                                        <h4 className="text-[16px] font-black text-green-400 uppercase tracking-wider border-l-2 border-green-400 pl-3">Forex / Currency</h4>
+                                                        <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-1 pl-3">Universal Currency Trading Parameters</p>
+                                                    </div>
+                                                    <div className="flex items-center gap-3 bg-[#202940] px-4 py-2 rounded-lg border border-white/5">
+                                                        <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Status</span>
+                                                        <input type="checkbox" name="forexTrading" checked={formData.forexTrading} onChange={handleChange} className="w-5 h-5 rounded accent-[#4caf50] cursor-pointer" />
+                                                        <span className={`text-[11px] font-black uppercase tracking-wider ${formData.forexTrading ? 'text-green-400' : 'text-slate-500'}`}>{formData.forexTrading ? 'ENABLED' : 'DISABLED'}</span>
+                                                    </div>
+                                                </div>
+                                                <hr className="border-white/5" />
+                                            </div>
+
+                                            {/* CRYPTO */}
+                                            <div className="bg-[#1a2035]/50 rounded-xl p-6 border border-white/5">
+                                                <div className="flex justify-between items-center mb-4">
+                                                    <div>
+                                                        <h4 className="text-[16px] font-black text-orange-400 uppercase tracking-wider border-l-2 border-orange-400 pl-3">Crypto (Bitcoin/ETH)</h4>
+                                                        <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-1 pl-3">Cryptocurrency Asset Execution Hub</p>
+                                                    </div>
+                                                    <div className="flex items-center gap-3 bg-[#202940] px-4 py-2 rounded-lg border border-white/5">
+                                                        <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Status</span>
+                                                        <input type="checkbox" name="cryptoTrading" checked={formData.cryptoTrading} onChange={handleChange} className="w-5 h-5 rounded accent-[#4caf50] cursor-pointer" />
+                                                        <span className={`text-[11px] font-black uppercase tracking-wider ${formData.cryptoTrading ? 'text-green-400' : 'text-slate-500'}`}>{formData.cryptoTrading ? 'ENABLED' : 'DISABLED'}</span>
+                                                    </div>
+                                                </div>
+                                                <hr className="border-white/5" />
+                                            </div>
                                         </div>
                                     </fieldset>
 

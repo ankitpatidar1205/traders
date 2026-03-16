@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Save, ArrowLeft, Info, Check, Lock, Key, Settings, User, ChevronDown, FileUp, ShieldCheck, FileText } from 'lucide-react';
+import { X, Save, ArrowLeft, Info, Check, Lock, Key, Settings, User, ChevronDown, FileUp, ShieldCheck, FileText, Globe } from 'lucide-react';
 import * as api from '../../services/api';
 
 const ScripField = ({ label, value, onChange, hint, name }) => (
@@ -99,7 +99,7 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
         allowFreshEntry: false,
         allowOrdersBetweenHL: true,
         tradeEquityUnits: false,
-        accountStatus: 'Active',
+        accountStatus: true,
         autoCloseTrades: false,
         autoClosePercentage: '90',
         notifyPercentage: '70',
@@ -118,26 +118,26 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
         mcxIntradayMargin: '500',
         mcxHoldingMargin: '100',
         mcxLotMargins: {
-            BULLDEX: { INTRADAY: '0', HOLDING: '0' },
-            GOLD: { INTRADAY: '0', HOLDING: '0' },
-            SILVER: { INTRADAY: '0', HOLDING: '0' },
-            CRUDEOIL: { INTRADAY: '0', HOLDING: '0' },
-            'CRUDEOIL MINI': { INTRADAY: '0', HOLDING: '0' },
-            COPPER: { INTRADAY: '0', HOLDING: '0' },
-            NICKEL: { INTRADAY: '0', HOLDING: '0' },
-            ZINC: { INTRADAY: '0', HOLDING: '0' },
-            ZINCMINI: { INTRADAY: '0', HOLDING: '0' },
-            LEAD: { INTRADAY: '0', HOLDING: '0' },
-            LEADMINI: { INTRADAY: '0', HOLDING: '0' },
-            ALUMINIUM: { INTRADAY: '0', HOLDING: '0' },
-            ALUMINI: { INTRADAY: '0', HOLDING: '0' },
-            NATURALGAS: { INTRADAY: '0', HOLDING: '0' },
-            'NATURALGAS MINI': { INTRADAY: '0', HOLDING: '0' },
-            MENTHAOIL: { INTRADAY: '0', HOLDING: '0' },
-            COTTON: { INTRADAY: '0', HOLDING: '0' },
-            GOLDM: { INTRADAY: '0', HOLDING: '0' },
-            SILVERM: { INTRADAY: '0', HOLDING: '0' },
-            'SILVER MIC': { INTRADAY: '0', HOLDING: '0' }
+            BULLDEX: { INTRADAY: '0', HOLDING: '0', LOT: '1' },
+            GOLD: { INTRADAY: '0', HOLDING: '0', LOT: '1' },
+            SILVER: { INTRADAY: '0', HOLDING: '0', LOT: '1' },
+            CRUDEOIL: { INTRADAY: '0', HOLDING: '0', LOT: '1' },
+            'CRUDEOIL MINI': { INTRADAY: '0', HOLDING: '0', LOT: '1' },
+            COPPER: { INTRADAY: '0', HOLDING: '0', LOT: '1' },
+            NICKEL: { INTRADAY: '0', HOLDING: '0', LOT: '1' },
+            ZINC: { INTRADAY: '0', HOLDING: '0', LOT: '1' },
+            ZINCMINI: { INTRADAY: '0', HOLDING: '0', LOT: '1' },
+            LEAD: { INTRADAY: '0', HOLDING: '0', LOT: '1' },
+            LEADMINI: { INTRADAY: '0', HOLDING: '0', LOT: '1' },
+            ALUMINIUM: { INTRADAY: '0', HOLDING: '0', LOT: '1' },
+            ALUMINI: { INTRADAY: '0', HOLDING: '0', LOT: '1' },
+            NATURALGAS: { INTRADAY: '0', HOLDING: '0', LOT: '1' },
+            'NATURALGAS MINI': { INTRADAY: '0', HOLDING: '0', LOT: '1' },
+            MENTHAOIL: { INTRADAY: '0', HOLDING: '0', LOT: '1' },
+            COTTON: { INTRADAY: '0', HOLDING: '0', LOT: '1' },
+            GOLDM: { INTRADAY: '0', HOLDING: '0', LOT: '1' },
+            SILVERM: { INTRADAY: '0', HOLDING: '0', LOT: '1' },
+            'SILVER MIC': { INTRADAY: '0', HOLDING: '0', LOT: '1' }
         },
         mcxLotBrokerage: {
             GOLDM: '0', SILVERM: '0', BULLDEX: '0', GOLD: '0', SILVER: '0', CRUDEOIL: '0',
@@ -215,12 +215,17 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
             COTTON: '0', GOLDM: '0', SILVERM: '0', 'SILVER MIC': '0'
         },
 
-        // 7. Other
+        // 7. International Segments
+        comexTrading: false,
+        forexTrading: false,
+        cryptoTrading: false,
+
+        // 8. Other
         notes: '',
         broker: client?.broker || '',
         transactionPassword: '',
 
-        // 8. Kyc / Documents
+        // 9. Kyc / Documents
         documents: {
             panCard: null,
             aadhaarFront: null,
@@ -310,7 +315,7 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
             // Step 2: Update user profile with extra fields
             await api.updateUser(userId, {
                 isDemo: formData.isDemoAccount,
-                status: formData.accountStatus || 'Active',
+                status: formData.accountStatus ? 'Active' : 'Inactive',
                 exposureMultiplier: 1
             });
 
@@ -674,7 +679,7 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                                 <h4 className="text-sm font-normal mb-8 px-2 border-l-2 border-[#4caf50]" style={{ color: '#bcc0cf' }}>MCX Exposure Lot wise:</h4>
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 px-2">
                                                     {Object.keys(formData.mcxLotMargins).map((scrip) => (
-                                                        <div key={scrip} className="mb-6 grid grid-cols-2 gap-4 items-end">
+                                                        <div key={scrip} className="mb-6 grid grid-cols-3 gap-4 items-end">
                                                             <ScripField
                                                                 label={`${scrip} Intraday`}
                                                                 name={`mcx-intraday-${scrip}`}
@@ -686,6 +691,12 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                                                 name={`mcx-holding-${scrip}`}
                                                                 value={formData.mcxLotMargins[scrip].HOLDING}
                                                                 onChange={(e) => handleNestedChange('mcxLotMargins', scrip, e.target.value, 'HOLDING')}
+                                                            />
+                                                            <ScripField
+                                                                label={`${scrip} Lot`}
+                                                                name={`mcx-lot-${scrip}`}
+                                                                value={formData.mcxLotMargins[scrip].LOT || '1'}
+                                                                onChange={(e) => handleNestedChange('mcxLotMargins', scrip, e.target.value, 'LOT')}
                                                             />
                                                         </div>
                                                     ))}
@@ -888,6 +899,65 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                         )}
                                     </fieldset>
 
+
+                                    <hr className="border-white/5" />
+
+                                    {/* INTERNATIONAL SEGMENTS */}
+                                    <fieldset className="border-none p-0 m-0">
+                                        <div className="flex items-center gap-3 mb-8 px-2">
+                                            <h3 className="text-[20px] font-black text-white uppercase tracking-tight">International Segments (Comex, Forex, Crypto):</h3>
+                                        </div>
+
+                                        <div className="space-y-6 px-2">
+                                            {/* COMEX */}
+                                            <div className="bg-[#1a2035]/50 rounded-xl p-6 border border-white/5">
+                                                <div className="flex justify-between items-center mb-4">
+                                                    <div>
+                                                        <h4 className="text-[16px] font-black text-cyan-400 uppercase tracking-wider border-l-2 border-cyan-400 pl-3">Comex Commodities</h4>
+                                                        <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-1 pl-3">Global Commodity Exchange Settings</p>
+                                                    </div>
+                                                    <div className="flex items-center gap-3 bg-[#202940] px-4 py-2 rounded-lg border border-white/5">
+                                                        <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Status</span>
+                                                        <input type="checkbox" name="comexTrading" checked={formData.comexTrading} onChange={handleChange} className="w-5 h-5 rounded accent-[#4caf50] cursor-pointer" />
+                                                        <span className={`text-[11px] font-black uppercase tracking-wider ${formData.comexTrading ? 'text-green-400' : 'text-slate-500'}`}>{formData.comexTrading ? 'ENABLED' : 'DISABLED'}</span>
+                                                    </div>
+                                                </div>
+                                                <hr className="border-white/5" />
+                                            </div>
+
+                                            {/* FOREX */}
+                                            <div className="bg-[#1a2035]/50 rounded-xl p-6 border border-white/5">
+                                                <div className="flex justify-between items-center mb-4">
+                                                    <div>
+                                                        <h4 className="text-[16px] font-black text-green-400 uppercase tracking-wider border-l-2 border-green-400 pl-3">Forex / Currency</h4>
+                                                        <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-1 pl-3">Universal Currency Trading Parameters</p>
+                                                    </div>
+                                                    <div className="flex items-center gap-3 bg-[#202940] px-4 py-2 rounded-lg border border-white/5">
+                                                        <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Status</span>
+                                                        <input type="checkbox" name="forexTrading" checked={formData.forexTrading} onChange={handleChange} className="w-5 h-5 rounded accent-[#4caf50] cursor-pointer" />
+                                                        <span className={`text-[11px] font-black uppercase tracking-wider ${formData.forexTrading ? 'text-green-400' : 'text-slate-500'}`}>{formData.forexTrading ? 'ENABLED' : 'DISABLED'}</span>
+                                                    </div>
+                                                </div>
+                                                <hr className="border-white/5" />
+                                            </div>
+
+                                            {/* CRYPTO */}
+                                            <div className="bg-[#1a2035]/50 rounded-xl p-6 border border-white/5">
+                                                <div className="flex justify-between items-center mb-4">
+                                                    <div>
+                                                        <h4 className="text-[16px] font-black text-orange-400 uppercase tracking-wider border-l-2 border-orange-400 pl-3">Crypto (Bitcoin/ETH)</h4>
+                                                        <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-1 pl-3">Cryptocurrency Asset Execution Hub</p>
+                                                    </div>
+                                                    <div className="flex items-center gap-3 bg-[#202940] px-4 py-2 rounded-lg border border-white/5">
+                                                        <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Status</span>
+                                                        <input type="checkbox" name="cryptoTrading" checked={formData.cryptoTrading} onChange={handleChange} className="w-5 h-5 rounded accent-[#4caf50] cursor-pointer" />
+                                                        <span className={`text-[11px] font-black uppercase tracking-wider ${formData.cryptoTrading ? 'text-green-400' : 'text-slate-500'}`}>{formData.cryptoTrading ? 'ENABLED' : 'DISABLED'}</span>
+                                                    </div>
+                                                </div>
+                                                <hr className="border-white/5" />
+                                            </div>
+                                        </div>
+                                    </fieldset>
 
                                     <hr className="border-white/5" />
 

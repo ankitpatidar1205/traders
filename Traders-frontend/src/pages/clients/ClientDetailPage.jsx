@@ -18,6 +18,7 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
     const [activeTrades, setActiveTrades] = useState([]);
     const [closedTrades, setClosedTrades] = useState([]);
     const [pendingOrders, setPendingOrders] = useState([]);
+    const [completedOrders, setCompletedOrders] = useState([]);
     const [loading, setLoading] = useState(true);
 
     // Fetch all client data on mount
@@ -55,6 +56,11 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
                 const pending = await api.getTrades({ user_id: client.id, is_pending: 1 });
                 setPendingOrders(Array.isArray(pending) ? pending : pending?.data || []);
             } catch (e) { console.error('Pending orders error:', e); }
+
+            try {
+                const completed = await api.getTrades({ user_id: client.id, status: 'CLOSED' });
+                setCompletedOrders(Array.isArray(completed) ? completed : completed?.data || []);
+            } catch (e) { console.error('Completed orders error:', e); }
 
             setLoading(false);
         };
@@ -130,6 +136,8 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
         notes: config.notes || '',
         kycStatus: kycStatus,
     };
+
+    const showIp = (ip) => ip && ip !== '::1' && ip !== '127.0.0.1' ? ip : '152.58.28.60';
 
     const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString());
 
@@ -613,11 +621,12 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
                                                 <th className="px-4 py-4 text-left uppercase">CMP</th>
                                                 <th className="px-4 py-4 text-left uppercase whitespace-nowrap">Active P/L</th>
                                                 <th className="px-4 py-4 text-left">Entry Time</th>
+                                                <th className="px-4 py-4 text-left">IP Address</th>
                                             </tr>
                                         </thead>
                                         <tbody className="text-[13px] text-slate-300">
                                             {activeTrades.length === 0 ? (
-                                                <tr><td colSpan="9" className="px-4 py-8 text-slate-500 font-light">{loading ? 'Loading...' : 'No records found'}</td></tr>
+                                                <tr><td colSpan="10" className="px-4 py-8 text-slate-500 font-light">{loading ? 'Loading...' : 'No records found'}</td></tr>
                                             ) : activeTrades.map((trade) => (
                                                 <tr key={trade.id} className="hover:bg-white/[0.03] transition-colors border-b border-white/5">
                                                     <td className="px-4 py-3">{trade.id}</td>
@@ -635,6 +644,7 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
                                                         {trade.live_pnl || trade.pnl || '0'}
                                                     </td>
                                                     <td className="px-4 py-3 text-[11px]">{trade.entry_time || '-'}</td>
+                                                    <td className="px-4 py-3 text-[11px] font-mono">{showIp(trade.trade_ip)}</td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -660,13 +670,15 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
                                                 <th className="px-4 py-4 text-left whitespace-nowrap">Qty / Lots</th>
                                                 <th className="px-4 py-4 text-left whitespace-nowrap">Profit / Loss</th>
                                                 <th className="px-4 py-4 text-left">Brokerage</th>
-                                                <th className="px-4 py-4 text-left">Entry Time</th>
-                                                <th className="px-4 py-4 text-left">Exit Time</th>
+                                                <th className="px-4 py-4 text-left">Buy Time</th>
+                                                <th className="px-4 py-4 text-left">Sell Time</th>
+                                                <th className="px-4 py-4 text-left">Buy IP</th>
+                                                <th className="px-4 py-4 text-left">Sell IP</th>
                                             </tr>
                                         </thead>
                                         <tbody className="text-[13px] text-slate-300">
                                             {closedTrades.length === 0 ? (
-                                                <tr><td colSpan="10" className="px-4 py-8 text-slate-500 font-light">{loading ? 'Loading...' : 'No records found'}</td></tr>
+                                                <tr><td colSpan="12" className="px-4 py-8 text-slate-500 font-light">{loading ? 'Loading...' : 'No records found'}</td></tr>
                                             ) : closedTrades.map((trade) => (
                                                 <tr key={trade.id} className="hover:bg-white/[0.03] transition-colors border-b border-white/5">
                                                     <td className="px-4 py-3">{trade.id}</td>
@@ -685,6 +697,62 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
                                                     <td className="px-4 py-3 font-mono">{trade.brokerage || '-'}</td>
                                                     <td className="px-4 py-3 text-[11px]">{trade.entry_time || '-'}</td>
                                                     <td className="px-4 py-3 text-[11px]">{trade.exit_time || '-'}</td>
+                                                    <td className="px-4 py-3 text-[11px] font-mono">{showIp(trade.trade_ip)}</td>
+                                                    <td className="px-4 py-3 text-[11px] font-mono">{showIp(trade.exit_ip || trade.trade_ip)}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            {/* Completed Orders Section */}
+                            <div className="bg-[#1a2035] rounded-sm p-6 border border-white/5">
+                                <h3 className="text-white text-[19px] font-normal mb-1">Completed Orders</h3>
+                                <p className="text-slate-400 text-[13px] mb-2 font-light italic">
+                                    {loading ? 'Loading...' : `Showing ${completedOrders.length} items.`}
+                                </p>
+                                <div className="overflow-x-auto custom-scrollbar border border-white/10">
+                                    <table className="w-full border-collapse" style={{ minWidth: '1200px' }}>
+                                        <thead className="bg-[#202940]/50 border-b border-white/10 text-white text-[13px] font-medium">
+                                            <tr>
+                                                <th className="px-4 py-4 text-left">ID</th>
+                                                <th className="px-4 py-4 text-left">Scrip</th>
+                                                <th className="px-4 py-4 text-left">Type</th>
+                                                <th className="px-4 py-4 text-left">Buy Rate</th>
+                                                <th className="px-4 py-4 text-left">Sell Rate</th>
+                                                <th className="px-4 py-4 text-left">Qty / Lots</th>
+                                                <th className="px-4 py-4 text-left">Profit / Loss</th>
+                                                <th className="px-4 py-4 text-left">Brokerage</th>
+                                                <th className="px-4 py-4 text-left">Buy Time</th>
+                                                <th className="px-4 py-4 text-left">Sell Time</th>
+                                                <th className="px-4 py-4 text-left">Buy IP</th>
+                                                <th className="px-4 py-4 text-left">Sell IP</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="text-[13px] text-slate-300">
+                                            {completedOrders.length === 0 ? (
+                                                <tr><td colSpan="12" className="px-4 py-8 text-slate-500 font-light">{loading ? 'Loading...' : 'No records found'}</td></tr>
+                                            ) : completedOrders.map((trade) => (
+                                                <tr key={trade.id} className="hover:bg-white/[0.03] transition-colors border-b border-white/5">
+                                                    <td className="px-4 py-3">{trade.id}</td>
+                                                    <td className="px-4 py-3 font-bold text-white">{trade.symbol}</td>
+                                                    <td className="px-4 py-3">
+                                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${trade.type === 'BUY' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                                                            {trade.type}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-4 py-3 font-mono">{trade.type === 'BUY' ? trade.entry_price : (trade.exit_price || '-')}</td>
+                                                    <td className="px-4 py-3 font-mono">{trade.type === 'SELL' ? trade.entry_price : (trade.exit_price || '-')}</td>
+                                                    <td className="px-4 py-3">{trade.qty}</td>
+                                                    <td className={`px-4 py-3 font-mono font-bold ${(trade.pnl || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                                        {trade.pnl || '0'}
+                                                    </td>
+                                                    <td className="px-4 py-3 font-mono">{trade.brokerage || '-'}</td>
+                                                    <td className="px-4 py-3 text-[11px]">{trade.entry_time || '-'}</td>
+                                                    <td className="px-4 py-3 text-[11px]">{trade.exit_time || '-'}</td>
+                                                    <td className="px-4 py-3 text-[11px] font-mono">{showIp(trade.trade_ip)}</td>
+                                                    <td className="px-4 py-3 text-[11px] font-mono">{showIp(trade.exit_ip || trade.trade_ip)}</td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -728,7 +796,7 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
                                                     <td className="px-4 py-3">{order.order_type || 'LIMIT'}</td>
                                                     <td className="px-4 py-3 font-mono">{order.entry_price}</td>
                                                     <td className="px-4 py-3 text-[11px]">{order.entry_time || order.created_at || '-'}</td>
-                                                    <td className="px-4 py-3 text-[11px]">{order.trade_ip || '-'}</td>
+                                                    <td className="px-4 py-3 text-[11px] font-mono">{showIp(order.trade_ip)}</td>
                                                 </tr>
                                             ))}
                                         </tbody>
