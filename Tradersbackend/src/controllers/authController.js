@@ -154,6 +154,20 @@ const createUser = async (req, res) => {
             } catch (e) { console.error(`user_segments auto-create failed for ${segment}:`, e.message); }
         }
 
+        // Save menu permissions for ADMIN role (if provided by SUPERADMIN)
+        if ((role || 'TRADER') === 'ADMIN' && req.body.menuPermissions && Array.isArray(req.body.menuPermissions)) {
+            try {
+                const perms = req.body.menuPermissions;
+                if (perms.length > 0) {
+                    const permValues = perms.map(menuId => [newUserId, menuId]);
+                    await db.query(
+                        'INSERT IGNORE INTO admin_menu_permissions (user_id, menu_id) VALUES ?',
+                        [permValues]
+                    );
+                }
+            } catch (e) { console.error('menu_permissions auto-create failed:', e.message); }
+        }
+
         res.status(201).json({ message: 'User created successfully', id: newUserId });
     } catch (err) {
         if (err.code === 'ER_DUP_ENTRY') {

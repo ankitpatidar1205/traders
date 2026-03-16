@@ -34,6 +34,8 @@ const supportRoutes = require('./routes/supportRoutes');
 const aiRoutes = require('./routes/aiRoutes');
 const kiteRoutes = require('./routes/kiteRoutes');
 const bankRoutes = require('./routes/bankRoutes');
+const newClientBankRoutes = require('./routes/newClientBankRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 const { logIp } = require('./middleware/logger');
 
 // Middleware
@@ -61,6 +63,8 @@ app.use('/api/support', supportRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/kite', kiteRoutes);
 app.use('/api/bank', bankRoutes);
+app.use('/api/new-client-bank', newClientBankRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Routes Placeholder
 app.get('/', (req, res) => {
@@ -90,5 +94,7 @@ const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
+
+// Trigger nodemon restart
 
 module.exports = { app, io };

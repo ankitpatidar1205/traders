@@ -1,5 +1,6 @@
 const db = require('../config/db');
 const bcrypt = require('bcryptjs');
+const { uploadFile, deleteFile } = require('../utils/imagekit');
 
 const getUsers = async (req, res) => {
     try {
@@ -262,10 +263,25 @@ const updateDocuments = async (req, res) => {
     const files = req.files || {};
 
     try {
-        const panScreenshot    = files.panScreenshot    ? `/uploads/${files.panScreenshot[0].filename}`    : undefined;
-        const aadharFront      = files.aadharFront      ? `/uploads/${files.aadharFront[0].filename}`      : undefined;
-        const aadharBack       = files.aadharBack       ? `/uploads/${files.aadharBack[0].filename}`       : undefined;
-        const bankProof        = files.bankProof        ? `/uploads/${files.bankProof[0].filename}`        : undefined;
+        // Upload files to ImageKit
+        let panScreenshot, aadharFront, aadharBack, bankProof;
+
+        if (files.panScreenshot && files.panScreenshot[0]) {
+            const result = await uploadFile(files.panScreenshot[0].buffer, files.panScreenshot[0].originalname, `/traders/kyc/${req.params.id}`);
+            panScreenshot = result.url;
+        }
+        if (files.aadharFront && files.aadharFront[0]) {
+            const result = await uploadFile(files.aadharFront[0].buffer, files.aadharFront[0].originalname, `/traders/kyc/${req.params.id}`);
+            aadharFront = result.url;
+        }
+        if (files.aadharBack && files.aadharBack[0]) {
+            const result = await uploadFile(files.aadharBack[0].buffer, files.aadharBack[0].originalname, `/traders/kyc/${req.params.id}`);
+            aadharBack = result.url;
+        }
+        if (files.bankProof && files.bankProof[0]) {
+            const result = await uploadFile(files.bankProof[0].buffer, files.bankProof[0].originalname, `/traders/kyc/${req.params.id}`);
+            bankProof = result.url;
+        }
 
         // Build dynamic upsert
         const setFields = ['user_id = ?'];
@@ -286,7 +302,16 @@ const updateDocuments = async (req, res) => {
                 ${setFields.filter(f => !f.startsWith('user_id')).join(', ')}
         `, [...values, ...values.slice(1)]);
 
-        res.json({ message: 'Documents updated' });
+        // Return the uploaded URLs so frontend can display them
+        res.json({
+            message: 'Documents updated',
+            urls: {
+                panScreenshot: panScreenshot || undefined,
+                aadharFront: aadharFront || undefined,
+                aadharBack: aadharBack || undefined,
+                bankProof: bankProof || undefined
+            }
+        });
     } catch (err) {
         console.error(err);
         res.status(500).send('Server Error');

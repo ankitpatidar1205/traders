@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const path = require('path');
 const {
     getUsers, getUserProfile, updateStatus, deleteUser, updatePasswords, resetPassword,
     updateUser, updateClientSettings, getBrokerShares, updateBrokerShares,
@@ -9,17 +8,8 @@ const {
 } = require('../controllers/userController');
 const { authMiddleware, roleMiddleware } = require('../middleware/auth');
 
-// Multer setup for file uploads
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, path.join(__dirname, '../../uploads'));
-    },
-    filename: (req, file, cb) => {
-        const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-        cb(null, `${unique}-${file.originalname}`);
-    }
-});
-const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } }); // 5MB limit
+// Multer setup - memory storage for ImageKit uploads
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } }); // 5MB limit
 
 // ─── EXISTING ROUTES ─────────────────────────────────
 router.get('/', authMiddleware, getUsers);

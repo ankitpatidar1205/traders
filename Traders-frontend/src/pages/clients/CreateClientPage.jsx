@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Save, ArrowLeft, Info, Check, Lock, Key, Settings, User, ChevronDown, FileUp, ShieldCheck } from 'lucide-react';
+import { X, Save, ArrowLeft, Info, Check, Lock, Key, Settings, User, ChevronDown, FileUp, ShieldCheck, FileText, Globe } from 'lucide-react';
 import * as api from '../../services/api';
 
 const ScripField = ({ label, value, onChange, hint, name }) => (
@@ -99,15 +99,18 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
         allowFreshEntry: false,
         allowOrdersBetweenHL: true,
         tradeEquityUnits: false,
-        accountStatus: 'Active',
+        accountStatus: true,
         autoCloseTrades: false,
         autoClosePercentage: '90',
         notifyPercentage: '70',
         minTimeToBookProfit: '120',
         scalpingStopLoss: 'Disabled',
+        banAllSegmentLimitOrder: false,
 
         // 3. MCX Futures
         mcxTrading: true,
+        banMcxLimitOrder: false,
+        mcxMinTimeToBookProfit: '120',
         mcxMinLot: '1',
         mcxMaxLot: '100',
         mcxMaxLotScrip: '1000',
@@ -118,26 +121,26 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
         mcxIntradayMargin: '500',
         mcxHoldingMargin: '100',
         mcxLotMargins: {
-            BULLDEX: { INTRADAY: '0', HOLDING: '0' },
-            GOLD: { INTRADAY: '0', HOLDING: '0' },
-            SILVER: { INTRADAY: '0', HOLDING: '0' },
-            CRUDEOIL: { INTRADAY: '0', HOLDING: '0' },
-            'CRUDEOIL MINI': { INTRADAY: '0', HOLDING: '0' },
-            COPPER: { INTRADAY: '0', HOLDING: '0' },
-            NICKEL: { INTRADAY: '0', HOLDING: '0' },
-            ZINC: { INTRADAY: '0', HOLDING: '0' },
-            ZINCMINI: { INTRADAY: '0', HOLDING: '0' },
-            LEAD: { INTRADAY: '0', HOLDING: '0' },
-            LEADMINI: { INTRADAY: '0', HOLDING: '0' },
-            ALUMINIUM: { INTRADAY: '0', HOLDING: '0' },
-            ALUMINI: { INTRADAY: '0', HOLDING: '0' },
-            NATURALGAS: { INTRADAY: '0', HOLDING: '0' },
-            'NATURALGAS MINI': { INTRADAY: '0', HOLDING: '0' },
-            MENTHAOIL: { INTRADAY: '0', HOLDING: '0' },
-            COTTON: { INTRADAY: '0', HOLDING: '0' },
-            GOLDM: { INTRADAY: '0', HOLDING: '0' },
-            SILVERM: { INTRADAY: '0', HOLDING: '0' },
-            'SILVER MIC': { INTRADAY: '0', HOLDING: '0' }
+            BULLDEX: { INTRADAY: '0', HOLDING: '0', LOT: '1' },
+            GOLD: { INTRADAY: '0', HOLDING: '0', LOT: '1' },
+            SILVER: { INTRADAY: '0', HOLDING: '0', LOT: '1' },
+            CRUDEOIL: { INTRADAY: '0', HOLDING: '0', LOT: '1' },
+            'CRUDEOIL MINI': { INTRADAY: '0', HOLDING: '0', LOT: '1' },
+            COPPER: { INTRADAY: '0', HOLDING: '0', LOT: '1' },
+            NICKEL: { INTRADAY: '0', HOLDING: '0', LOT: '1' },
+            ZINC: { INTRADAY: '0', HOLDING: '0', LOT: '1' },
+            ZINCMINI: { INTRADAY: '0', HOLDING: '0', LOT: '1' },
+            LEAD: { INTRADAY: '0', HOLDING: '0', LOT: '1' },
+            LEADMINI: { INTRADAY: '0', HOLDING: '0', LOT: '1' },
+            ALUMINIUM: { INTRADAY: '0', HOLDING: '0', LOT: '1' },
+            ALUMINI: { INTRADAY: '0', HOLDING: '0', LOT: '1' },
+            NATURALGAS: { INTRADAY: '0', HOLDING: '0', LOT: '1' },
+            'NATURALGAS MINI': { INTRADAY: '0', HOLDING: '0', LOT: '1' },
+            MENTHAOIL: { INTRADAY: '0', HOLDING: '0', LOT: '1' },
+            COTTON: { INTRADAY: '0', HOLDING: '0', LOT: '1' },
+            GOLDM: { INTRADAY: '0', HOLDING: '0', LOT: '1' },
+            SILVERM: { INTRADAY: '0', HOLDING: '0', LOT: '1' },
+            'SILVER MIC': { INTRADAY: '0', HOLDING: '0', LOT: '1' }
         },
         mcxLotBrokerage: {
             GOLDM: '0', SILVERM: '0', BULLDEX: '0', GOLD: '0', SILVER: '0', CRUDEOIL: '0',
@@ -155,6 +158,8 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
 
         // 4. Equity Futures
         equityTrading: true,
+        banEquityLimitOrder: false,
+        equityMinTimeToBookProfit: '120',
         equityBrokerage: '800',
         equityMinLot: '1',
         equityMaxLot: '100',
@@ -172,6 +177,8 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
         indexOptionsTrading: true,
         equityOptionsTrading: true,
         mcxOptionsTrading: false,
+        banOptionsLimitOrder: false,
+        optionsMinTimeToBookProfit: '120',
         optionsIndexBrokerageType: 'per_lot',
         optionsIndexBrokerage: '20',
         optionsEquityBrokerageType: 'per_lot',
@@ -215,12 +222,17 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
             COTTON: '0', GOLDM: '0', SILVERM: '0', 'SILVER MIC': '0'
         },
 
-        // 7. Other
+        // 7. International Segments
+        comexTrading: false,
+        forexTrading: false,
+        cryptoTrading: false,
+
+        // 8. Other
         notes: '',
-        broker: client?.broker || '3761 : demo001',
+        broker: client?.broker || '',
         transactionPassword: '',
 
-        // 8. Kyc / Documents
+        // 9. Kyc / Documents
         documents: {
             panCard: null,
             aadhaarFront: null,
@@ -233,15 +245,21 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
 
     const [loading, setLoading] = useState(false);
     const [saveError, setSaveError] = useState('');
-    const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString());
     const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+    const [brokers, setBrokers] = useState([]);
     const profileRef = useRef(null);
 
+    // Fetch brokers for dropdown
     useEffect(() => {
-        const timer = setInterval(() => {
-            setCurrentTime(new Date().toLocaleTimeString());
-        }, 1000);
-        return () => clearInterval(timer);
+        const fetchBrokers = async () => {
+            try {
+                const data = await api.getClients({ role: 'BROKER' });
+                setBrokers(data || []);
+            } catch (err) {
+                console.error('Failed to fetch brokers:', err);
+            }
+        };
+        fetchBrokers();
     }, []);
 
     // Close dropdown when clicking outside
@@ -289,7 +307,7 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
         setLoading(true);
         setSaveError('');
         try {
-            // Step 1: Create user
+            // Step 1: Create user with basic fields
             const result = await api.createClient({
                 fullName: formData.fullName,
                 username: formData.username,
@@ -301,7 +319,19 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
             });
             const userId = result.id;
 
-            // Step 2: Save all settings + full config as JSON
+            // Step 2: Update user profile with extra fields
+            await api.updateUser(userId, {
+                isDemo: formData.isDemoAccount,
+                status: formData.accountStatus ? 'Active' : 'Inactive',
+                exposureMultiplier: 1
+            });
+
+            // Step 3: Save client settings + ALL config as JSON (MCX, Equity, Options, Expiry, etc.)
+            const configToSave = { ...formData };
+            // Remove files from config (they go to documents endpoint)
+            delete configToSave.documents;
+            delete configToSave.password;
+
             await api.updateClientSettings(userId, {
                 allowFreshEntry: formData.allowFreshEntry,
                 allowOrdersBetweenHL: formData.allowOrdersBetweenHL,
@@ -310,8 +340,30 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                 notifyPct: formData.notifyPercentage,
                 minProfitTime: formData.minTimeToBookProfit,
                 scalpingSlEnabled: formData.scalpingStopLoss,
-                config: formData
+                config: configToSave
             });
+
+            // Step 4: Set transaction password if provided
+            if (formData.transactionPassword) {
+                await api.updateUserPasswords(userId, {
+                    transactionPassword: formData.transactionPassword
+                });
+            }
+
+            // Step 5: Upload KYC documents if any files selected
+            const docs = formData.documents;
+            if (docs.panCard || docs.aadhaarFront || docs.aadhaarBack || docs.bankStatement) {
+                const docFormData = new FormData();
+                if (docs.panCard)      docFormData.append('panScreenshot', docs.panCard);
+                if (docs.aadhaarFront) docFormData.append('aadharFront', docs.aadhaarFront);
+                if (docs.aadhaarBack)  docFormData.append('aadharBack', docs.aadhaarBack);
+                if (docs.bankStatement) docFormData.append('bankProof', docs.bankStatement);
+                docFormData.append('kycStatus', 'PENDING');
+                await api.updateDocuments(userId, docFormData);
+            }
+
+            // Step 6: Assign broker if selected
+            // Broker info is stored in config_json already
 
             onSave(formData);
         } catch (err) {
@@ -444,7 +496,7 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                 </div>
                                 <span className="truncate">{item.label}</span>
                             </div>
-                            {item.label === 'Market Watch' && <span className="text-[10px] opacity-60" style={{ color: '#bcc0cf' }}>{currentTime}</span>}
+                            {item.label === 'Market Watch' && <span className="text-[10px] opacity-60" style={{ color: '#bcc0cf' }}>{new Date().toLocaleTimeString()}</span>}
                         </div>
                     ))}
                     <div className="mt-auto px-4 py-4 mt-2 border-t border-white/10 bg-black/20 rounded-md">
@@ -530,25 +582,6 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                                 placeholder=""
                                                 hint="Optional"
                                             />
-                                            <InputField
-                                                label="Min. Time to book profit (No. of Seconds)"
-                                                name="minTimeToBookProfit"
-                                                value={formData.minTimeToBookProfit}
-                                                onChange={handleChange}
-                                                placeholder="120"
-                                                hint="Example: 120, will hold the trade for 2 minutes before closing a trade in profit"
-                                            />
-                                            <SelectField
-                                                label="Scalping Stop Loss"
-                                                name="scalpingStopLoss"
-                                                value={formData.scalpingStopLoss}
-                                                onChange={handleChange}
-                                                options={[
-                                                    { value: 'Disabled', label: 'Disabled' },
-                                                    { value: 'Enabled', label: 'Enabled' }
-                                                ]}
-                                                hint="If Disabled, Stop Loss or Booking Loss can be done after Min. time of profit booking."
-                                            />
                                         </div>
                                     </fieldset>
 
@@ -565,11 +598,23 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                                 <CheckboxField label="Trade equity as units instead of lots." name="tradeEquityUnits" checked={formData.tradeEquityUnits} onChange={handleChange} />
                                                 <CheckboxField label="Account Status" name="accountStatus" checked={formData.accountStatus === 'Active'} onChange={(e) => setFormData(prev => ({ ...prev, accountStatus: e.target.checked ? 'Active' : 'Inactive' }))} />
                                                 <CheckboxField label="Auto Close Trades if condition met" name="autoCloseTrades" checked={formData.autoCloseTrades} onChange={handleChange} />
+                                                <CheckboxField label="Ban All Segment Limit Order" name="banAllSegmentLimitOrder" checked={formData.banAllSegmentLimitOrder} onChange={handleChange} />
                                             </div>
                                             <div className="space-y-0">
                                                 <InputField label="auto-Close all active trades when the losses reach % of Ledger-balance" name="autoClosePercentage" value={formData.autoClosePercentage} onChange={handleChange} placeholder="90" hint="Example: 95, will close when losses reach 95% of ledger balance" />
                                                 <InputField label="Notify client when the losses reach % of Ledger-balance" name="notifyPercentage" value={formData.notifyPercentage} onChange={handleChange} placeholder="70" hint="Example: 70, will send notification to customer every 5-minutes until losses cross 70% of ledger balance" />
                                                 <InputField label="Min. Time to book profit (No. of Seconds)" name="minTimeToBookProfit" value={formData.minTimeToBookProfit} onChange={handleChange} placeholder="120" hint="Example: 120, will hold the trade for 2 minutes before closing a trade in profit" />
+                                                <SelectField
+                                                    label="Scalping Stop Loss"
+                                                    name="scalpingStopLoss"
+                                                    value={formData.scalpingStopLoss}
+                                                    onChange={handleChange}
+                                                    options={[
+                                                        { value: 'Disabled', label: 'Disabled' },
+                                                        { value: 'Enabled', label: 'Enabled' }
+                                                    ]}
+                                                    hint="If Disabled, Stop Loss or Booking Loss can be done after Min. time of profit booking."
+                                                />
                                             </div>
                                         </div>
                                     </fieldset>
@@ -589,6 +634,8 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
 
                                         {formData.mcxTrading && (
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 animate-in fade-in slide-in-from-top-2 duration-500">
+                                                <CheckboxField label="Ban All Segment Limit Order" name="banMcxLimitOrder" checked={formData.banMcxLimitOrder} onChange={handleChange} />
+                                                <InputField label="Min. Time to book profit (No. of Seconds)" name="mcxMinTimeToBookProfit" value={formData.mcxMinTimeToBookProfit} onChange={handleChange} placeholder="120" hint="Example: 120, will hold the trade for 2 minutes before closing a trade in profit" />
                                                 <InputField label="Minimum lot size required per single trade of MCX" name="mcxMinLot" value={formData.mcxMinLot} onChange={handleChange} placeholder="0" />
                                                 <InputField label="Maximum lot size allowed per single trade of MCX" name="mcxMaxLot" value={formData.mcxMaxLot} onChange={handleChange} placeholder="20" />
                                                 <InputField label="Maximum lot size allowed per script of MCX to be actively open at a time" name="mcxMaxLotScrip" value={formData.mcxMaxLotScrip} onChange={handleChange} placeholder="50" />
@@ -634,7 +681,7 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                                 <h4 className="text-sm font-normal mb-8 px-2 border-l-2 border-[#4caf50]" style={{ color: '#bcc0cf' }}>MCX Exposure Lot wise:</h4>
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 px-2">
                                                     {Object.keys(formData.mcxLotMargins).map((scrip) => (
-                                                        <div key={scrip} className="mb-6 grid grid-cols-2 gap-4 items-end">
+                                                        <div key={scrip} className="mb-6 grid grid-cols-3 gap-4 items-end">
                                                             <ScripField
                                                                 label={`${scrip} Intraday`}
                                                                 name={`mcx-intraday-${scrip}`}
@@ -646,6 +693,12 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                                                 name={`mcx-holding-${scrip}`}
                                                                 value={formData.mcxLotMargins[scrip].HOLDING}
                                                                 onChange={(e) => handleNestedChange('mcxLotMargins', scrip, e.target.value, 'HOLDING')}
+                                                            />
+                                                            <ScripField
+                                                                label={`${scrip} Lot`}
+                                                                name={`mcx-lot-${scrip}`}
+                                                                value={formData.mcxLotMargins[scrip].LOT || '1'}
+                                                                onChange={(e) => handleNestedChange('mcxLotMargins', scrip, e.target.value, 'LOT')}
                                                             />
                                                         </div>
                                                     ))}
@@ -703,6 +756,8 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
 
                                         {formData.equityTrading && (
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 animate-in fade-in slide-in-from-top-2 duration-500">
+                                                <CheckboxField label="Ban All Segment Limit Order" name="banEquityLimitOrder" checked={formData.banEquityLimitOrder} onChange={handleChange} />
+                                                <InputField label="Min. Time to book profit (No. of Seconds)" name="equityMinTimeToBookProfit" value={formData.equityMinTimeToBookProfit} onChange={handleChange} placeholder="120" hint="Example: 120, will hold the trade for 2 minutes before closing a trade in profit" />
                                                 <InputField label="Equity Brokerage Per Crore" name="equityBrokerage" value={formData.equityBrokerage} onChange={handleChange} placeholder="800" />
                                                 <InputField label="Minimum lot size required per single trade of Equity" name="equityMinLot" value={formData.equityMinLot} onChange={handleChange} placeholder="0" />
                                                 <InputField label="Maximum lot size allowed per single trade of Equity" name="equityMaxLot" value={formData.equityMaxLot} onChange={handleChange} placeholder="50" />
@@ -746,6 +801,14 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
 
                                         {(formData.indexOptionsTrading || formData.equityOptionsTrading || formData.mcxOptionsTrading) && (
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 px-2 animate-in fade-in slide-in-from-top-2 duration-500">
+                                                <div className="mb-4 px-2">
+                                                    <label className="block text-sm mb-1 font-light" style={{ color: '#bcc0cf' }}>Ban All Segment Limit Order</label>
+                                                    <label className="flex items-center gap-3 cursor-pointer py-1">
+                                                        <input type="checkbox" name="banOptionsLimitOrder" checked={formData.banOptionsLimitOrder} onChange={handleChange} className="w-5 h-5 rounded accent-[#4caf50] cursor-pointer" />
+                                                        <span className="text-sm text-white">{formData.banOptionsLimitOrder ? 'Enabled' : 'Disabled'}</span>
+                                                    </label>
+                                                </div>
+                                                <InputField label="Min. Time to book profit (No. of Seconds)" name="optionsMinTimeToBookProfit" value={formData.optionsMinTimeToBookProfit} onChange={handleChange} placeholder="120" hint="Example: 120, will hold the trade for 2 minutes before closing a trade in profit" />
                                                 {/* Column 1 */}
                                                 <div className="space-y-0">
                                                     {formData.indexOptionsTrading && (
@@ -851,6 +914,65 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
 
                                     <hr className="border-white/5" />
 
+                                    {/* INTERNATIONAL SEGMENTS */}
+                                    <fieldset className="border-none p-0 m-0">
+                                        <div className="flex items-center gap-3 mb-8 px-2">
+                                            <h3 className="text-[20px] font-black text-white uppercase tracking-tight">International Segments (Comex, Forex, Crypto):</h3>
+                                        </div>
+
+                                        <div className="space-y-6 px-2">
+                                            {/* COMEX */}
+                                            <div className="bg-[#1a2035]/50 rounded-xl p-6 border border-white/5">
+                                                <div className="flex justify-between items-center mb-4">
+                                                    <div>
+                                                        <h4 className="text-[16px] font-black text-cyan-400 uppercase tracking-wider border-l-2 border-cyan-400 pl-3">Comex Commodities</h4>
+                                                        <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-1 pl-3">Global Commodity Exchange Settings</p>
+                                                    </div>
+                                                    <div className="flex items-center gap-3 bg-[#202940] px-4 py-2 rounded-lg border border-white/5">
+                                                        <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Status</span>
+                                                        <input type="checkbox" name="comexTrading" checked={formData.comexTrading} onChange={handleChange} className="w-5 h-5 rounded accent-[#4caf50] cursor-pointer" />
+                                                        <span className={`text-[11px] font-black uppercase tracking-wider ${formData.comexTrading ? 'text-green-400' : 'text-slate-500'}`}>{formData.comexTrading ? 'ENABLED' : 'DISABLED'}</span>
+                                                    </div>
+                                                </div>
+                                                <hr className="border-white/5" />
+                                            </div>
+
+                                            {/* FOREX */}
+                                            <div className="bg-[#1a2035]/50 rounded-xl p-6 border border-white/5">
+                                                <div className="flex justify-between items-center mb-4">
+                                                    <div>
+                                                        <h4 className="text-[16px] font-black text-green-400 uppercase tracking-wider border-l-2 border-green-400 pl-3">Forex / Currency</h4>
+                                                        <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-1 pl-3">Universal Currency Trading Parameters</p>
+                                                    </div>
+                                                    <div className="flex items-center gap-3 bg-[#202940] px-4 py-2 rounded-lg border border-white/5">
+                                                        <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Status</span>
+                                                        <input type="checkbox" name="forexTrading" checked={formData.forexTrading} onChange={handleChange} className="w-5 h-5 rounded accent-[#4caf50] cursor-pointer" />
+                                                        <span className={`text-[11px] font-black uppercase tracking-wider ${formData.forexTrading ? 'text-green-400' : 'text-slate-500'}`}>{formData.forexTrading ? 'ENABLED' : 'DISABLED'}</span>
+                                                    </div>
+                                                </div>
+                                                <hr className="border-white/5" />
+                                            </div>
+
+                                            {/* CRYPTO */}
+                                            <div className="bg-[#1a2035]/50 rounded-xl p-6 border border-white/5">
+                                                <div className="flex justify-between items-center mb-4">
+                                                    <div>
+                                                        <h4 className="text-[16px] font-black text-orange-400 uppercase tracking-wider border-l-2 border-orange-400 pl-3">Crypto (Bitcoin/ETH)</h4>
+                                                        <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-1 pl-3">Cryptocurrency Asset Execution Hub</p>
+                                                    </div>
+                                                    <div className="flex items-center gap-3 bg-[#202940] px-4 py-2 rounded-lg border border-white/5">
+                                                        <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Status</span>
+                                                        <input type="checkbox" name="cryptoTrading" checked={formData.cryptoTrading} onChange={handleChange} className="w-5 h-5 rounded accent-[#4caf50] cursor-pointer" />
+                                                        <span className={`text-[11px] font-black uppercase tracking-wider ${formData.cryptoTrading ? 'text-green-400' : 'text-slate-500'}`}>{formData.cryptoTrading ? 'ENABLED' : 'DISABLED'}</span>
+                                                    </div>
+                                                </div>
+                                                <hr className="border-white/5" />
+                                            </div>
+                                        </div>
+                                    </fieldset>
+
+                                    <hr className="border-white/5" />
+
                                     {/* KYC / DOCUMENT VERIFICATION */}
                                     <fieldset className="border-none p-0 m-0">
                                         <div className="flex items-center gap-3 mb-8 px-2">
@@ -868,118 +990,56 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-2">
-                                            {/* PAN Card */}
-                                            <div className="space-y-3">
-                                                <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">PAN Card Image</label>
-                                                <div className="relative group cursor-pointer">
-                                                    <input
-                                                        type="file"
-                                                        className="hidden"
-                                                        id="doc-pan"
-                                                        onChange={(e) => handleNestedChange('documents', 'panCard', e.target.files[0])}
-                                                    />
-                                                    <label htmlFor="doc-pan" className="flex flex-col items-center justify-center h-48 rounded-2xl bg-black/40 border-2 border-dashed border-white/10 hover:border-green-500/50 hover:bg-black/60 transition-all group overflow-hidden cursor-pointer">
-                                                        {formData.documents.panCard ? (
-                                                            <div className="w-full h-full flex flex-col items-center justify-center gap-3">
-                                                                <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center">
-                                                                    <Check className="w-6 h-6 text-green-400" />
-                                                                </div>
-                                                                <span className="text-[10px] font-black text-green-400">UPLOADED: {formData.documents.panCard.name}</span>
-                                                            </div>
-                                                        ) : (
-                                                            <>
-                                                                <FileUp className="w-10 h-10 text-slate-600 group-hover:text-green-500 transition-colors mb-4" />
-                                                                <span className="text-[11px] font-black text-slate-500 group-hover:text-green-500 uppercase tracking-[0.2em]">Select Document</span>
-                                                            </>
-                                                        )}
-                                                    </label>
-                                                </div>
-                                            </div>
-
-                                            {/* Aadhaar Front */}
-                                            <div className="space-y-3">
-                                                <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Aadhaar Front Image</label>
-                                                <div className="relative group cursor-pointer">
-                                                    <input
-                                                        type="file"
-                                                        className="hidden"
-                                                        id="doc-aadhaar-f"
-                                                        onChange={(e) => handleNestedChange('documents', 'aadhaarFront', e.target.files[0])}
-                                                    />
-                                                    <label htmlFor="doc-aadhaar-f" className="flex flex-col items-center justify-center h-48 rounded-2xl bg-black/40 border-2 border-dashed border-white/10 hover:border-green-500/50 hover:bg-black/60 transition-all group overflow-hidden cursor-pointer">
-                                                        {formData.documents.aadhaarFront ? (
-                                                            <div className="w-full h-full flex flex-col items-center justify-center gap-3">
-                                                                <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center">
-                                                                    <Check className="w-6 h-6 text-green-400" />
-                                                                </div>
-                                                                <span className="text-[10px] font-black text-green-400">UPLOADED: {formData.documents.aadhaarFront.name}</span>
-                                                            </div>
-                                                        ) : (
-                                                            <>
-                                                                <FileUp className="w-10 h-10 text-slate-600 group-hover:text-green-500 transition-colors mb-4" />
-                                                                <span className="text-[11px] font-black text-slate-500 group-hover:text-green-500 uppercase tracking-[0.2em]">Select Document</span>
-                                                            </>
-                                                        )}
-                                                    </label>
-                                                </div>
-                                            </div>
-
-                                            {/* Aadhaar Back */}
-                                            <div className="space-y-3">
-                                                <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Aadhaar Back Image</label>
-                                                <div className="relative group cursor-pointer">
-                                                    <input
-                                                        type="file"
-                                                        className="hidden"
-                                                        id="doc-aadhaar-b"
-                                                        onChange={(e) => handleNestedChange('documents', 'aadhaarBack', e.target.files[0])}
-                                                    />
-                                                    <label htmlFor="doc-aadhaar-b" className="flex flex-col items-center justify-center h-48 rounded-2xl bg-black/40 border-2 border-dashed border-white/10 hover:border-green-500/50 hover:bg-black/60 transition-all group overflow-hidden cursor-pointer">
-                                                        {formData.documents.aadhaarBack ? (
-                                                            <div className="w-full h-full flex flex-col items-center justify-center gap-3">
-                                                                <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center">
-                                                                    <Check className="w-6 h-6 text-green-400" />
-                                                                </div>
-                                                                <span className="text-[10px] font-black text-green-400">UPLOADED: {formData.documents.aadhaarBack.name}</span>
-                                                            </div>
-                                                        ) : (
-                                                            <>
-                                                                <FileUp className="w-10 h-10 text-slate-600 group-hover:text-green-500 transition-colors mb-4" />
-                                                                <span className="text-[11px] font-black text-slate-500 group-hover:text-green-500 uppercase tracking-[0.2em]">Select Document</span>
-                                                            </>
-                                                        )}
-                                                    </label>
-                                                </div>
-                                            </div>
-
-                                            {/* Bank Statement */}
-                                            <div className="space-y-3">
-                                                <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Bank Statement / Cheque</label>
-                                                <div className="relative group cursor-pointer">
-                                                    <input
-                                                        type="file"
-                                                        className="hidden"
-                                                        id="doc-bank"
-                                                        onChange={(e) => handleNestedChange('documents', 'bankStatement', e.target.files[0])}
-                                                    />
-                                                    <label htmlFor="doc-bank" className="flex flex-col items-center justify-center h-48 rounded-2xl bg-black/40 border-2 border-dashed border-white/10 hover:border-green-500/50 hover:bg-black/60 transition-all group overflow-hidden cursor-pointer">
-                                                        {formData.documents.bankStatement ? (
-                                                            <div className="w-full h-full flex flex-col items-center justify-center gap-3">
-                                                                <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center">
-                                                                    <Check className="w-6 h-6 text-green-400" />
-                                                                </div>
-                                                                <span className="text-[10px] font-black text-green-400">UPLOADED: {formData.documents.bankStatement.name}</span>
-                                                            </div>
-                                                        ) : (
-                                                            <>
-                                                                <FileUp className="w-10 h-10 text-slate-600 group-hover:text-green-500 transition-colors mb-4" />
-                                                                <span className="text-[11px] font-black text-slate-500 group-hover:text-green-500 uppercase tracking-[0.2em]">Select Document</span>
-                                                            </>
-                                                        )}
-                                                    </label>
-                                                </div>
-                                            </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 px-2">
+                                            {[
+                                                { key: 'panCard', label: 'PAN Card', id: 'doc-pan' },
+                                                { key: 'aadhaarFront', label: 'Aadhaar Front', id: 'doc-aadhaar-f' },
+                                                { key: 'aadhaarBack', label: 'Aadhaar Back', id: 'doc-aadhaar-b' },
+                                                { key: 'bankStatement', label: 'Bank Proof / Cheque', id: 'doc-bank' }
+                                            ].map(doc => {
+                                                const file = formData.documents[doc.key];
+                                                const hasFile = file instanceof File;
+                                                const isPdf = hasFile && file.type === 'application/pdf';
+                                                return (
+                                                    <div key={doc.key} className="space-y-3">
+                                                        <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">{doc.label}</label>
+                                                        <div className="relative group cursor-pointer">
+                                                            <input
+                                                                type="file"
+                                                                className="hidden"
+                                                                id={doc.id}
+                                                                accept="image/*,.pdf"
+                                                                onChange={(e) => handleNestedChange('documents', doc.key, e.target.files[0])}
+                                                            />
+                                                            <label htmlFor={doc.id} className="flex flex-col items-center justify-center h-48 rounded-2xl bg-black/40 border-2 border-dashed border-white/10 hover:border-green-500/50 hover:bg-black/60 transition-all group overflow-hidden cursor-pointer">
+                                                                {hasFile ? (
+                                                                    <div className="w-full h-full relative flex flex-col items-center justify-center gap-2">
+                                                                        {isPdf ? (
+                                                                            <div className="absolute inset-0 w-full h-full flex items-center justify-center bg-red-900/20 rounded-2xl">
+                                                                                <FileText className="w-16 h-16 text-red-400 opacity-50" />
+                                                                            </div>
+                                                                        ) : file.type?.startsWith('image/') ? (
+                                                                            <img src={URL.createObjectURL(file)} alt={doc.label} className="absolute inset-0 w-full h-full object-cover rounded-2xl opacity-70" />
+                                                                        ) : null}
+                                                                        <div className="relative z-10 flex flex-col items-center gap-2">
+                                                                            <div className="w-10 h-10 rounded-full bg-green-500/30 backdrop-blur flex items-center justify-center">
+                                                                                <Check className="w-5 h-5 text-green-400" />
+                                                                            </div>
+                                                                            <span className="text-[9px] font-black text-green-300 bg-black/60 px-2 py-1 rounded max-w-[120px] truncate">{file.name}</span>
+                                                                            <span className="text-[8px] text-slate-400">Click to change</span>
+                                                                        </div>
+                                                                    </div>
+                                                                ) : (
+                                                                    <>
+                                                                        <FileUp className="w-10 h-10 text-slate-600 group-hover:text-green-500 transition-colors mb-4" />
+                                                                        <span className="text-[11px] font-black text-slate-500 group-hover:text-green-500 uppercase tracking-[0.2em]">Select Document</span>
+                                                                    </>
+                                                                )}
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
 
                                         <div className="mt-12 space-y-8 bg-black/20 p-8 rounded-2xl border border-white/5">
@@ -1003,9 +1063,12 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                                         onChange={handleChange}
                                                         className="w-full bg-white border border-slate-200 py-2.5 px-3 text-black font-bold outline-none rounded-sm text-sm"
                                                     >
-                                                        <option value="">Select User</option>
-                                                        <option value="3761 : demo001">3761 : demo001</option>
-                                                        <option value="3762 : demo002">3762 : demo002</option>
+                                                        <option value="">Select Broker</option>
+                                                        {brokers.map(b => (
+                                                            <option key={b.id} value={`${b.id} : ${b.username}`}>
+                                                                {b.id} : {b.username} ({b.full_name || b.fullName || ''})
+                                                            </option>
+                                                        ))}
                                                     </select>
                                                 </div>
                                             </div>

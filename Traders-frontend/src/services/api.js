@@ -3,11 +3,16 @@
  * All API calls go through this file
  */
 
-// Use your machine's IP or localhost
-const SERVER_IP = 'localhost'; 
+// Local development
+const SERVER_IP = 'localhost';
 const PORT = '5000';
 export const BASE_URL = import.meta.env.VITE_API_URL || `http://${SERVER_IP}:${PORT}/api`;
 export const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || `http://${SERVER_IP}:${PORT}`;
+
+// Production backend on Railway (uncomment below & comment above to use live)
+// const PRODUCTION_URL = 'https://trader-production-e063.up.railway.app';
+// export const BASE_URL = import.meta.env.VITE_API_URL || `${PRODUCTION_URL}/api`;
+// export const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || PRODUCTION_URL;
 
 const getHeaders = () => ({
     'Content-Type': 'application/json',
@@ -144,6 +149,15 @@ export const createTrade = async (data) => {
 export const placeOrder = async (data) => {
     const res = await fetch(`${BASE_URL}/trades/place`, {
         method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify(data),
+    });
+    return handleResponse(res);
+};
+
+export const closeTrade = async (id, data = {}) => {
+    const res = await fetch(`${BASE_URL}/trades/${id}/close`, {
+        method: 'PUT',
         headers: getHeaders(),
         body: JSON.stringify(data),
     });
@@ -502,5 +516,87 @@ export const toggleBankStatus = async (id) => {
         method: 'PATCH',
         headers: getHeaders(),
     });
+    return handleResponse(res);
+};
+
+// ─── NEW CLIENT BANK (Payment Details for Deposits) ──
+export const getNewClientBank = async () => {
+    const res = await fetch(`${BASE_URL}/new-client-bank`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const updateNewClientBank = async (data) => {
+    const res = await fetch(`${BASE_URL}/new-client-bank`, {
+        method: 'PUT',
+        headers: getHeaders(),
+        body: JSON.stringify(data),
+    });
+    return handleResponse(res);
+};
+
+// ─── ADMIN PANEL: PERMISSIONS, THEME, LOGO ───────────
+
+export const getInitData = async () => {
+    const res = await fetch(`${BASE_URL}/admin/init`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const getAdminMenuPermissions = async (userId) => {
+    const res = await fetch(`${BASE_URL}/admin/menu-permissions/${userId}`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const saveAdminMenuPermissions = async (userId, menuPermissions) => {
+    const res = await fetch(`${BASE_URL}/admin/menu-permissions/${userId}`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ menuPermissions }),
+    });
+    return handleResponse(res);
+};
+
+export const getThemeSettings = async () => {
+    const res = await fetch(`${BASE_URL}/admin/theme`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const saveThemeSettings = async (theme) => {
+    const res = await fetch(`${BASE_URL}/admin/theme`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ theme }),
+    });
+    return handleResponse(res);
+};
+
+export const getLogoPath = async () => {
+    const res = await fetch(`${BASE_URL}/admin/logo`);
+    return handleResponse(res);
+};
+
+export const uploadLogo = async (formData) => {
+    const res = await fetch(`${BASE_URL}/admin/logo`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('traders_token') || ''}` },
+        body: formData,
+    });
+    return handleResponse(res);
+};
+
+export const saveAdminPanelSettings = async (userId, theme, logoFile, profileImageFile) => {
+    const fd = new FormData();
+    fd.append('theme', JSON.stringify(theme));
+    if (logoFile) fd.append('logo', logoFile);
+    if (profileImageFile) fd.append('profileImage', profileImageFile);
+    const res = await fetch(`${BASE_URL}/admin/panel-settings/${userId}`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('traders_token') || ''}` },
+        body: fd,
+    });
+    return handleResponse(res);
+};
+
+export const getAdminPanelSettings = async (userId) => {
+    const res = await fetch(`${BASE_URL}/admin/panel-settings/${userId}`, { headers: getHeaders() });
     return handleResponse(res);
 };

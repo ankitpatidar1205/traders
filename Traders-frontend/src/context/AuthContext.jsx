@@ -1,8 +1,8 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext(null);
 
-// Role definitions - who can see what
+// Role definitions
 export const ROLES = {
     SUPERADMIN: 'SUPERADMIN',
     ADMIN: 'ADMIN',
@@ -10,40 +10,60 @@ export const ROLES = {
     TRADER: 'TRADER',
 };
 
-// Menu items allowed per role
+// Static fallback menu access per role (ADMIN is overridden by DB permissions)
 export const ROLE_MENU_ACCESS = {
     SUPERADMIN: [
         'live-m2m', 'kite-dashboard', 'market-watch', 'notifications', 'action-ledger',
-        'active-positions', 'closed-positions', 'users', 'trades',
+        'active-positions', 'closed-positions', 'trading-clients', 'trades',
         'group-trades', 'closed-trades', 'deleted-trades', 'pending-orders',
-        'funds', 'trading-clients', 'tickers', 'banned', 'bank',
+        'funds', 'brokers', 'tickers', 'banned', 'bank',
         'new-client-bank', 'accounts', 'broker-accounts', 'ip-logins',
         'trade-ip-tracking', 'global-updation', 'change-password',
         'change-transaction-password', 'withdrawal-requests',
         'deposit-requests', 'negative-balance', 'admins',
-        'learning', 'support', 'voice-modulation', 'signal-admin', 'signals'
+        'learning', 'support', 'voice-modulation', 'signal-admin', 'signals',
     ],
     ADMIN: [
         'live-m2m', 'kite-dashboard', 'market-watch', 'notifications', 'active-positions',
-        'closed-positions', 'trading-clients', 'users', 'trades',
+        'closed-positions', 'trading-clients', 'brokers', 'trades',
         'group-trades', 'closed-trades', 'deleted-trades', 'pending-orders',
         'funds', 'tickers', 'banned', 'new-client-bank',
         'accounts', 'broker-accounts', 'change-password', 'change-transaction-password',
         'withdrawal-requests', 'deposit-requests', 'negative-balance',
-        'learning', 'support', 'voice-modulation', 'signal-admin', 'signals'
+        'learning', 'support', 'voice-modulation', 'signal-admin', 'signals',
     ],
     BROKER: [
         'live-m2m', 'active-positions', 'closed-positions', 'trades',
-        'users', 'funds', 'notifications', 'pending-orders',
+        'trading-clients', 'funds', 'notifications', 'pending-orders',
         'change-password', 'change-transaction-password',
-        'learning', 'support', 'voice-modulation', 'signals'
+        'learning', 'support', 'voice-modulation', 'signals',
     ],
     TRADER: [
         'live-m2m', 'market-watch', 'notifications', 'active-positions',
         'closed-positions', 'trades', 'closed-trades', 'pending-orders',
         'funds', 'change-password', 'change-transaction-password',
-        'learning', 'support', 'voice-modulation', 'signals'
+        'learning', 'support', 'voice-modulation', 'signals',
     ],
+};
+
+// Default theme (used before DB theme loads)
+const DEFAULT_THEME = {
+    sidebarColor: '#1a2035',
+    navbarColor: '#288c6c',
+    primaryColor: '#4ea752',
+    buttonColor: '#4CAF50',
+    backgroundColor: '#1a2035',
+    textColor: '#ffffff',
+};
+
+const applyThemeToCss = (theme) => {
+    const root = document.documentElement;
+    if (theme.sidebarColor)    root.style.setProperty('--sidebar-color',    theme.sidebarColor);
+    if (theme.navbarColor)     root.style.setProperty('--navbar-color',     theme.navbarColor);
+    if (theme.primaryColor)    root.style.setProperty('--primary-color',    theme.primaryColor);
+    if (theme.buttonColor)     root.style.setProperty('--button-color',     theme.buttonColor);
+    if (theme.backgroundColor) root.style.setProperty('--bg-color',         theme.backgroundColor);
+    if (theme.textColor)       root.style.setProperty('--text-color',       theme.textColor);
 };
 
 export const AuthProvider = ({ children }) => {
@@ -61,6 +81,37 @@ export const AuthProvider = ({ children }) => {
         return saved || 'NIFTY50';
     });
 
+    // Dynamic admin menu permissions (null = use static ROLE_MENU_ACCESS)
+    const [menuPermissions, setMenuPermissions] = useState(() => {
+        try {
+            const saved = localStorage.getItem('traders_menu_permissions');
+            return saved ? JSON.parse(saved) : null;
+        } catch (_) { return null; }
+    });
+
+    // Theme
+    const [theme, setTheme] = useState(() => {
+        try {
+            const saved = localStorage.getItem('traders_theme');
+            return saved ? JSON.parse(saved) : DEFAULT_THEME;
+        } catch (_) { return DEFAULT_THEME; }
+    });
+
+    // Logo
+    const [logoPath, setLogoPath] = useState(() => {
+        return localStorage.getItem('traders_logo') || null;
+    });
+
+    // Profile image
+    const [profileImagePath, setProfileImagePath] = useState(() => {
+        return localStorage.getItem('traders_profile_image') || null;
+    });
+
+    // Apply theme CSS variables whenever theme changes
+    useEffect(() => {
+        applyThemeToCss(theme);
+    }, [theme]);
+
     useEffect(() => {
         if (user) {
             localStorage.setItem('traders_user', JSON.stringify(user));
@@ -72,6 +123,7 @@ export const AuthProvider = ({ children }) => {
             localStorage.removeItem('traders_user');
             localStorage.removeItem('traders_session_valid');
             localStorage.removeItem('traders_segment');
+            localStorage.removeItem('traders_menu_permissions');
         }
     }, [user]);
 
@@ -90,7 +142,7 @@ export const AuthProvider = ({ children }) => {
             email: extraData.email || '',
             mobile: extraData.mobile || '',
             userId: extraData.userId || Math.floor(Math.random() * 1000000).toString(),
-            ...extraData
+            ...extraData,
         };
         setUser(userData);
         setCurrentSegment(segment);
@@ -99,21 +151,92 @@ export const AuthProvider = ({ children }) => {
     const logout = () => {
         setUser(null);
         setCurrentSegment('NIFTY50');
+        setMenuPermissions(null);
+        setTheme(DEFAULT_THEME);
+        setLogoPath(null);
         localStorage.removeItem('traders_user');
         localStorage.removeItem('traders_view');
         localStorage.removeItem('traders_session_valid');
         localStorage.removeItem('traders_segment');
         localStorage.removeItem('traders_token');
+        localStorage.removeItem('traders_menu_permissions');
+        localStorage.removeItem('traders_theme');
+        localStorage.removeItem('traders_logo');
+        localStorage.removeItem('traders_profile_image');
     };
 
     const switchSegment = (newSegment) => {
         setCurrentSegment(newSegment);
     };
 
+    // Called after login with data from /api/admin/init
+    const applyInitData = (initData) => {
+        if (initData.menuPermissions !== undefined) {
+            setMenuPermissions(initData.menuPermissions);
+            if (initData.menuPermissions) {
+                localStorage.setItem('traders_menu_permissions', JSON.stringify(initData.menuPermissions));
+            }
+        }
+
+        // Always reset theme — if server returns empty (SUPERADMIN), go back to defaults
+        if (initData.theme && Object.keys(initData.theme).length > 0) {
+            const merged = { ...DEFAULT_THEME, ...initData.theme };
+            setTheme(merged);
+            localStorage.setItem('traders_theme', JSON.stringify(merged));
+        } else {
+            setTheme(DEFAULT_THEME);
+            localStorage.removeItem('traders_theme');
+        }
+
+        // Always reset logo — if server returns null (SUPERADMIN), clear it
+        if (initData.logoPath) {
+            setLogoPath(initData.logoPath);
+            localStorage.setItem('traders_logo', initData.logoPath);
+        } else {
+            setLogoPath(null);
+            localStorage.removeItem('traders_logo');
+        }
+
+        // Always reset profile image
+        if (initData.profileImagePath) {
+            setProfileImagePath(initData.profileImagePath);
+            localStorage.setItem('traders_profile_image', initData.profileImagePath);
+        } else {
+            setProfileImagePath(null);
+            localStorage.removeItem('traders_profile_image');
+        }
+    };
+
+    // Update theme from ThemeSettingsPage after save
+    const updateTheme = (newTheme) => {
+        const merged = { ...DEFAULT_THEME, ...newTheme };
+        setTheme(merged);
+        localStorage.setItem('traders_theme', JSON.stringify(merged));
+    };
+
+    const updateLogoPath = (path) => {
+        setLogoPath(path);
+        if (path) localStorage.setItem('traders_logo', path);
+        else localStorage.removeItem('traders_logo');
+    };
+
     const canAccess = (menuId) => {
         if (!user) return false;
-        const allowed = ROLE_MENU_ACCESS[user.role] || [];
-        return allowed.includes(menuId);
+        // SUPERADMIN always uses static list
+        if (user.role === ROLES.SUPERADMIN) {
+            return ROLE_MENU_ACCESS[ROLES.SUPERADMIN].includes(menuId);
+        }
+        // ADMIN: use DB permissions if available, else static fallback
+        if (user.role === ROLES.ADMIN) {
+            if (menuPermissions && menuPermissions.length > 0) {
+                // Always allow password change
+                if (['change-password', 'change-transaction-password'].includes(menuId)) return true;
+                return menuPermissions.includes(menuId);
+            }
+            return (ROLE_MENU_ACCESS[ROLES.ADMIN] || []).includes(menuId);
+        }
+        // BROKER / TRADER
+        return (ROLE_MENU_ACCESS[user.role] || []).includes(menuId);
     };
 
     const isSuperAdmin = () => user?.role === ROLES.SUPERADMIN;
@@ -123,8 +246,11 @@ export const AuthProvider = ({ children }) => {
 
     return (
         <AuthContext.Provider value={{
-            user, currentSegment, login, logout, switchSegment,
-            canAccess, isSuperAdmin, isAdmin, isBroker, isClient
+            user, currentSegment,
+            login, logout, switchSegment,
+            canAccess, isSuperAdmin, isAdmin, isBroker, isClient,
+            menuPermissions, theme, logoPath, profileImagePath,
+            applyInitData, updateTheme, updateLogoPath,
         }}>
             {children}
         </AuthContext.Provider>

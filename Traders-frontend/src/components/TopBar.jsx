@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import useRiskManagement from '../hooks/useRiskManagement';
-import logo from '../assets/shrishreenathjitraders.in.png';
+import defaultLogo from '../assets/shrishreenathjitraders.in.png';
 
 // ─── Notification data ────────────────────────────────────────────────────────
 const ALL_NOTIFICATIONS = [
@@ -84,9 +84,19 @@ const SETTINGS_SECTIONS = [
 
 // ─── Component ────────────────────────────────────────────────────────────────
 const TopBar = ({ currentViewLabel, onLogout, onNavigate }) => {
-    const { user, currentSegment, switchSegment } = useAuth();
+    const { user, currentSegment, switchSegment, logoPath, profileImagePath, theme } = useAuth();
     const userName = user?.name || '';
     const userRole = user?.role || 'admin';
+
+    // Admins see their uploaded logo; SuperAdmin always sees the default bundled logo
+    const resolvedLogo = (userRole === 'ADMIN' && logoPath)
+        ? (logoPath.startsWith('http') ? logoPath : `http://localhost:5000${logoPath}`)
+        : defaultLogo;
+
+    // Profile image for right side
+    const resolvedProfileImage = (userRole === 'ADMIN' && profileImagePath)
+        ? (profileImagePath.startsWith('http') ? profileImagePath : `http://localhost:5000${profileImagePath}`)
+        : null;
 
     const onSwitchSegment = (seg) => {
         switchSegment(seg);
@@ -161,7 +171,7 @@ const TopBar = ({ currentViewLabel, onLogout, onNavigate }) => {
     return (
         <nav
             className="flex w-full items-center justify-between px-8 h-16 text-white shadow-[0_4px_20px_0_rgba(0,0,0,0.14)] relative z-40 transition-all duration-300"
-            style={{ background: 'linear-gradient(60deg, #288c6c, #4ea752)' }}
+            style={{ background: `linear-gradient(60deg, ${theme?.navbarColor || '#288c6c'}, ${theme?.primaryColor || '#4ea752'})` }}
         >
             {/* ── Logo ── */}
             <div className="flex items-center gap-6 h-full">
@@ -170,7 +180,7 @@ const TopBar = ({ currentViewLabel, onLogout, onNavigate }) => {
                     onClick={() => onNavigate?.('dashboard')}
                 >
                     <img
-                        src={logo}
+                        src={resolvedLogo}
                         alt="Logo"
                         className="h-11 w-auto object-contain mix-blend-multiply transition-transform hover:scale-105 duration-300"
                     />
@@ -448,8 +458,10 @@ const TopBar = ({ currentViewLabel, onLogout, onNavigate }) => {
                         onClick={() => { setShowDropdown(p => !p); setShowNotifPanel(false); setShowSettings(false); }}
                         className="flex items-center gap-3 text-white cursor-pointer hover:bg-white/10 px-3 py-2 rounded-lg transition-all"
                     >
-                        <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center border border-white/30 shadow-sm">
-                            <User className="w-5 h-5" />
+                        <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center border border-white/30 shadow-sm overflow-hidden">
+                            {resolvedProfileImage
+                                ? <img src={resolvedProfileImage} alt="profile" className="w-full h-full object-cover" />
+                                : <User className="w-5 h-5" />}
                         </div>
                         <div className="flex flex-col">
                             <span className="text-[13px] font-bold uppercase tracking-widest leading-none">{userName || 'DEMO PANEL'}</span>

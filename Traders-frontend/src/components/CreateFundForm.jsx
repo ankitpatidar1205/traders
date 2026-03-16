@@ -25,7 +25,7 @@ const CreateFundForm = ({ onSave, onBack, mode = 'deposit', initialUser }) => {
     setLoading(true);
     try {
       const data = await api.getClients();
-      setUsers(data);
+      setUsers(Array.isArray(data) ? data.filter(u => u.role === 'TRADER') : []);
     } catch (err) {
       console.error('Failed to fetch users', err);
     } finally {

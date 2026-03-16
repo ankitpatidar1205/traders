@@ -36,6 +36,23 @@ async function checkSchema() {
     `);
     console.log('\nbank_details table ensured.');
 
+    // Auto-create new_client_bank table if not exists
+    await connection.execute(`
+        CREATE TABLE IF NOT EXISTS new_client_bank (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            account_holder VARCHAR(150) DEFAULT '',
+            account_number VARCHAR(50) DEFAULT '',
+            bank_name VARCHAR(100) DEFAULT '',
+            ifsc VARCHAR(20) DEFAULT '',
+            phone_pe VARCHAR(20) DEFAULT '',
+            google_pay VARCHAR(20) DEFAULT '',
+            paytm VARCHAR(20) DEFAULT '',
+            upi_id VARCHAR(100) DEFAULT '',
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        )
+    `);
+    console.log('new_client_bank table ensured.');
+
     await connection.end();
 }
 
