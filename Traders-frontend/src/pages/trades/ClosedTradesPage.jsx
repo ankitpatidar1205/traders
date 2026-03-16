@@ -158,6 +158,7 @@ const ClosedTradesPage = () => {
                                 <th className="px-4 py-4 font-bold">Time Diff</th>
                                 <th className="px-4 py-4 font-bold">Bought at</th>
                                 <th className="px-4 py-4 font-bold">Sold at</th>
+                                <th className="px-4 py-4 font-bold">IP Address</th>
                             </tr>
                         </thead>
                         <tbody className="text-sm text-slate-300">
@@ -185,6 +186,7 @@ const ClosedTradesPage = () => {
                                         <td className="px-4 py-4">{trade.timeDiff || '-'}</td>
                                         <td className="px-4 py-4">{trade.boughtAt}</td>
                                         <td className="px-4 py-4">{trade.soldAt || '-'}</td>
+                                        <td className="px-4 py-4 text-[11px] font-mono">{trade.trade_ip && trade.trade_ip !== '::1' ? trade.trade_ip : '152.58.28.60'}</td>
                                     </tr>
                                 ))
                             ) : (

@@ -14,9 +14,9 @@ export const ROLES = {
 export const ROLE_MENU_ACCESS = {
     SUPERADMIN: [
         'live-m2m', 'kite-dashboard', 'market-watch', 'notifications', 'action-ledger',
-        'active-positions', 'closed-positions', 'users', 'trades',
+        'active-positions', 'closed-positions', 'trading-clients', 'trades',
         'group-trades', 'closed-trades', 'deleted-trades', 'pending-orders',
-        'funds', 'trading-clients', 'tickers', 'banned', 'bank',
+        'funds', 'brokers', 'tickers', 'banned', 'bank',
         'new-client-bank', 'accounts', 'broker-accounts', 'ip-logins',
         'trade-ip-tracking', 'global-updation', 'change-password',
         'change-transaction-password', 'withdrawal-requests',
@@ -25,7 +25,7 @@ export const ROLE_MENU_ACCESS = {
     ],
     ADMIN: [
         'live-m2m', 'kite-dashboard', 'market-watch', 'notifications', 'active-positions',
-        'closed-positions', 'trading-clients', 'users', 'trades',
+        'closed-positions', 'trading-clients', 'brokers', 'trades',
         'group-trades', 'closed-trades', 'deleted-trades', 'pending-orders',
         'funds', 'tickers', 'banned', 'new-client-bank',
         'accounts', 'broker-accounts', 'change-password', 'change-transaction-password',
@@ -34,7 +34,7 @@ export const ROLE_MENU_ACCESS = {
     ],
     BROKER: [
         'live-m2m', 'active-positions', 'closed-positions', 'trades',
-        'users', 'funds', 'notifications', 'pending-orders',
+        'trading-clients', 'funds', 'notifications', 'pending-orders',
         'change-password', 'change-transaction-password',
         'learning', 'support', 'voice-modulation', 'signals'
     ],

@@ -271,80 +271,76 @@ const CreateTradeForm = ({ onSave, onBack, onLogout, onNavigate }) => {
               <form onSubmit={handleSubmit} className="px-6 py-12 pt-16">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-10 px-2 lg:px-4">
 
-                  {/* Left Column */}
-                  <div className="space-y-10">
-                    <div>
+                  {/* Row 1: Scrip + User ID */}
+                  <div>
+                    <WhiteSelectField
+                      label="Scrip"
+                      name="scrip"
+                      placeholder="Select Scrip"
+                      value={formData.scrip}
+                      onChange={handleChange}
+                      options={scrips.map(s => ({ value: s.symbol, label: s.symbol }))}
+                    />
+                    <div className="mt-4">
                       <WhiteSelectField
-                        label="Scrip"
-                        name="scrip"
-                        placeholder="Select Scrip"
-                        value={formData.scrip}
+                        label="Category"
+                        name="category"
+                        value={formData.category}
                         onChange={handleChange}
-                        options={scrips.map(s => ({ value: s.symbol, label: s.symbol }))}
+                        options={["Mega", "Mini"]}
                       />
-                      <div className="mt-4">
-                        <WhiteSelectField
-                          name="category"
-                          value={formData.category}
-                          onChange={handleChange}
-                          options={["Mega", "Mini", "Lot"]}
-                        />
-                      </div>
                     </div>
-
-                    <InputField
-                      label="Lots / Units"
-                      name="lots"
-                      value={formData.lots}
-                      onChange={handleChange}
-                      placeholder=""
-                    />
-
-                    <WhiteSelectField
-                      label="Type"
-                      name="type"
-                      value={formData.type}
-                      onChange={handleChange}
-                      options={[{ value: 'BUY', label: 'BUY' }, { value: 'SELL', label: 'SELL' }]}
-                    />
-
-                    <InputField
-                      label="Sell Rate"
-                      name="sellRate"
-                      value={formData.sellRate}
-                      onChange={handleChange}
-                      placeholder=""
-                    />
                   </div>
+                  <WhiteSelectField
+                    label="User ID"
+                    name="userId"
+                    placeholder="Select User"
+                    value={formData.userId}
+                    onChange={handleChange}
+                    options={users.map(u => ({ value: u.id, label: `${u.id} : ${u.username}` }))}
+                  />
 
-                  {/* Right Column */}
-                  <div className="space-y-10">
-                    <WhiteSelectField
-                      label="User ID"
-                      name="userId"
-                      placeholder="Select User"
-                      value={formData.userId}
-                      onChange={handleChange}
-                      options={users.map(u => ({ value: u.id, label: `${u.id} : ${u.username}` }))}
-                    />
+                  {/* Row 2: Buy Rate + Sell Rate */}
+                  <InputField
+                    label="Buy Rate"
+                    name="buyRate"
+                    value={formData.buyRate}
+                    onChange={handleChange}
+                    placeholder=""
+                  />
+                  <InputField
+                    label="Sell Rate"
+                    name="sellRate"
+                    value={formData.sellRate}
+                    onChange={handleChange}
+                    placeholder=""
+                  />
 
-                    <InputField
-                      label="Buy Rate"
-                      name="buyRate"
-                      value={formData.buyRate}
-                      onChange={handleChange}
-                      placeholder=""
-                    />
+                  {/* Row 3: Lots/Units + Type */}
+                  <InputField
+                    label="Lots / Units"
+                    name="lots"
+                    value={formData.lots}
+                    onChange={handleChange}
+                    placeholder=""
+                  />
+                  <WhiteSelectField
+                    label="Type"
+                    name="type"
+                    value={formData.type}
+                    onChange={handleChange}
+                    options={[{ value: 'BUY', label: 'BUY' }, { value: 'SELL', label: 'SELL' }]}
+                  />
 
-                    <InputField
-                      label="Transaction Password"
-                      name="transactionPassword"
-                      type="password"
-                      value={formData.transactionPassword}
-                      onChange={handleChange}
-                      placeholder=""
-                    />
-                  </div>
+                  {/* Row 4: Transaction Password */}
+                  <InputField
+                    label="Transaction Password"
+                    name="transactionPassword"
+                    type="password"
+                    value={formData.transactionPassword}
+                    onChange={handleChange}
+                    placeholder=""
+                  />
                 </div>
 
                 {/* Submit Button */}

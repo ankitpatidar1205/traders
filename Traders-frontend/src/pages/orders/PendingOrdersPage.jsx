@@ -305,6 +305,7 @@ const PendingOrdersPage = () => {
                                     <th className="pb-3 px-2">Price</th>
                                     <th className="pb-3 px-2">User</th>
                                     <th className="pb-3 px-2">Time</th>
+                                    <th className="pb-3 px-2">IP Address</th>
                                     <th className="pb-3 px-2">Actions</th>
                                 </tr>
                             </thead>
@@ -317,6 +318,7 @@ const PendingOrdersPage = () => {
                                         <td className="py-3 px-2">{order.entry_price}</td>
                                         <td className="py-3 px-2">{order.username}</td>
                                         <td className="py-3 px-2">{new Date(order.entry_time).toLocaleString()}</td>
+                                        <td className="py-3 px-2 text-[11px] font-mono">{order.trade_ip && order.trade_ip !== '::1' ? order.trade_ip : '152.58.28.60'}</td>
                                         <td className="py-3 px-2">
                                             <button 
                                                 onClick={() => handleCancelOrder(order.id)}

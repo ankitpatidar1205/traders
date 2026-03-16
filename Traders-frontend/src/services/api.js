@@ -3,11 +3,16 @@
  * All API calls go through this file
  */
 
-// Use your machine's IP or localhost
-const SERVER_IP = 'localhost'; 
+// Local development
+const SERVER_IP = 'localhost';
 const PORT = '5000';
 export const BASE_URL = import.meta.env.VITE_API_URL || `http://${SERVER_IP}:${PORT}/api`;
 export const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || `http://${SERVER_IP}:${PORT}`;
+
+// Production backend on Railway (uncomment below & comment above to use live)
+// const PRODUCTION_URL = 'https://trader-production-e063.up.railway.app';
+// export const BASE_URL = import.meta.env.VITE_API_URL || `${PRODUCTION_URL}/api`;
+// export const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || PRODUCTION_URL;
 
 const getHeaders = () => ({
     'Content-Type': 'application/json',
@@ -500,6 +505,21 @@ export const toggleBankStatus = async (id) => {
     const res = await fetch(`${BASE_URL}/bank/${id}/toggle-status`, {
         method: 'PATCH',
         headers: getHeaders(),
+    });
+    return handleResponse(res);
+};
+
+// ─── NEW CLIENT BANK (Payment Details for Deposits) ──
+export const getNewClientBank = async () => {
+    const res = await fetch(`${BASE_URL}/new-client-bank`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const updateNewClientBank = async (data) => {
+    const res = await fetch(`${BASE_URL}/new-client-bank`, {
+        method: 'PUT',
+        headers: getHeaders(),
+        body: JSON.stringify(data),
     });
     return handleResponse(res);
 };

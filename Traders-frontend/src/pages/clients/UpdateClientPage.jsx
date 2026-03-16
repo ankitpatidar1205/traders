@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Save, ArrowLeft, Info, Check, ChevronDown, Settings, User, Lock, Key, FileUp, ShieldCheck } from 'lucide-react';
+import { X, Save, ArrowLeft, Info, Check, ChevronDown, Settings, User, Lock, Key, FileUp, ShieldCheck, Eye, FileText, Globe } from 'lucide-react';
 import * as api from '../../services/api';
 
 const InputField = ({ label, name, value, onChange, type = "text", placeholder, hint, className = "" }) => (
@@ -82,15 +82,12 @@ const ScripField = ({ label, value, onChange, name, className = "" }) => (
 
 const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => {
     const [loading, setLoading] = useState(false);
+    const [loadingProfile, setLoadingProfile] = useState(true);
     const [saveError, setSaveError] = useState('');
-    const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString());
     const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+    const [brokers, setBrokers] = useState([]);
+    const [existingDocs, setExistingDocs] = useState({});
     const profileRef = useRef(null);
-
-    useEffect(() => {
-        const timer = setInterval(() => setCurrentTime(new Date().toLocaleTimeString()), 1000);
-        return () => clearInterval(timer);
-    }, []);
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -105,14 +102,14 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
 
     const [formData, setFormData] = useState({
         // 1. Personal Details
-        fullName: client?.fullName || 'Demo ji',
+        fullName: client?.full_name || client?.fullName || '',
         mobile: client?.mobile || '',
-        username: client?.username || 'Demo0174',
+        username: client?.username || '',
         password: '',
         city: client?.city || '',
 
         // 2. Config
-        isDemoAccount: client?.demoAccount === 'Yes' || true,
+        isDemoAccount: client?.is_demo === 1 || client?.demoAccount === 'Yes' || false,
         allowFreshEntry: client?.allowFreshEntry || false,
         allowOrdersBetweenHL: client?.allowOrdersBetweenHL !== undefined ? client.allowOrdersBetweenHL : true,
         tradeEquityUnits: client?.tradeEquityUnits || false,
@@ -125,36 +122,36 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
 
         // 3. MCX Futures
         mcxTrading: client?.mcxTrading !== undefined ? client.mcxTrading : true,
-        mcxMinLot: client?.mcxMinLot || '0',
-        mcxMaxLot: client?.mcxMaxLot || '20',
-        mcxMaxLotScrip: client?.mcxMaxLotScrip || '50',
-        mcxMaxSizeAll: client?.mcxMaxSizeAll || '100',
-        mcxBrokerageType: client?.mcxBrokerageType || 'per_lot',
-        mcxBrokerage: client?.mcxBrokerage || '800.0000',
-        mcxExposureType: client?.mcxExposureType || 'per_lot',
+        mcxMinLot: client?.mcxMinLot || '1',
+        mcxMaxLot: client?.mcxMaxLot || '100',
+        mcxMaxLotScrip: client?.mcxMaxLotScrip || '1000',
+        mcxMaxSizeAll: client?.mcxMaxSizeAll || '5000',
+        mcxBrokerageType: client?.mcxBrokerageType || 'per_crore',
+        mcxBrokerage: client?.mcxBrokerage || '800',
+        mcxExposureType: client?.mcxExposureType || 'per_turnover',
         mcxIntradayMargin: client?.mcxIntradayMargin || '500',
         mcxHoldingMargin: client?.mcxHoldingMargin || '100',
         mcxLotMargins: client?.mcxLotMargins || {
-            BULLDEX: { INTRADAY: '10000', HOLDING: '10000' },
-            GOLD: { INTRADAY: '10000', HOLDING: '10000' },
-            SILVER: { INTRADAY: '15000', HOLDING: '40000' },
-            CRUDEOIL: { INTRADAY: '10000', HOLDING: '10000' },
-            'CRUDEOIL MINI': { INTRADAY: '10000', HOLDING: '10000' },
-            COPPER: { INTRADAY: '10000', HOLDING: '10000' },
-            NICKEL: { INTRADAY: '10000', HOLDING: '10000' },
-            ZINC: { INTRADAY: '10000', HOLDING: '10000' },
-            ZINCMINI: { INTRADAY: '1000', HOLDING: '1000' },
-            LEAD: { INTRADAY: '1000', HOLDING: '1000' },
-            LEADMINI: { INTRADAY: '1000', HOLDING: '1000' },
-            ALUMINIUM: { INTRADAY: '1000', HOLDING: '1000' },
-            ALUMINI: { INTRADAY: '1000', HOLDING: '1000' },
-            NATURALGAS: { INTRADAY: '1000', HOLDING: '1000' },
-            'NATURALGAS MINI': { INTRADAY: '1000', HOLDING: '1000' },
-            MENTHAOIL: { INTRADAY: '1000', HOLDING: '1000' },
-            COTTON: { INTRADAY: '1000', HOLDING: '1000' },
-            GOLDM: { INTRADAY: '1000', HOLDING: '1000' },
-            SILVERM: { INTRADAY: '1000', HOLDING: '1000' },
-            'SILVER MIC': { INTRADAY: '1000', HOLDING: '1000' }
+            BULLDEX: { INTRADAY: '10000', HOLDING: '10000', LOT: '1' },
+            GOLD: { INTRADAY: '10000', HOLDING: '10000', LOT: '1' },
+            SILVER: { INTRADAY: '15000', HOLDING: '40000', LOT: '1' },
+            CRUDEOIL: { INTRADAY: '10000', HOLDING: '10000', LOT: '1' },
+            'CRUDEOIL MINI': { INTRADAY: '10000', HOLDING: '10000', LOT: '1' },
+            COPPER: { INTRADAY: '10000', HOLDING: '10000', LOT: '1' },
+            NICKEL: { INTRADAY: '10000', HOLDING: '10000', LOT: '1' },
+            ZINC: { INTRADAY: '10000', HOLDING: '10000', LOT: '1' },
+            ZINCMINI: { INTRADAY: '1000', HOLDING: '1000', LOT: '1' },
+            LEAD: { INTRADAY: '1000', HOLDING: '1000', LOT: '1' },
+            LEADMINI: { INTRADAY: '1000', HOLDING: '1000', LOT: '1' },
+            ALUMINIUM: { INTRADAY: '1000', HOLDING: '1000', LOT: '1' },
+            ALUMINI: { INTRADAY: '1000', HOLDING: '1000', LOT: '1' },
+            NATURALGAS: { INTRADAY: '1000', HOLDING: '1000', LOT: '1' },
+            'NATURALGAS MINI': { INTRADAY: '1000', HOLDING: '1000', LOT: '1' },
+            MENTHAOIL: { INTRADAY: '1000', HOLDING: '1000', LOT: '1' },
+            COTTON: { INTRADAY: '1000', HOLDING: '1000', LOT: '1' },
+            GOLDM: { INTRADAY: '1000', HOLDING: '1000', LOT: '1' },
+            SILVERM: { INTRADAY: '1000', HOLDING: '1000', LOT: '1' },
+            'SILVER MIC': { INTRADAY: '1000', HOLDING: '1000', LOT: '1' }
         },
         mcxLotBrokerage: client?.mcxLotBrokerage || {
             GOLDM: '100.0000', SILVERM: '100.0000', BULLDEX: '500.0000', GOLD: '200.0000', SILVER: '150.0000',
@@ -173,18 +170,18 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
 
         // 4. Equity Futures
         equityTrading: client?.equityTrading !== undefined ? client.equityTrading : true,
-        equityBrokerage: client?.equityBrokerage || '800.0000',
-        equityMinQty: client?.equityMinQty || '0',
-        equityMaxQty: client?.equityMaxQty || '50',
-        equityMinIndexQty: client?.equityMinIndexQty || '0',
-        equityMaxIndexQty: client?.equityMaxIndexQty || '20',
-        equityMaxScrip: client?.equityMaxScrip || '100',
-        equityMaxIndexScrip: client?.equityMaxIndexScrip || '100',
-        equityMaxSizeAll: client?.equityMaxSizeAll || '100',
-        equityMaxSizeAllIndex: client?.equityMaxSizeAllIndex || '100',
+        equityBrokerage: client?.equityBrokerage || '800',
+        equityMinLot: client?.equityMinLot || '1',
+        equityMaxLot: client?.equityMaxLot || '100',
+        equityMinIndexLot: client?.equityMinIndexLot || '1',
+        equityMaxIndexLot: client?.equityMaxIndexLot || '100',
+        equityMaxScrip: client?.equityMaxScrip || '500',
+        equityMaxIndexScrip: client?.equityMaxIndexScrip || '500',
+        equityMaxSizeAll: client?.equityMaxSizeAll || '2000',
+        equityMaxSizeAllIndex: client?.equityMaxSizeAllIndex || '2000',
         equityIntradayMargin: client?.equityIntradayMargin || '500',
         equityHoldingMargin: client?.equityHoldingMargin || '100',
-        equityOrdersAway: client?.equityOrdersAway || '0.00',
+        equityOrdersAway: client?.equityOrdersAway || '5',
 
         // 5. Options Config
         indexOptionsTrading: client?.indexOptionsTrading !== undefined ? client.indexOptionsTrading : true,
@@ -220,9 +217,25 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
         optionsMcxHolding: client?.optionsMcxHolding || '2',
         optionsOrdersAway: client?.optionsOrdersAway || '0.00',
 
-        // 7. Other
+        // 6. Expiry Rules
+        autoSquareOff: 'No',
+        expirySquareOffTime: '11:30',
+        allowExpiringScrip: 'No',
+        daysBeforeExpiry: '0',
+        mcxOptionsAwayPoints: {
+            MCXBULLDEX: '0', GOLD: '0', SILVER: '0', CRUDEOIL: '0', COPPER: '0',
+            NICKEL: '0', ZINC: '0', LEAD: '0', NATURALGAS: '0', MENTHAOIL: '0',
+            COTTON: '0', GOLDM: '0', SILVERM: '0', 'SILVER MIC': '0'
+        },
+
+        // 7. International Segments
+        comexTrading: client?.comexTrading || false,
+        forexTrading: client?.forexTrading || false,
+        cryptoTrading: client?.cryptoTrading || false,
+
+        // 8. Other
         notes: client?.notes || '',
-        broker: client?.broker || '3761 : demo001',
+        broker: client?.broker || '',
         transactionPassword: '',
 
         // 8. Kyc / Documents
@@ -231,9 +244,138 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
             aadhaarFront: null,
             aadhaarBack: null,
             bankStatement: null,
-            addressProof: null
-        }
+            additionalDoc: null
+        },
+        kycStatus: 'Pending'
     });
+
+    // Load full profile from API on mount
+    useEffect(() => {
+        const loadProfile = async () => {
+            if (!client?.id) { setLoadingProfile(false); return; }
+            try {
+                const data = await api.getClientById(client.id);
+                const profile = data.profile || {};
+                const settings = data.settings || {};
+                const config = settings.config || {};
+                const docs = data.documents || {};
+
+                // Store existing document URLs for display
+                setExistingDocs({
+                    panCard: docs.pan_screenshot || null,
+                    aadhaarFront: docs.aadhar_front || null,
+                    aadhaarBack: docs.aadhar_back || null,
+                    bankStatement: docs.bank_proof || null
+                });
+
+                // Merge config_json data into form if available
+                setFormData(prev => ({
+                    ...prev,
+                    fullName: profile.full_name || prev.fullName,
+                    mobile: profile.mobile || prev.mobile,
+                    username: profile.username || prev.username,
+                    city: profile.city || prev.city,
+                    isDemoAccount: profile.is_demo === 1,
+                    accountStatus: profile.status !== 'Inactive',
+                    // Settings fields
+                    allowFreshEntry: settings.allow_fresh_entry === 1,
+                    allowOrdersBetweenHL: settings.allow_orders_between_hl === 1,
+                    tradeEquityUnits: settings.trade_equity_units === 1,
+                    autoClosePercentage: String(settings.auto_close_at_m2m_pct || '90'),
+                    notifyPercentage: String(settings.notify_at_m2m_pct || '70'),
+                    minTimeToBookProfit: String(settings.min_time_to_book_profit || '120'),
+                    scalpingStopLoss: settings.scalping_sl_enabled === 1 ? 'Enabled' : 'Disabled',
+                    autoCloseTrades: settings.scalping_sl_enabled === 1,
+                    // Merge all config_json fields (MCX, Equity, Options, etc.)
+                    ...(Object.keys(config).length > 0 ? {
+                        mcxTrading: config.mcxTrading ?? prev.mcxTrading,
+                        mcxMinLot: config.mcxMinLot ?? prev.mcxMinLot,
+                        mcxMaxLot: config.mcxMaxLot ?? prev.mcxMaxLot,
+                        mcxMaxLotScrip: config.mcxMaxLotScrip ?? prev.mcxMaxLotScrip,
+                        mcxMaxSizeAll: config.mcxMaxSizeAll ?? prev.mcxMaxSizeAll,
+                        mcxBrokerageType: config.mcxBrokerageType ?? prev.mcxBrokerageType,
+                        mcxBrokerage: config.mcxBrokerage ?? prev.mcxBrokerage,
+                        mcxExposureType: config.mcxExposureType ?? prev.mcxExposureType,
+                        mcxIntradayMargin: config.mcxIntradayMargin ?? prev.mcxIntradayMargin,
+                        mcxHoldingMargin: config.mcxHoldingMargin ?? prev.mcxHoldingMargin,
+                        mcxLotMargins: config.mcxLotMargins ?? prev.mcxLotMargins,
+                        mcxLotBrokerage: config.mcxLotBrokerage ?? prev.mcxLotBrokerage,
+                        bidGaps: config.bidGaps ?? prev.bidGaps,
+                        equityTrading: config.equityTrading ?? prev.equityTrading,
+                        equityBrokerage: config.equityBrokerage ?? prev.equityBrokerage,
+                        equityMinLot: config.equityMinLot ?? config.equityMinQty ?? prev.equityMinLot,
+                        equityMaxLot: config.equityMaxLot ?? config.equityMaxQty ?? prev.equityMaxLot,
+                        equityMinIndexLot: config.equityMinIndexLot ?? config.equityMinIndexQty ?? prev.equityMinIndexLot,
+                        equityMaxIndexLot: config.equityMaxIndexLot ?? config.equityMaxIndexQty ?? prev.equityMaxIndexLot,
+                        equityMaxScrip: config.equityMaxScrip ?? prev.equityMaxScrip,
+                        equityMaxIndexScrip: config.equityMaxIndexScrip ?? prev.equityMaxIndexScrip,
+                        equityMaxSizeAll: config.equityMaxSizeAll ?? prev.equityMaxSizeAll,
+                        equityMaxSizeAllIndex: config.equityMaxSizeAllIndex ?? prev.equityMaxSizeAllIndex,
+                        equityIntradayMargin: config.equityIntradayMargin ?? prev.equityIntradayMargin,
+                        equityHoldingMargin: config.equityHoldingMargin ?? prev.equityHoldingMargin,
+                        equityOrdersAway: config.equityOrdersAway ?? prev.equityOrdersAway,
+                        indexOptionsTrading: config.indexOptionsTrading ?? prev.indexOptionsTrading,
+                        equityOptionsTrading: config.equityOptionsTrading ?? prev.equityOptionsTrading,
+                        mcxOptionsTrading: config.mcxOptionsTrading ?? prev.mcxOptionsTrading,
+                        optionsIndexBrokerageType: config.optionsIndexBrokerageType ?? prev.optionsIndexBrokerageType,
+                        optionsIndexBrokerage: config.optionsIndexBrokerage ?? prev.optionsIndexBrokerage,
+                        optionsEquityBrokerageType: config.optionsEquityBrokerageType ?? prev.optionsEquityBrokerageType,
+                        optionsEquityBrokerage: config.optionsEquityBrokerage ?? prev.optionsEquityBrokerage,
+                        optionsMcxBrokerageType: config.optionsMcxBrokerageType ?? prev.optionsMcxBrokerageType,
+                        optionsMcxBrokerage: config.optionsMcxBrokerage ?? prev.optionsMcxBrokerage,
+                        optionsMinBidPrice: config.optionsMinBidPrice ?? prev.optionsMinBidPrice,
+                        optionsIndexShortSelling: config.optionsIndexShortSelling ?? prev.optionsIndexShortSelling,
+                        optionsEquityShortSelling: config.optionsEquityShortSelling ?? prev.optionsEquityShortSelling,
+                        optionsMcxShortSelling: config.optionsMcxShortSelling ?? prev.optionsMcxShortSelling,
+                        optionsEquityMinLot: config.optionsEquityMinLot ?? prev.optionsEquityMinLot,
+                        optionsEquityMaxLot: config.optionsEquityMaxLot ?? prev.optionsEquityMaxLot,
+                        optionsIndexMinLot: config.optionsIndexMinLot ?? prev.optionsIndexMinLot,
+                        optionsIndexMaxLot: config.optionsIndexMaxLot ?? prev.optionsIndexMaxLot,
+                        optionsMcxMinLot: config.optionsMcxMinLot ?? prev.optionsMcxMinLot,
+                        optionsMcxMaxLot: config.optionsMcxMaxLot ?? prev.optionsMcxMaxLot,
+                        optionsEquityMaxScrip: config.optionsEquityMaxScrip ?? prev.optionsEquityMaxScrip,
+                        optionsIndexMaxScrip: config.optionsIndexMaxScrip ?? prev.optionsIndexMaxScrip,
+                        optionsMcxMaxScrip: config.optionsMcxMaxScrip ?? prev.optionsMcxMaxScrip,
+                        optionsMaxEquitySizeAll: config.optionsMaxEquitySizeAll ?? prev.optionsMaxEquitySizeAll,
+                        optionsMaxIndexSizeAll: config.optionsMaxIndexSizeAll ?? prev.optionsMaxIndexSizeAll,
+                        optionsMaxMcxSizeAll: config.optionsMaxMcxSizeAll ?? prev.optionsMaxMcxSizeAll,
+                        optionsIndexIntraday: config.optionsIndexIntraday ?? prev.optionsIndexIntraday,
+                        optionsIndexHolding: config.optionsIndexHolding ?? prev.optionsIndexHolding,
+                        optionsEquityIntraday: config.optionsEquityIntraday ?? prev.optionsEquityIntraday,
+                        optionsEquityHolding: config.optionsEquityHolding ?? prev.optionsEquityHolding,
+                        optionsMcxIntraday: config.optionsMcxIntraday ?? prev.optionsMcxIntraday,
+                        optionsMcxHolding: config.optionsMcxHolding ?? prev.optionsMcxHolding,
+                        optionsOrdersAway: config.optionsOrdersAway ?? prev.optionsOrdersAway,
+                        autoSquareOff: config.autoSquareOff ?? prev.autoSquareOff,
+                        expirySquareOffTime: config.expirySquareOffTime ?? prev.expirySquareOffTime,
+                        allowExpiringScrip: config.allowExpiringScrip ?? prev.allowExpiringScrip,
+                        daysBeforeExpiry: config.daysBeforeExpiry ?? prev.daysBeforeExpiry,
+                        mcxOptionsAwayPoints: config.mcxOptionsAwayPoints ?? prev.mcxOptionsAwayPoints,
+                        notes: config.notes ?? prev.notes,
+                        broker: config.broker ?? prev.broker,
+                    } : {})
+                }));
+            } catch (err) {
+                console.error('Failed to load profile:', err);
+            } finally {
+                setLoadingProfile(false);
+            }
+        };
+        loadProfile();
+    }, [client?.id]);
+
+    // Fetch brokers for dropdown
+    useEffect(() => {
+        const fetchBrokers = async () => {
+            try {
+                const data = await api.getClients({ role: 'BROKER' });
+                setBrokers(data || []);
+            } catch (err) {
+                console.error('Failed to fetch brokers:', err);
+            }
+        };
+        fetchBrokers();
+    }, []);
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -263,14 +405,20 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
         try {
             const userId = client.id;
 
-            // Step 1: Update user profile
+            // Step 1: Update user profile with all basic fields
             await api.updateUser(userId, {
                 fullName: formData.fullName,
                 mobile: formData.mobile,
-                city: formData.city
+                city: formData.city,
+                isDemo: formData.isDemoAccount,
+                status: formData.accountStatus ? 'Active' : 'Inactive'
             });
 
-            // Step 2: Update client settings + full config as JSON
+            // Step 2: Update client settings + ALL config as JSON
+            const configToSave = { ...formData };
+            delete configToSave.documents;
+            delete configToSave.password;
+
             await api.updateClientSettings(userId, {
                 allowFreshEntry: formData.allowFreshEntry,
                 allowOrdersBetweenHL: formData.allowOrdersBetweenHL,
@@ -279,8 +427,27 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                 notifyPct: formData.notifyPercentage,
                 minProfitTime: formData.minTimeToBookProfit,
                 scalpingSlEnabled: formData.scalpingStopLoss,
-                config: formData
+                config: configToSave
             });
+
+            // Step 3: Update password if provided
+            if (formData.password) {
+                await api.updateUserPasswords(userId, {
+                    newPassword: formData.password
+                });
+            }
+
+            // Step 4: Upload new documents if any files selected
+            const docs = formData.documents || {};
+            const hasNewFiles = Object.values(docs).some(v => v instanceof File);
+            if (hasNewFiles) {
+                const docFormData = new FormData();
+                if (docs.panCard instanceof File)      docFormData.append('panScreenshot', docs.panCard);
+                if (docs.aadhaarFront instanceof File)  docFormData.append('aadharFront', docs.aadhaarFront);
+                if (docs.aadhaarBack instanceof File)   docFormData.append('aadharBack', docs.aadhaarBack);
+                if (docs.bankStatement instanceof File) docFormData.append('bankProof', docs.bankStatement);
+                await api.updateDocuments(userId, docFormData);
+            }
 
             onSave(formData);
         } catch (err) {
@@ -411,7 +578,7 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                 <span className={`fa-solid ${item.icon} text-xs`}></span>
                                 <span className="truncate">{item.label}</span>
                             </div>
-                            {item.label === 'Market Watch' && <span className="text-[10px] opacity-60" style={{ color: '#bcc0cf' }}>{currentTime}</span>}
+                            {item.label === 'Market Watch' && <span className="text-[10px] opacity-60" style={{ color: '#bcc0cf' }}>{new Date().toLocaleTimeString()}</span>}
                         </div>
                     ))}
                 </div>
@@ -435,7 +602,15 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
 
                         {/* Main Card */}
                         <div className="bg-[#202940] rounded shadow-2xl p-10 pt-16 border border-white/5">
-                            <form onSubmit={handleSubmit}>
+                            {loadingProfile ? (
+                                <div className="flex items-center justify-center py-20">
+                                    <div className="text-center">
+                                        <div className="w-10 h-10 border-2 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                                        <p className="text-slate-400 text-sm">Loading profile data...</p>
+                                    </div>
+                                </div>
+                            ) : null}
+                            <form onSubmit={handleSubmit} style={{ display: loadingProfile ? 'none' : 'block' }}>
                                 <div className="space-y-12">
                                     {/* PERSONAL DETAILS */}
                                     <fieldset className="border-none p-0 m-0">
@@ -496,7 +671,7 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                         {formData.mcxExposureType === 'per_lot' && (
                                             <div className="mt-8">
                                                 <h4 className="text-[17px] font-normal mb-10 px-4 border-l-2 border-[#4caf50] text-[#bcc0cf]" >MCX Exposure Lot wise:</h4>
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 px-2">
+                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 px-2">
                                                     {[
                                                         'BULLDEX', 'GOLD', 'SILVER', 'CRUDEOIL', 'CRUDEOIL MINI', 'COPPER', 'NICKEL', 'ZINC',
                                                         'ZINCMINI', 'LEAD', 'LEADMINI', 'ALUMINIUM', 'ALUMINI', 'NATURALGAS', 'NATURALGAS MINI',
@@ -505,6 +680,7 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                                         <React.Fragment key={scrip}>
                                                             <ScripField label={`${scrip} INTRADAY`} value={formData.mcxLotMargins[scrip]?.INTRADAY || '0'} onChange={(e) => handleNestedChange('mcxLotMargins', scrip, e.target.value, 'INTRADAY')} />
                                                             <ScripField label={`${scrip} HOLDING`} value={formData.mcxLotMargins[scrip]?.HOLDING || '0'} onChange={(e) => handleNestedChange('mcxLotMargins', scrip, e.target.value, 'HOLDING')} />
+                                                            <ScripField label={`${scrip} LOT`} value={formData.mcxLotMargins[scrip]?.LOT || '1'} onChange={(e) => handleNestedChange('mcxLotMargins', scrip, e.target.value, 'LOT')} />
                                                         </React.Fragment>
                                                     ))}
                                                 </div>
@@ -552,10 +728,10 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12">
                                             <CheckboxField label="Equity Trading" name="equityTrading" checked={formData.equityTrading} onChange={handleChange} />
                                             <InputField label="Equity brokerage Per Crore" name="equityBrokerage" value={formData.equityBrokerage} onChange={handleChange} />
-                                            <InputField label="Minimum quantity size required per single trade of Equity" name="equityMinQty" value={formData.equityMinQty} onChange={handleChange} />
-                                            <InputField label="Maximum quantity size allowed per single trade of Equity" name="equityMaxQty" value={formData.equityMaxQty} onChange={handleChange} />
-                                            <InputField label="Minimum quantity size required per single trade of Equity INDEX" name="equityMinIndexQty" value={formData.equityMinIndexQty} onChange={handleChange} />
-                                            <InputField label="Maximum quantity size allowed per single trade of Equity INDEX" name="equityMaxIndexQty" value={formData.equityMaxIndexQty} onChange={handleChange} />
+                                            <InputField label="Minimum lot size required per single trade of Equity" name="equityMinLot" value={formData.equityMinLot} onChange={handleChange} />
+                                            <InputField label="Maximum lot size allowed per single trade of Equity" name="equityMaxLot" value={formData.equityMaxLot} onChange={handleChange} />
+                                            <InputField label="Minimum lot size required per single trade of Equity INDEX" name="equityMinIndexLot" value={formData.equityMinIndexLot} onChange={handleChange} />
+                                            <InputField label="Maximum lot size allowed per single trade of Equity INDEX" name="equityMaxIndexLot" value={formData.equityMaxIndexLot} onChange={handleChange} />
                                             <InputField label="Maximum quantity size allowed per script of Equity to be actively open at a time" name="equityMaxScrip" value={formData.equityMaxScrip} onChange={handleChange} />
                                             <InputField label="Maximum quantity size allowed per script of Equity INDEX to be actively open at a time" name="equityMaxIndexScrip" value={formData.equityMaxIndexScrip} onChange={handleChange} />
                                             <InputField label="Max Size All Equity" name="equityMaxSizeAll" value={formData.equityMaxSizeAll} onChange={handleChange} />
@@ -670,6 +846,93 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
 
                                     <hr className="border-white/5" />
 
+                                    {/* EXPIRY RULES */}
+                                    <fieldset className="border-none p-0 m-0">
+                                        <SectionHeader title="Expiry Rules:" />
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12">
+                                            <SelectField label="Auto Square-off on Expiry Day" name="autoSquareOff" value={formData.autoSquareOff} onChange={handleChange} options={[{ value: 'No', label: 'No' }, { value: 'Yes', label: 'Yes' }]} />
+                                            <InputField label="Square-off Time" name="expirySquareOffTime" value={formData.expirySquareOffTime} onChange={handleChange} hint="Time in HH:MM format (e.g. 11:30)" />
+                                            <SelectField label="Allow buying of expiring scrip" name="allowExpiringScrip" value={formData.allowExpiringScrip} onChange={handleChange} options={[{ value: 'No', label: 'No' }, { value: 'Yes', label: 'Yes' }]} />
+                                            <InputField label="Days before expiry to stop buying" name="daysBeforeExpiry" value={formData.daysBeforeExpiry} onChange={handleChange} />
+                                        </div>
+
+                                        {/* MCX Options Away Points */}
+                                        <div className="mt-6">
+                                            <h4 className="text-[14px] text-slate-400 uppercase font-bold tracking-wider mb-4 px-2">MCX Options Away Points:</h4>
+                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 px-2">
+                                                {Object.keys(formData.mcxOptionsAwayPoints || {}).map(scrip => (
+                                                    <ScripField
+                                                        key={scrip}
+                                                        label={`${scrip}:`}
+                                                        value={formData.mcxOptionsAwayPoints[scrip] || '0'}
+                                                        onChange={(e) => handleNestedChange('mcxOptionsAwayPoints', scrip, e.target.value)}
+                                                    />
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </fieldset>
+
+                                    <hr className="border-white/5" />
+
+                                    {/* INTERNATIONAL SEGMENTS */}
+                                    <fieldset className="border-none p-0 m-0">
+                                        <div className="flex items-center gap-3 mb-8 px-2">
+                                            <h3 className="text-[20px] font-black text-white uppercase tracking-tight">International Segments (Comex, Forex, Crypto):</h3>
+                                        </div>
+
+                                        <div className="space-y-6 px-2">
+                                            {/* COMEX */}
+                                            <div className="bg-[#1a2035]/50 rounded-xl p-6 border border-white/5">
+                                                <div className="flex justify-between items-center mb-4">
+                                                    <div>
+                                                        <h4 className="text-[16px] font-black text-cyan-400 uppercase tracking-wider border-l-2 border-cyan-400 pl-3">Comex Commodities</h4>
+                                                        <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-1 pl-3">Global Commodity Exchange Settings</p>
+                                                    </div>
+                                                    <div className="flex items-center gap-3 bg-[#202940] px-4 py-2 rounded-lg border border-white/5">
+                                                        <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Status</span>
+                                                        <input type="checkbox" name="comexTrading" checked={formData.comexTrading} onChange={handleChange} className="w-5 h-5 rounded accent-[#4caf50] cursor-pointer" />
+                                                        <span className={`text-[11px] font-black uppercase tracking-wider ${formData.comexTrading ? 'text-green-400' : 'text-slate-500'}`}>{formData.comexTrading ? 'ENABLED' : 'DISABLED'}</span>
+                                                    </div>
+                                                </div>
+                                                <hr className="border-white/5" />
+                                            </div>
+
+                                            {/* FOREX */}
+                                            <div className="bg-[#1a2035]/50 rounded-xl p-6 border border-white/5">
+                                                <div className="flex justify-between items-center mb-4">
+                                                    <div>
+                                                        <h4 className="text-[16px] font-black text-green-400 uppercase tracking-wider border-l-2 border-green-400 pl-3">Forex / Currency</h4>
+                                                        <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-1 pl-3">Universal Currency Trading Parameters</p>
+                                                    </div>
+                                                    <div className="flex items-center gap-3 bg-[#202940] px-4 py-2 rounded-lg border border-white/5">
+                                                        <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Status</span>
+                                                        <input type="checkbox" name="forexTrading" checked={formData.forexTrading} onChange={handleChange} className="w-5 h-5 rounded accent-[#4caf50] cursor-pointer" />
+                                                        <span className={`text-[11px] font-black uppercase tracking-wider ${formData.forexTrading ? 'text-green-400' : 'text-slate-500'}`}>{formData.forexTrading ? 'ENABLED' : 'DISABLED'}</span>
+                                                    </div>
+                                                </div>
+                                                <hr className="border-white/5" />
+                                            </div>
+
+                                            {/* CRYPTO */}
+                                            <div className="bg-[#1a2035]/50 rounded-xl p-6 border border-white/5">
+                                                <div className="flex justify-between items-center mb-4">
+                                                    <div>
+                                                        <h4 className="text-[16px] font-black text-orange-400 uppercase tracking-wider border-l-2 border-orange-400 pl-3">Crypto (Bitcoin/ETH)</h4>
+                                                        <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-1 pl-3">Cryptocurrency Asset Execution Hub</p>
+                                                    </div>
+                                                    <div className="flex items-center gap-3 bg-[#202940] px-4 py-2 rounded-lg border border-white/5">
+                                                        <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Status</span>
+                                                        <input type="checkbox" name="cryptoTrading" checked={formData.cryptoTrading} onChange={handleChange} className="w-5 h-5 rounded accent-[#4caf50] cursor-pointer" />
+                                                        <span className={`text-[11px] font-black uppercase tracking-wider ${formData.cryptoTrading ? 'text-green-400' : 'text-slate-500'}`}>{formData.cryptoTrading ? 'ENABLED' : 'DISABLED'}</span>
+                                                    </div>
+                                                </div>
+                                                <hr className="border-white/5" />
+                                            </div>
+                                        </div>
+                                    </fieldset>
+
+                                    <hr className="border-white/5" />
+
                                     {/* KYC / DOCUMENT VERIFICATION */}
                                     <fieldset className="border-none p-0 m-0">
                                         <div className="flex items-center gap-3 mb-8 px-2">
@@ -682,161 +945,91 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-2">
-                                            {/* PAN Card */}
-                                            <div className="space-y-3">
-                                                <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">PAN Card Image</label>
-                                                <div className="relative group cursor-pointer">
-                                                    <input
-                                                        type="file"
-                                                        className="hidden"
-                                                        id="doc-pan"
-                                                        onChange={(e) => handleNestedChange('documents', 'panCard', e.target.files[0])}
-                                                    />
-                                                    <label htmlFor="doc-pan" className="flex flex-col items-center justify-center h-48 rounded-2xl bg-black/40 border-2 border-dashed border-white/10 hover:border-green-500/50 hover:bg-black/60 transition-all group overflow-hidden cursor-pointer">
-                                                        {formData.documents.panCard ? (
-                                                            <div className="w-full h-full flex flex-col items-center justify-center gap-3">
-                                                                <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center">
-                                                                    <Check className="w-6 h-6 text-green-400" />
-                                                                </div>
-                                                                <span className="text-[10px] text-green-400 font-black uppercase tracking-widest px-4 text-center">{formData.documents.panCard.name}</span>
-                                                            </div>
-                                                        ) : (
-                                                            <>
-                                                                <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-4 group-hover:bg-green-500/20 transition-all">
-                                                                    <FileUp className="w-6 h-6 text-slate-600 group-hover:text-green-400" />
-                                                                </div>
-                                                                <span className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Upload PAN Card</span>
-                                                                <p className="text-[9px] text-slate-600 mt-2 font-bold uppercase underline">Click to Browse</p>
-                                                            </>
-                                                        )}
-                                                    </label>
-                                                </div>
-                                            </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 px-2">
+                                            {[
+                                                { key: 'panCard', label: 'PAN Card', id: 'edit-doc-pan' },
+                                                { key: 'aadhaarFront', label: 'Aadhaar Front', id: 'edit-doc-aadhaar-f' },
+                                                { key: 'aadhaarBack', label: 'Aadhaar Back', id: 'edit-doc-aadhaar-b' },
+                                                { key: 'bankStatement', label: 'Bank Proof / Cheque', id: 'edit-doc-bank' }
+                                            ].map(doc => {
+                                                const file = formData.documents[doc.key];
+                                                const existingUrl = existingDocs[doc.key];
+                                                const hasFile = file instanceof File;
+                                                const hasExisting = !!existingUrl;
+                                                const isPdfFile = hasFile && file.type === 'application/pdf';
+                                                const isPdfUrl = hasExisting && (existingUrl.toLowerCase().endsWith('.pdf') || existingUrl.includes('/pdf'));
+                                                const viewUrl = hasFile ? URL.createObjectURL(file) : existingUrl;
 
-                                            {/* Aadhaar Front */}
-                                            <div className="space-y-3">
-                                                <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Aadhaar Card (Front)</label>
-                                                <div className="relative group cursor-pointer">
-                                                    <input
-                                                        type="file"
-                                                        className="hidden"
-                                                        id="doc-aadhaar-f"
-                                                        onChange={(e) => handleNestedChange('documents', 'aadhaarFront', e.target.files[0])}
-                                                    />
-                                                    <label htmlFor="doc-aadhaar-f" className="flex flex-col items-center justify-center h-48 rounded-2xl bg-black/40 border-2 border-dashed border-white/10 hover:border-green-500/50 hover:bg-black/60 transition-all group overflow-hidden cursor-pointer">
-                                                        {formData.documents.aadhaarFront ? (
-                                                            <div className="w-full h-full flex flex-col items-center justify-center gap-3">
-                                                                <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center">
-                                                                    <Check className="w-6 h-6 text-green-400" />
-                                                                </div>
-                                                                <span className="text-[10px] text-green-400 font-black uppercase tracking-widest px-4 text-center">{formData.documents.aadhaarFront.name}</span>
-                                                            </div>
-                                                        ) : (
-                                                            <>
-                                                                <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-4 group-hover:bg-green-500/20 transition-all">
-                                                                    <FileUp className="w-6 h-6 text-slate-600 group-hover:text-green-400" />
-                                                                </div>
-                                                                <span className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Aadhaar (Front Side)</span>
-                                                                <p className="text-[9px] text-slate-600 mt-2 font-bold uppercase underline">Click to Browse</p>
-                                                            </>
-                                                        )}
-                                                    </label>
-                                                </div>
-                                            </div>
-
-                                            {/* Aadhaar Back */}
-                                            <div className="space-y-3">
-                                                <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Aadhaar Card (Back)</label>
-                                                <div className="relative group cursor-pointer">
-                                                    <input
-                                                        type="file"
-                                                        className="hidden"
-                                                        id="doc-aadhaar-b"
-                                                        onChange={(e) => handleNestedChange('documents', 'aadhaarBack', e.target.files[0])}
-                                                    />
-                                                    <label htmlFor="doc-aadhaar-b" className="flex flex-col items-center justify-center h-48 rounded-2xl bg-black/40 border-2 border-dashed border-white/10 hover:border-green-500/50 hover:bg-black/60 transition-all group overflow-hidden cursor-pointer">
-                                                        {formData.documents.aadhaarBack ? (
-                                                            <div className="w-full h-full flex flex-col items-center justify-center gap-3">
-                                                                <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center">
-                                                                    <Check className="w-6 h-6 text-green-400" />
-                                                                </div>
-                                                                <span className="text-[10px] text-green-400 font-black uppercase tracking-widest px-4 text-center">{formData.documents.aadhaarBack.name}</span>
-                                                            </div>
-                                                        ) : (
-                                                            <>
-                                                                <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-4 group-hover:bg-green-500/20 transition-all">
-                                                                    <FileUp className="w-6 h-6 text-slate-600 group-hover:text-green-400" />
-                                                                </div>
-                                                                <span className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Aadhaar (Back Side)</span>
-                                                                <p className="text-[9px] text-slate-600 mt-2 font-bold uppercase underline">Click to Browse</p>
-                                                            </>
-                                                        )}
-                                                    </label>
-                                                </div>
-                                            </div>
-
-                                            {/* Bank Statement */}
-                                            <div className="space-y-3">
-                                                <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Bank Proof (Statement/Cheque)</label>
-                                                <div className="relative group cursor-pointer">
-                                                    <input
-                                                        type="file"
-                                                        className="hidden"
-                                                        id="doc-bank"
-                                                        onChange={(e) => handleNestedChange('documents', 'bankStatement', e.target.files[0])}
-                                                    />
-                                                    <label htmlFor="doc-bank" className="flex flex-col items-center justify-center h-48 rounded-2xl bg-black/40 border-2 border-dashed border-white/10 hover:border-green-500/50 hover:bg-black/60 transition-all group overflow-hidden cursor-pointer">
-                                                        {formData.documents.bankStatement ? (
-                                                            <div className="w-full h-full flex flex-col items-center justify-center gap-3">
-                                                                <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center">
-                                                                    <Check className="w-6 h-6 text-green-400" />
-                                                                </div>
-                                                                <span className="text-[10px] text-green-400 font-black uppercase tracking-widest px-4 text-center">{formData.documents.bankStatement.name}</span>
-                                                            </div>
-                                                        ) : (
-                                                            <>
-                                                                <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-4 group-hover:bg-green-500/20 transition-all">
-                                                                    <FileUp className="w-6 h-6 text-slate-600 group-hover:text-green-400" />
-                                                                </div>
-                                                                <span className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Bank Proof / Cheque</span>
-                                                                <p className="text-[9px] text-slate-600 mt-2 font-bold uppercase underline">Click to Browse</p>
-                                                            </>
-                                                        )}
-                                                    </label>
-                                                </div>
-                                            </div>
-
-                                            {/* Address Proof */}
-                                            <div className="space-y-3">
-                                                <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Address Proof</label>
-                                                <div className="relative group cursor-pointer">
-                                                    <input
-                                                        type="file"
-                                                        className="hidden"
-                                                        id="doc-address"
-                                                        onChange={(e) => handleNestedChange('documents', 'addressProof', e.target.files[0])}
-                                                    />
-                                                    <label htmlFor="doc-address" className="flex flex-col items-center justify-center h-48 rounded-2xl bg-black/40 border-2 border-dashed border-white/10 hover:border-green-500/50 hover:bg-black/60 transition-all group overflow-hidden cursor-pointer">
-                                                        {formData.documents.addressProof ? (
-                                                            <div className="w-full h-full flex flex-col items-center justify-center gap-3">
-                                                                <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center">
-                                                                    <Check className="w-6 h-6 text-green-400" />
-                                                                </div>
-                                                                <span className="text-[10px] text-green-400 font-black uppercase tracking-widest px-4 text-center">{formData.documents.addressProof.name}</span>
-                                                            </div>
-                                                        ) : (
-                                                            <>
-                                                                <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-4 group-hover:bg-green-500/20 transition-all">
-                                                                    <FileUp className="w-6 h-6 text-slate-600 group-hover:text-green-400" />
-                                                                </div>
-                                                                <span className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Utility Bill / Rent</span>
-                                                                <p className="text-[9px] text-slate-600 mt-2 font-bold uppercase underline">Click to Browse</p>
-                                                            </>
-                                                        )}
-                                                    </label>
-                                                </div>
-                                            </div>
+                                                return (
+                                                    <div key={doc.key} className="space-y-3">
+                                                        <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">{doc.label}</label>
+                                                        <div className="relative group">
+                                                            <input
+                                                                type="file"
+                                                                className="hidden"
+                                                                id={doc.id}
+                                                                accept="image/*,.pdf"
+                                                                onChange={(e) => handleNestedChange('documents', doc.key, e.target.files[0])}
+                                                            />
+                                                            <label htmlFor={doc.id} className="flex flex-col items-center justify-center h-48 rounded-2xl bg-black/40 border-2 border-dashed border-white/10 hover:border-green-500/50 hover:bg-black/60 transition-all overflow-hidden cursor-pointer">
+                                                                {hasFile ? (
+                                                                    <div className="w-full h-full relative flex flex-col items-center justify-center">
+                                                                        {isPdfFile ? (
+                                                                            <div className="absolute inset-0 w-full h-full flex items-center justify-center bg-red-900/20 rounded-2xl">
+                                                                                <FileText className="w-16 h-16 text-red-400 opacity-50" />
+                                                                            </div>
+                                                                        ) : file.type?.startsWith('image/') ? (
+                                                                            <img src={URL.createObjectURL(file)} alt={doc.label} className="absolute inset-0 w-full h-full object-cover rounded-2xl opacity-70" />
+                                                                        ) : null}
+                                                                        <div className="relative z-10 flex flex-col items-center gap-2">
+                                                                            <div className="w-10 h-10 rounded-full bg-green-500/30 backdrop-blur flex items-center justify-center">
+                                                                                <Check className="w-5 h-5 text-green-400" />
+                                                                            </div>
+                                                                            <span className="text-[9px] font-black text-green-300 bg-black/60 px-2 py-1 rounded max-w-[120px] truncate">{file.name}</span>
+                                                                            <span className="text-[8px] text-slate-400">Click to change</span>
+                                                                        </div>
+                                                                    </div>
+                                                                ) : hasExisting ? (
+                                                                    <div className="w-full h-full relative flex flex-col items-center justify-center">
+                                                                        {isPdfUrl ? (
+                                                                            <div className="absolute inset-0 w-full h-full flex items-center justify-center bg-red-900/20 rounded-2xl">
+                                                                                <FileText className="w-16 h-16 text-red-400 opacity-50" />
+                                                                            </div>
+                                                                        ) : (
+                                                                            <img src={existingUrl} alt={doc.label} crossOrigin="anonymous" className="absolute inset-0 w-full h-full object-cover rounded-2xl opacity-70" onError={(e) => { e.target.style.display = 'none'; }} />
+                                                                        )}
+                                                                        <div className="relative z-10 flex flex-col items-center gap-2">
+                                                                            <div className="w-10 h-10 rounded-full bg-green-500/30 backdrop-blur flex items-center justify-center">
+                                                                                <Check className="w-5 h-5 text-green-400" />
+                                                                            </div>
+                                                                            <span className="text-[9px] font-black text-green-300 bg-black/60 px-2 py-1 rounded">UPLOADED</span>
+                                                                            <span className="text-[8px] text-slate-400">Click to replace</span>
+                                                                        </div>
+                                                                    </div>
+                                                                ) : (
+                                                                    <>
+                                                                        <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-4 group-hover:bg-green-500/20 transition-all">
+                                                                            <FileUp className="w-6 h-6 text-slate-600 group-hover:text-green-400" />
+                                                                        </div>
+                                                                        <span className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Upload {doc.label}</span>
+                                                                        <p className="text-[9px] text-slate-600 mt-2 font-bold uppercase underline">Click to Browse</p>
+                                                                    </>
+                                                                )}
+                                                            </label>
+                                                            {(hasFile || hasExisting) && (
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(viewUrl, '_blank'); }}
+                                                                    className="absolute top-2 right-2 z-20 w-8 h-8 rounded-full bg-blue-600/80 hover:bg-blue-500 flex items-center justify-center transition-all shadow-lg"
+                                                                    title="View Document"
+                                                                >
+                                                                    <Eye className="w-4 h-4 text-white" />
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
                                     </fieldset>
 
@@ -847,7 +1040,7 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                         <SectionHeader title="Other:" />
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 px-2">
                                             <InputField label="Notes" name="notes" value={formData.notes} onChange={handleChange} placeholder="" />
-                                            <SelectField label="Broker" name="broker" value={formData.broker} onChange={handleChange} options={[{ value: '3761 : demo001', label: '3761 : demo001' }]} />
+                                            <SelectField label="Broker" name="broker" value={formData.broker} onChange={handleChange} options={[{ value: '', label: 'Select Broker' }, ...brokers.map(b => ({ value: `${b.id} : ${b.username}`, label: `${b.id} : ${b.username} (${b.full_name || ''})` }))]} />
                                             <InputField label="Transaction Password" name="transactionPassword" value={formData.transactionPassword} onChange={handleChange} type="password" />
                                         </div>
 

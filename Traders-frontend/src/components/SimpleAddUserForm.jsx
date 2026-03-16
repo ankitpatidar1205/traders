@@ -131,6 +131,7 @@ const SimpleAddUserForm = ({ role, onBack, onSave }) => {
                                     name="mobile"
                                     value={formData.mobile}
                                     onChange={handleChange}
+                                    required
                                     className="w-full bg-white border border-slate-200 rounded px-10 py-3 text-slate-900 font-bold focus:outline-none focus:ring-2 focus:ring-[#4caf50]/20 focus:border-[#4caf50] transition-all placeholder:font-normal placeholder:text-slate-400"
                                     placeholder="10-digit mobile"
                                     maxLength={10}
