@@ -18,6 +18,24 @@ const login = async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
+    // KYC check for TRADER role
+    if (user.role === 'TRADER') {
+      try {
+        const [kycRows] = await db.execute(
+          'SELECT kyc_status FROM user_documents WHERE user_id = ?',
+          [user.id]
+        );
+        const kycStatus = kycRows[0]?.kyc_status;
+        // Block if KYC record missing or not VERIFIED
+        if (!kycRows[0] || kycStatus !== 'VERIFIED') {
+          return res.status(403).json({ message: 'KYC verification incomplete. Please contact your broker.' });
+        }
+      } catch (kycErr) {
+        console.error('KYC check error:', kycErr);
+        return res.status(403).json({ message: 'KYC verification incomplete. Please contact your broker.' });
+      }
+    }
+
     const token = jwt.sign(
       { id: user.id, username: user.username, role: user.role },
       process.env.JWT_SECRET,
@@ -106,6 +124,13 @@ const createUser = async (req, res) => {
         try {
             await db.execute('INSERT IGNORE INTO client_settings (user_id) VALUES (?)', [newUserId]);
         } catch (e) { console.error('client_settings auto-create failed:', e.message); }
+
+        // Auto-create user_documents for TRADER (KYC starts as PENDING)
+        if ((role || 'TRADER') === 'TRADER') {
+            try {
+                await db.execute('INSERT IGNORE INTO user_documents (user_id, kyc_status) VALUES (?, ?)', [newUserId, 'PENDING']);
+            } catch (e) { console.error('user_documents auto-create failed:', e.message); }
+        }
 
         // Auto-create broker_shares (BROKER and ADMIN)
         if (['BROKER', 'ADMIN'].includes(role || 'TRADER')) {

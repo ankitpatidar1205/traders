@@ -13,9 +13,15 @@
 body {
     margin: 0;
     font-family: Roboto, Helvetica, Arial, sans-serif;
-    background-color: var(--color-main-bg);
+    background-color: var(--bg-color, var(--color-main-bg, #1a2035));
     color: white;
     font-size: 14px;
+}
+
+/* Theme background override — direct page containers inside <main> use the
+   admin's chosen background color instead of the hardcoded Tailwind class */
+main > div {
+    background-color: var(--bg-color, #1a2035) !important;
 }
 
 /* Hide Scrollbars globally but keep functionality */

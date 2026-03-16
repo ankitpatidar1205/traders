@@ -3,6 +3,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
 const mockEngine = require('./utils/mockEngine');
+const runMigrations = require('./config/migrate');
 require('dotenv').config();
 
 const app = express();
@@ -91,9 +92,18 @@ mockEngine.on('update', (prices) => {
 });
 
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-});
+
+// Run DB migrations first, then start server
+runMigrations()
+    .then(() => {
+        server.listen(PORT, () => {
+            console.log(`🚀 Server running on port ${PORT}`);
+        });
+    })
+    .catch((err) => {
+        console.error('❌ Migration failed, server not started:', err.message);
+        process.exit(1);
+    });
 
 // Trigger nodemon restart
 
