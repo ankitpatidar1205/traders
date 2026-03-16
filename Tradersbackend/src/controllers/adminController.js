@@ -3,62 +3,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// ─── AUTO-CREATE REQUIRED TABLES ON STARTUP ──────────
-
-const ensureTables = async () => {
-    try {
-        await db.execute(`
-            CREATE TABLE IF NOT EXISTS admin_menu_permissions (
-                id      INT AUTO_INCREMENT PRIMARY KEY,
-                user_id INT          NOT NULL,
-                menu_id VARCHAR(100) NOT NULL,
-                UNIQUE KEY uq_user_menu (user_id, menu_id),
-                CONSTRAINT fk_amp_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-            )
-        `);
-        await db.execute(`
-            CREATE TABLE IF NOT EXISTS admin_panel_settings (
-                id                   INT AUTO_INCREMENT PRIMARY KEY,
-                user_id              INT          NOT NULL UNIQUE,
-                theme_json           TEXT,
-                logo_path            VARCHAR(500),
-                profile_image_path   VARCHAR(500),
-                updated_at           TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                CONSTRAINT fk_aps_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-            )
-        `);
-        // Add profile_image_path column for existing tables that were created before this column was added
-        try {
-            await db.execute(`ALTER TABLE admin_panel_settings ADD COLUMN profile_image_path VARCHAR(500)`);
-            console.log('✅ profile_image_path column added');
-        } catch (err) {
-            // errno 1060 = Duplicate column name — column already exists, safe to ignore
-            if (err.errno !== 1060 && err.code !== 'ER_DUP_FIELDNAME') {
-                console.error('⚠️  Could not add profile_image_path column:', err.message);
-            }
-        }
-        // Keep old tables for backward compat (won't be written to anymore)
-        await db.execute(`
-            CREATE TABLE IF NOT EXISTS theme_settings (
-                id            INT AUTO_INCREMENT PRIMARY KEY,
-                setting_key   VARCHAR(100) NOT NULL UNIQUE,
-                setting_value VARCHAR(200) NOT NULL
-            )
-        `);
-        await db.execute(`
-            CREATE TABLE IF NOT EXISTS system_settings (
-                id            INT AUTO_INCREMENT PRIMARY KEY,
-                setting_key   VARCHAR(100) NOT NULL UNIQUE,
-                setting_value TEXT
-            )
-        `);
-        console.log('✅ Admin tables ready');
-    } catch (err) {
-        console.error('⚠️  Admin table setup error:', err.message);
-    }
-};
-
-ensureTables();
+// Tables are now created by src/config/migrate.js on server startup.
 
 // ─── UPLOAD DIR SETUP ─────────────────────────────────
 
