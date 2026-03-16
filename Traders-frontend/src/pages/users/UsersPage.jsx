@@ -142,6 +142,8 @@ const UsersPage = ({ onNavigate, roleFilter }) => {
         onEdit: (row) => {
             if (roleFilter === 'BROKER') {
                 navigate(`/edit-broker/${row.id}`);
+            } else if (roleFilter === 'ADMIN') {
+                navigate(`/edit-admin/${row.id}`);
             } else {
                 openEditModal(row);
             }

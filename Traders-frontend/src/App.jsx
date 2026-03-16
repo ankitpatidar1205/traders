@@ -42,6 +42,7 @@ import SimpleTraderForm from './components/SimpleTraderForm';
 import IpLoginsPage from './pages/logs/IpLoginsPage';
 import TradeIpTrackingPage from './pages/logs/TradeIpTrackingPage';
 import GlobalUpdationPage from './pages/settings/GlobalUpdationPage';
+import ThemeSettingsPage from './pages/settings/ThemeSettingsPage';
 import AccessDenied from './components/common/AccessDenied';
 import LearningPage from './pages/learning/LearningPage';
 import SignalAdminPage from './pages/trades/SignalAdminPage';
@@ -52,12 +53,13 @@ import ClientDetailsForm from './components/ClientDetailsForm';
 import Toast from './components/common/Toast';
 import EditBrokerPage from './pages/brokers/EditBrokerPage';
 import ViewBrokerPage from './pages/brokers/ViewBrokerPage';
+import EditAdminPage from './pages/users/EditAdminPage';
 
 import { useAuth, ROLES } from './context/AuthContext';
 import * as api from './services/api';
 
 function App() {
-    const { user, login: authLogin, logout: authLogout, canAccess } = useAuth();
+    const { user, login: authLogin, logout: authLogout, canAccess, applyInitData } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
     
@@ -77,15 +79,23 @@ function App() {
     const handleLogin = async (username, password) => {
         try {
             const response = await api.login(username, password);
-            
+
             // Store token for API headers
             localStorage.setItem('traders_token', response.token);
-            
+
             // Proceed with AuthContext login
             authLogin(response.user.username, response.user.role, {
                 userId: response.user.id,
-                fullName: response.user.fullName
+                fullName: response.user.fullName,
             });
+
+            // Load menu permissions, theme, and logo for this user
+            try {
+                const initData = await api.getInitData();
+                applyInitData(initData);
+            } catch (initErr) {
+                console.warn('Init data load failed (non-critical):', initErr.message);
+            }
 
             // Role-based navigation
             if (response.user.role === ROLES.TRADER) {
@@ -240,6 +250,7 @@ function App() {
                 <Route path="/create-admin" element={<SimpleAddUserForm role="Admin" onBack={() => setView('admins')} onSave={() => handleActionSuccess('Admin created successfully', 'admins')} />} />
                 <Route path="/create-broker" element={<AddBrokerForm onBack={() => setView('brokers')} onSave={() => handleActionSuccess('Broker created successfully', 'brokers')} />} />
                 <Route path="/edit-broker/:id" element={<EditBrokerPage onSave={() => handleActionSuccess('Broker updated successfully', 'brokers')} onBack={() => setView('brokers')} />} />
+                <Route path="/edit-admin/:id" element={<EditAdminPage />} />
                 <Route path="/view-broker/:id" element={<ViewBrokerPage onBack={() => setView('brokers')} />} />
                 <Route path="/broker-accounts" element={<ProtectedRoute viewId="broker-accounts"><BrokerAccountsPage /></ProtectedRoute>} />
                 <Route path="/create-fund-deposit" element={<CreateFundForm onBack={() => setView('trading-clients')} onSave={(data) => handleActionSuccess('Deposit successful', 'trading-clients')} mode="deposit" initialUser={selectedClient} />} />
@@ -272,6 +283,7 @@ function App() {
                 <Route path="/ip-logins" element={<ProtectedRoute viewId="ip-logins"><IpLoginsPage /></ProtectedRoute>} />
                 <Route path="/trade-ip-tracking" element={<ProtectedRoute viewId="trade-ip-tracking"><TradeIpTrackingPage /></ProtectedRoute>} />
                 <Route path="/global-updation" element={<ProtectedRoute viewId="global-updation"><GlobalUpdationPage /></ProtectedRoute>} />
+                <Route path="/theme-settings" element={<ProtectedRoute viewId="theme-settings"><ThemeSettingsPage /></ProtectedRoute>} />
                 
                 <Route path="/learning" element={<LearningPage segment={user?.segment} />} />
                 <Route path="/support" element={<RaiseTicketPage user={user} />} />

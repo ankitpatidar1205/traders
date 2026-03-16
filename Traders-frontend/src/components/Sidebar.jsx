@@ -1,10 +1,8 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
-import { ROLE_MENU_ACCESS } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 
 const ALL_MENU_ITEMS = [
     { id: 'live-m2m', label: 'Dashboard', icon: 'fa-table-columns' },
-    // { id: 'kite-dashboard', label: 'Kite Dashboard', icon: 'fa-chart-line text-green-400' },
     { id: 'market-watch', label: 'Market Watch', icon: 'fa-arrow-trend-up' },
     { id: 'notifications', label: 'Notifications', icon: 'fa-bell' },
     { id: 'action-ledger', label: 'Action Ledger', icon: 'fa-podcast' },
@@ -28,44 +26,37 @@ const ALL_MENU_ITEMS = [
     { id: 'ip-logins', label: 'IP Logins', icon: 'fa-shield-halved' },
     { id: 'trade-ip-tracking', label: 'Trade IP Tracking', icon: 'fa-location-dot' },
     { id: 'global-updation', label: 'Global Updation', icon: 'fa-earth-americas' },
-    { id: 'change-password', label: 'Change Login Password', icon: 'fa-user' },
-    { id: 'change-transaction-password', label: 'Change Transaction Pwd', icon: 'fa-gear' },
     { id: 'withdrawal-requests', label: 'Withdrawal Requests', icon: 'fa-gear' },
     { id: 'deposit-requests', label: 'Deposit Requests', icon: 'fa-gear' },
     { id: 'negative-balance', label: 'Negative Balance Txns', icon: 'fa-bell' },
-    // { id: 'learning', label: 'Learning Center', icon: 'fa-book-open' },
     { id: 'support', label: 'Raise Ticket', icon: 'fa-ticket' },
     { id: 'voice-modulation', label: 'Voice Modulation', icon: 'fa-microphone' },
+    { id: 'change-password', label: 'Change Login Password', icon: 'fa-user' },
+    { id: 'change-transaction-password', label: 'Change Transaction Pwd', icon: 'fa-gear' },
 ];
 
-const Sidebar = ({ onLogout, onNavigate, currentView, isOpen, onClose, userRole = 'admin', segment = 'NIFTY50' }) => {
-    const allowedIds = ROLE_MENU_ACCESS[userRole] || ROLE_MENU_ACCESS['admin'];
+const Sidebar = ({ onLogout, currentView, isOpen, onClose }) => {
+    const { user, canAccess } = useAuth();
+    const userRole = user?.role || 'ADMIN';
 
-    // Segment logic: Filter or Add context-specific items
-    let menuItems = ALL_MENU_ITEMS.filter(item => allowedIds.includes(item.id));
-
-    // If client, we can filter or reorder based on segment
-    if (userRole === 'client') {
-        // Just as an example, maybe some views are segment-restricted
-        // For now, let's keep it simple but show segment in the UI
-    }
+    const menuItems = ALL_MENU_ITEMS.filter(item => canAccess(item.id));
 
     const roleBadge = {
-        superadmin: { label: 'SUPER ADMIN', color: '#f59e0b' },
-        admin: { label: 'ADMIN', color: '#4caf50' },
-        broker: { label: 'BROKER', color: '#3b82f6' },
-        client: { label: 'CLIENT', color: '#8b5cf6' },
+        SUPERADMIN: { label: 'SUPER ADMIN', color: '#f59e0b' },
+        ADMIN:      { label: 'ADMIN',       color: '#4caf50' },
+        BROKER:     { label: 'BROKER',      color: '#3b82f6' },
+        TRADER:     { label: 'CLIENT',      color: '#8b5cf6' },
     };
-    const badge = roleBadge[userRole] || roleBadge['admin'];
+    const badge = roleBadge[userRole] || roleBadge['ADMIN'];
 
     return (
         <aside className={`
-      h-full bg-[#1a2035] text-white transition-all duration-300 ease-in-out flex-shrink-0 z-50
-      fixed inset-y-0 left-0 w-[260px]
-      md:relative md:translate-x-0
-      ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-      shadow-2xl
-    `}>
+            h-full text-white transition-all duration-300 ease-in-out flex-shrink-0 z-50
+            fixed inset-y-0 left-0 w-[260px]
+            md:relative md:translate-x-0
+            ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+            shadow-2xl
+        `} style={{ backgroundColor: 'var(--sidebar-color, #1a2035)' }}>
             <div className="flex flex-col h-full border-r border-white/5 overflow-hidden">
 
                 {/* Role Badge */}
@@ -83,7 +74,7 @@ const Sidebar = ({ onLogout, onNavigate, currentView, isOpen, onClose, userRole 
                     <div className="flex items-center gap-2 bg-white/5 rounded px-2 py-1">
                         <i className="fa-solid fa-layer-group text-[10px] text-green-400"></i>
                         <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">
-                            Seg: {segment.replace('_', ' ')}
+                            Seg: {(user?.segment || 'NIFTY50').replace('_', ' ')}
                         </span>
                     </div>
                 </div>
@@ -99,15 +90,15 @@ const Sidebar = ({ onLogout, onNavigate, currentView, isOpen, onClose, userRole 
                                     if (window.innerWidth < 768) onClose();
                                 }}
                                 className={`
-                  w-full flex items-center px-3 py-2.5 rounded-md transition-all duration-200 group
-                  ${currentView === item.id
+                                    w-full flex items-center px-3 py-2.5 rounded-md transition-all duration-200 group
+                                    ${currentView === item.id
                                         ? 'text-white shadow-lg'
                                         : 'text-[#bcc0cf] hover:bg-white/10 hover:text-white'}
-                `}
+                                `}
                                 style={currentView === item.id ? {
-                                    background: 'linear-gradient(60deg, #288c6c, #4ea752)',
+                                    background: 'linear-gradient(60deg, var(--navbar-color, #288c6c), var(--primary-color, #4ea752))',
                                     boxShadow: '0 4px 20px 0 rgba(0,0,0,0.14), 0 7px 10px -5px rgba(76,175,80,0.4)',
-                                    fontWeight: '500'
+                                    fontWeight: '500',
                                 } : {}}
                             >
                                 <div className={`w-7 flex justify-center mr-2.5 transition-colors ${currentView === item.id ? 'text-white' : 'text-slate-400 group-hover:text-white'}`}>
@@ -116,7 +107,6 @@ const Sidebar = ({ onLogout, onNavigate, currentView, isOpen, onClose, userRole 
                                 <span className="text-[12px] font-normal truncate uppercase tracking-wide">{item.label}</span>
                             </Link>
                         ))}
-
 
                         {/* Logout */}
                         <div className="px-0 py-3 border-t border-white/10">
