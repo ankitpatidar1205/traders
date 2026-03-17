@@ -4,6 +4,7 @@ const { Server } = require('socket.io');
 const cors = require('cors');
 const mockEngine = require('./utils/mockEngine');
 const runMigrations = require('./config/migrate');
+const { setIo }     = require('./config/socket');
 require('dotenv').config();
 
 const app = express();
@@ -36,7 +37,8 @@ const aiRoutes = require('./routes/aiRoutes');
 const kiteRoutes = require('./routes/kiteRoutes');
 const bankRoutes = require('./routes/bankRoutes');
 const newClientBankRoutes = require('./routes/newClientBankRoutes');
-const adminRoutes = require('./routes/adminRoutes');
+const adminRoutes        = require('./routes/adminRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 const { logIp } = require('./middleware/logger');
 
 // Middleware
@@ -66,19 +68,25 @@ app.use('/api/kite', kiteRoutes);
 app.use('/api/bank', bankRoutes);
 app.use('/api/new-client-bank', newClientBankRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Routes Placeholder
 app.get('/', (req, res) => {
   res.send('Traders API is running...');
 });
 
-// Socket.io logic for Live Prices
+// Socket.io logic
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
+  // Client sends { userId, role } right after connecting
+  socket.on('join', ({ userId, role }) => {
+    if (userId) socket.join(`user:${userId}`);
+    if (role)   socket.join(`role:${role}`);
+  });
+
   socket.on('subscribe_market', (scrips) => {
     console.log(`User ${socket.id} subscribed to:`, scrips);
-    // Join a room for these scrips
   });
 
   socket.on('disconnect', () => {
@@ -92,6 +100,9 @@ mockEngine.on('update', (prices) => {
 });
 
 const PORT = process.env.PORT || 5000;
+
+// Share io instance with controllers (before migrations)
+setIo(io);
 
 // Run DB migrations first, then start server
 runMigrations()

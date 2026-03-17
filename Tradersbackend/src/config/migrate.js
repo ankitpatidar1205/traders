@@ -367,6 +367,30 @@ const runMigrations = async () => {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     `);
 
+    // ─── 10b. NOTIFICATIONS ────────────────────────────────────────────────────
+
+    await db.execute(`
+        CREATE TABLE IF NOT EXISTS notifications (
+            id             INT AUTO_INCREMENT PRIMARY KEY,
+            title          VARCHAR(255) NOT NULL,
+            message        TEXT NOT NULL,
+            type           ENUM('info','warning','alert','success') DEFAULT 'info',
+            target_role    ENUM('SUPERADMIN','ADMIN','BROKER','ALL') DEFAULT 'ALL',
+            target_user_id INT DEFAULT NULL,
+            created_by     INT DEFAULT NULL,
+            created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+
+    await db.execute(`
+        CREATE TABLE IF NOT EXISTS notification_reads (
+            notification_id INT NOT NULL,
+            user_id         INT NOT NULL,
+            read_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (notification_id, user_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+
     // ─── 11. SEED DATA ─────────────────────────────────────────────────────────
 
     // Insert default global_configs only if table is empty
