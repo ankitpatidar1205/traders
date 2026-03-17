@@ -600,3 +600,33 @@ export const getAdminPanelSettings = async (userId) => {
     const res = await fetch(`${BASE_URL}/admin/panel-settings/${userId}`, { headers: getHeaders() });
     return handleResponse(res);
 };
+
+// ─── NOTIFICATIONS ────────────────────────────────────
+export const getNotifications = async () => {
+    const res = await fetch(`${BASE_URL}/notifications`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const markNotificationRead = async (id) => {
+    const res = await fetch(`${BASE_URL}/notifications/${id}/read`, { method: 'PUT', headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const markAllNotificationsRead = async () => {
+    const res = await fetch(`${BASE_URL}/notifications/read-all`, { method: 'PUT', headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const createNotification = async (data) => {
+    const res = await fetch(`${BASE_URL}/notifications`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify(data),
+    });
+    return handleResponse(res);
+};
+
+export const deleteNotification = async (id) => {
+    const res = await fetch(`${BASE_URL}/notifications/${id}`, { method: 'DELETE', headers: getHeaders() });
+    return handleResponse(res);
+};
