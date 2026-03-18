@@ -39,6 +39,7 @@ const LoginScreen = ({ navigation }) => {
         try {
             await api.login(username, password, {
                 deviceInfo: `${Platform.OS === 'android' ? 'Android' : 'iOS'} (${Platform.Version})`,
+                os: Platform.OS === 'android' ? 'Android' : 'iOS',
                 location: 'Mobile App (Virtual)',
                 riskScore: Math.floor(Math.random() * 20)
             });

@@ -8,7 +8,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'http://https://trader-production-e063.up.railway.app',
         changeOrigin: true,
         secure: false,
       },

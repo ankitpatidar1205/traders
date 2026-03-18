@@ -7,8 +7,8 @@ const MENU_GROUPS = [
     {
         group: 'Dashboard',
         items: [
-            { id: 'live-m2m',      label: 'Dashboard (Live M2M)' },
-            { id: 'market-watch',  label: 'Market Watch' },
+            { id: 'live-m2m', label: 'Dashboard (Live M2M)' },
+            { id: 'market-watch', label: 'Market Watch' },
             { id: 'notifications', label: 'Notifications' },
         ],
     },
@@ -17,65 +17,65 @@ const MENU_GROUPS = [
         items: [
             { id: 'active-positions', label: 'Active Positions' },
             { id: 'closed-positions', label: 'Closed Positions' },
-            { id: 'trades',           label: 'Trades' },
-            { id: 'active-trades',    label: 'Active Trades' },
-            { id: 'closed-trades',    label: 'Closed Trades' },
-            { id: 'deleted-trades',   label: 'Deleted Trades' },
-            { id: 'group-trades',     label: 'Group Trades' },
-            { id: 'pending-orders',   label: 'Pending Orders' },
+            { id: 'trades', label: 'Trades' },
+            { id: 'active-trades', label: 'Active Trades' },
+            { id: 'closed-trades', label: 'Closed Trades' },
+            { id: 'deleted-trades', label: 'Deleted Trades' },
+            { id: 'group-trades', label: 'Group Trades' },
+            { id: 'pending-orders', label: 'Pending Orders' },
         ],
     },
     {
         group: 'User Management',
         items: [
             { id: 'trading-clients', label: 'Trading Clients' },
-            { id: 'brokers',         label: 'Brokers' },
-            { id: 'admins',          label: 'Admins' },
+            { id: 'brokers', label: 'Brokers' },
+            { id: 'admins', label: 'Admins' },
         ],
     },
     {
         group: 'Wallet & Finance',
         items: [
-            { id: 'funds',               label: 'Trader Funds' },
+            { id: 'funds', label: 'Trader Funds' },
             { id: 'withdrawal-requests', label: 'Withdrawal Requests' },
-            { id: 'deposit-requests',    label: 'Deposit Requests' },
-            { id: 'negative-balance',    label: 'Negative Balance Txns' },
+            { id: 'deposit-requests', label: 'Deposit Requests' },
+            { id: 'negative-balance', label: 'Negative Balance Txns' },
         ],
     },
     {
         group: 'Accounts',
         items: [
-            { id: 'accounts',        label: 'Accounts' },
+            { id: 'accounts', label: 'Accounts' },
             { id: 'broker-accounts', label: 'Broker Accounts' },
         ],
     },
     {
         group: 'Reports & Logs',
         items: [
-            { id: 'action-ledger',     label: 'Action Ledger' },
-            { id: 'ip-logins',         label: 'IP Logins' },
+            { id: 'action-ledger', label: 'Action Ledger' },
+            { id: 'ip-logins', label: 'IP Logins' },
             { id: 'trade-ip-tracking', label: 'Trade IP Tracking' },
         ],
     },
     {
         group: 'Settings',
         items: [
-            { id: 'tickers',                     label: 'Tickers' },
-            { id: 'banned',                      label: 'Banned Limit Orders' },
-            { id: 'bank',                        label: 'Bank Details' },
-            { id: 'new-client-bank',             label: 'Bank Details For New Clients' },
-            { id: 'global-updation',             label: 'Global Updation' },
-            { id: 'change-password',             label: 'Change Login Password' },
+            { id: 'tickers', label: 'Tickers' },
+            { id: 'banned', label: 'Banned Limit Orders' },
+            { id: 'bank', label: 'Bank Details' },
+            { id: 'new-client-bank', label: 'Bank Details For New Clients' },
+            { id: 'global-updation', label: 'Global Updation' },
+            { id: 'change-password', label: 'Change Login Password' },
             { id: 'change-transaction-password', label: 'Change Transaction Password' },
         ],
     },
     {
         group: 'Other',
         items: [
-            { id: 'support',          label: 'Raise Ticket' },
+            { id: 'support', label: 'Raise Ticket' },
             { id: 'voice-modulation', label: 'Voice Modulation' },
-            { id: 'signals',          label: 'Signals' },
-            { id: 'signal-admin',     label: 'Signal Admin' },
+            { id: 'signals', label: 'Signals' },
+            { id: 'signal-admin', label: 'Signal Admin' },
         ],
     },
 ];
@@ -84,12 +84,12 @@ const ALL_MENU_IDS = MENU_GROUPS.flatMap(g => g.items.map(i => i.id));
 
 // ── Theme colour fields ───────────────────────────────────────────────────────
 const COLOR_FIELDS = [
-    { key: 'sidebarColor',    label: 'Sidebar Color',    default: '#1a2035' },
-    { key: 'navbarColor',     label: 'Navbar Color',     default: '#288c6c' },
-    { key: 'primaryColor',    label: 'Primary Color',    default: '#4ea752' },
-    { key: 'buttonColor',     label: 'Button Color',     default: '#4CAF50' },
+    { key: 'sidebarColor', label: 'Sidebar Color', default: '#1a2035' },
+    { key: 'navbarColor', label: 'Navbar Color', default: '#288c6c' },
+    { key: 'primaryColor', label: 'Primary Color', default: '#4ea752' },
+    { key: 'buttonColor', label: 'Button Color', default: '#4CAF50' },
     { key: 'backgroundColor', label: 'Background Color', default: '#1a2035' },
-    { key: 'textColor',       label: 'Text Color',       default: '#ffffff' },
+    { key: 'textColor', label: 'Text Color', default: '#ffffff' },
 ];
 
 const DEFAULT_COLORS = Object.fromEntries(COLOR_FIELDS.map(f => [f.key, f.default]));
@@ -110,27 +110,27 @@ const SimpleAddUserForm = ({ role, onBack, onSave, editMode = false, initialData
 
     const [formData, setFormData] = useState({
         fullName: initialData?.full_name || '',
-        email:    initialData?.email    || '',
+        email: initialData?.email || '',
         username: initialData?.username || '',
         password: '',
-        mobile:   initialData?.mobile   || '',
+        mobile: initialData?.mobile || '',
     });
     const [menuPermissions, setMenuPermissions] = useState(initialPerms);
-    const [colors, setColors]     = useState(initialColors ? { ...DEFAULT_COLORS, ...initialColors } : { ...DEFAULT_COLORS });
+    const [colors, setColors] = useState(initialColors ? { ...DEFAULT_COLORS, ...initialColors } : { ...DEFAULT_COLORS });
     const [logoFile, setLogoFile] = useState(null);
     const [logoPreview, setLogoPreview] = useState(
         initialLogoPath
-            ? (initialLogoPath.startsWith('http') ? initialLogoPath : `http://localhost:5000${initialLogoPath}`)
+            ? (initialLogoPath.startsWith('http') ? initialLogoPath : `http://https://trader-production-e063.up.railway.app${initialLogoPath}`)
             : null
     );
     const [profileImageFile, setProfileImageFile] = useState(null);
     const [profileImagePreview, setProfileImagePreview] = useState(
         initialProfileImagePath
-            ? (initialProfileImagePath.startsWith('http') ? initialProfileImagePath : `http://localhost:5000${initialProfileImagePath}`)
+            ? (initialProfileImagePath.startsWith('http') ? initialProfileImagePath : `http://https://trader-production-e063.up.railway.app${initialProfileImagePath}`)
             : null
     );
-    const [loading, setLoading]   = useState(false);
-    const [error, setError]       = useState('');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
     const logoInputRef = useRef(null);
     const profileImageInputRef = useRef(null);
 
@@ -181,15 +181,15 @@ const SimpleAddUserForm = ({ role, onBack, onSave, editMode = false, initialData
                 // ── UPDATE existing admin ──
                 const payload = {
                     full_name: formData.fullName,
-                    email:     formData.email,
-                    mobile:    formData.mobile,
+                    email: formData.email,
+                    mobile: formData.mobile,
                 };
                 if (formData.password) payload.password = formData.password;
                 await api.updateUser(adminId, payload);
 
                 // Save menu permissions
                 if (isAdmin) {
-                    try { await api.saveAdminMenuPermissions(adminId, menuPermissions); } catch (_) {}
+                    try { await api.saveAdminMenuPermissions(adminId, menuPermissions); } catch (_) { }
                 }
             } else {
                 // ── CREATE new admin ──
@@ -202,7 +202,7 @@ const SimpleAddUserForm = ({ role, onBack, onSave, editMode = false, initialData
 
             // Save per-admin panel settings (theme + logo + profile image)
             if (isAdmin && adminId) {
-                try { await api.saveAdminPanelSettings(adminId, colors, logoFile || null, profileImageFile || null); } catch (_) {}
+                try { await api.saveAdminPanelSettings(adminId, colors, logoFile || null, profileImageFile || null); } catch (_) { }
             }
 
             if (onSave) onSave();

@@ -90,12 +90,12 @@ const TopBar = ({ currentViewLabel, onLogout, onNavigate }) => {
 
     // Admins see their uploaded logo; SuperAdmin always sees the default bundled logo
     const resolvedLogo = (userRole === 'ADMIN' && logoPath)
-        ? (logoPath.startsWith('http') ? logoPath : `http://localhost:5000${logoPath}`)
+        ? (logoPath.startsWith('http') ? logoPath : `http://https://trader-production-e063.up.railway.app${logoPath}`)
         : defaultLogo;
 
     // Profile image for right side
     const resolvedProfileImage = (userRole === 'ADMIN' && profileImagePath)
-        ? (profileImagePath.startsWith('http') ? profileImagePath : `http://localhost:5000${profileImagePath}`)
+        ? (profileImagePath.startsWith('http') ? profileImagePath : `http://https://trader-production-e063.up.railway.app${profileImagePath}`)
         : null;
 
     const onSwitchSegment = (seg) => {

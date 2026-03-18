@@ -3,12 +3,12 @@ import { useAuth } from '../../context/AuthContext';
 import * as api from '../../services/api';
 
 const COLOR_FIELDS = [
-    { key: 'sidebarColor',    label: 'Sidebar Color',    desc: 'Navigation sidebar background' },
-    { key: 'navbarColor',     label: 'Navbar Color',     desc: 'Top bar / gradient start color' },
-    { key: 'primaryColor',    label: 'Primary Color',    desc: 'Gradient end & active highlights' },
-    { key: 'buttonColor',     label: 'Button Color',     desc: 'Primary action buttons' },
+    { key: 'sidebarColor', label: 'Sidebar Color', desc: 'Navigation sidebar background' },
+    { key: 'navbarColor', label: 'Navbar Color', desc: 'Top bar / gradient start color' },
+    { key: 'primaryColor', label: 'Primary Color', desc: 'Gradient end & active highlights' },
+    { key: 'buttonColor', label: 'Button Color', desc: 'Primary action buttons' },
     { key: 'backgroundColor', label: 'Background Color', desc: 'Main content area background' },
-    { key: 'textColor',       label: 'Text Color',       desc: 'Primary text across the dashboard' },
+    { key: 'textColor', label: 'Text Color', desc: 'Primary text across the dashboard' },
 ];
 
 const ThemeSettingsPage = () => {
@@ -42,12 +42,12 @@ const ThemeSettingsPage = () => {
 
     const handleReset = () => {
         const defaults = {
-            sidebarColor:    '#1a2035',
-            navbarColor:     '#288c6c',
-            primaryColor:    '#4ea752',
-            buttonColor:     '#4CAF50',
+            sidebarColor: '#1a2035',
+            navbarColor: '#288c6c',
+            primaryColor: '#4ea752',
+            buttonColor: '#4CAF50',
             backgroundColor: '#1a2035',
-            textColor:       '#ffffff',
+            textColor: '#ffffff',
         };
         setColors(defaults);
     };
@@ -73,17 +73,17 @@ const ThemeSettingsPage = () => {
     };
 
     const resolvedLogo = logoPath
-        ? (logoPath.startsWith('http') ? logoPath : `http://localhost:5000${logoPath}`)
+        ? (logoPath.startsWith('http') ? logoPath : `http://https://trader-production-e063.up.railway.app${logoPath}`)
         : null;
 
     // Live CSS variable preview
     const previewStyle = {
-        '--sidebar-color':    colors.sidebarColor,
-        '--navbar-color':     colors.navbarColor,
-        '--primary-color':    colors.primaryColor,
-        '--button-color':     colors.buttonColor,
-        '--bg-color':         colors.backgroundColor,
-        '--text-color':       colors.textColor,
+        '--sidebar-color': colors.sidebarColor,
+        '--navbar-color': colors.navbarColor,
+        '--primary-color': colors.primaryColor,
+        '--button-color': colors.buttonColor,
+        '--bg-color': colors.backgroundColor,
+        '--text-color': colors.textColor,
     };
 
     return (
@@ -169,7 +169,7 @@ const ThemeSettingsPage = () => {
                     <div className="w-32 rounded-lg p-3 flex flex-col gap-2" style={{ backgroundColor: 'var(--sidebar-color)' }}>
                         <div className="h-2 rounded bg-white/20 w-full" />
                         <div className="h-6 rounded w-full" style={{ background: `linear-gradient(60deg, var(--navbar-color), var(--primary-color))` }} />
-                        {[1,2,3].map(i => (
+                        {[1, 2, 3].map(i => (
                             <div key={i} className="h-4 rounded bg-white/10 w-full" />
                         ))}
                     </div>
@@ -177,7 +177,7 @@ const ThemeSettingsPage = () => {
                     <div className="flex-1 rounded-lg p-3 flex flex-col gap-3" style={{ backgroundColor: 'var(--bg-color)' }}>
                         <div className="h-8 rounded w-full" style={{ background: `linear-gradient(60deg, var(--navbar-color), var(--primary-color))` }} />
                         <div className="grid grid-cols-3 gap-2">
-                            {[1,2,3].map(i => (
+                            {[1, 2, 3].map(i => (
                                 <div key={i} className="h-12 rounded bg-white/5 border border-white/10" />
                             ))}
                         </div>
