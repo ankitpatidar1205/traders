@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS theme_settings (
     updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- 3. Generic system settings table (logo_path stored here)
+-- 3. Generic system settings table (logo_path
 CREATE TABLE IF NOT EXISTS system_settings (
     id            INT AUTO_INCREMENT PRIMARY KEY,
     setting_key   VARCHAR(100) NOT NULL UNIQUE,
