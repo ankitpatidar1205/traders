@@ -55,6 +55,7 @@ import Toast from './components/common/Toast';
 import EditBrokerPage from './pages/brokers/EditBrokerPage';
 import ViewBrokerPage from './pages/brokers/ViewBrokerPage';
 import EditAdminPage from './pages/users/EditAdminPage';
+import GlobalSettingsPage from './pages/settings/GlobalSettingsPage';
 
 import { useAuth, ROLES } from './context/AuthContext';
 import * as api from './services/api';
@@ -285,6 +286,7 @@ function App() {
                 <Route path="/trade-ip-tracking" element={<ProtectedRoute viewId="trade-ip-tracking"><TradeIpTrackingPage /></ProtectedRoute>} />
                 <Route path="/global-updation" element={<ProtectedRoute viewId="global-updation"><GlobalUpdationPage /></ProtectedRoute>} />
                 <Route path="/theme-settings" element={<ProtectedRoute viewId="theme-settings"><ThemeSettingsPage /></ProtectedRoute>} />
+                <Route path="/global-settings" element={<ProtectedRoute viewId="global-settings"><GlobalSettingsPage onBack={() => setView('live-m2m')} /></ProtectedRoute>} />
                 
                 <Route path="/learning" element={<LearningPage segment={user?.segment} />} />
                 <Route path="/support" element={<RaiseTicketPage user={user} />} />

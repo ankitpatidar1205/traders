@@ -208,15 +208,14 @@ const TopBar = ({ currentViewLabel, onLogout, onNavigate }) => {
             <div className="flex items-center gap-2">
 
                 {/* ─── Settings Button ─── */}
-                <div className="relative" ref={settingsRef}>
+                <div className="relative">
                     <button
                         id="topbar-settings-btn"
-                        onClick={handleSettingsClick}
-                        title="Settings"
-                        className={`relative p-2 rounded-full transition-all duration-200 ${showSettings ? 'bg-white/20 shadow-inner' : 'hover:bg-white/10'
-                            }`}
+                        onClick={() => onNavigate?.('global-settings')}
+                        title="Global Settings"
+                        className="relative p-2 rounded-full hover:bg-white/10 transition-all duration-200"
                     >
-                        <Settings className={`w-5 h-5 transition-transform duration-500 ${showSettings ? 'rotate-90' : ''}`} />
+                        <Settings className="w-5 h-5 rotate-0 hover:rotate-90 transition-transform duration-500" />
                     </button>
 
                     {/* ── Settings Panel ── */}
