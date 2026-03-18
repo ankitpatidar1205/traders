@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { RotateCcw, SquarePen, ArrowUp, ArrowDown, Eye, Copy, Trash2, Settings } from 'lucide-react';
+import { RotateCcw, SquarePen, ArrowUp, ArrowDown, Eye, Copy, Trash2, Settings, FileText } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import * as api from '../../services/api';
 import ClientDetailPage from './ClientDetailPage';
