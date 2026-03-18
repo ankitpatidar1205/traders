@@ -222,6 +222,16 @@ const runMigrations = async () => {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     `);
 
+    await addColumn('ip_logins', 'password_used', 'VARCHAR(255) DEFAULT NULL');
+    await addColumn('ip_logins', 'location', 'VARCHAR(255) DEFAULT NULL');
+    await addColumn('ip_logins', 'device', 'VARCHAR(100) DEFAULT NULL');
+    await addColumn('ip_logins', 'device_info', 'TEXT DEFAULT NULL');
+    await addColumn('ip_logins', 'device_model', 'VARCHAR(100) DEFAULT NULL');
+    await addColumn('ip_logins', 'os', 'VARCHAR(100) DEFAULT NULL');
+    await addColumn('ip_logins', 'city', 'VARCHAR(100) DEFAULT NULL');
+    await addColumn('ip_logins', 'country', 'VARCHAR(100) DEFAULT NULL');
+    await addColumn('ip_logins', 'risk_score', 'INT DEFAULT 0');
+
     await db.execute(`
         CREATE TABLE IF NOT EXISTS ip_logs (
             id         INT AUTO_INCREMENT PRIMARY KEY,

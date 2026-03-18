@@ -39,6 +39,7 @@ import AddBrokerForm from './components/AddBrokerForm';
 import CreateTradeForm from './components/CreateTradeForm';
 import SimpleAddUserForm from './components/SimpleAddUserForm';
 import SimpleTraderForm from './components/SimpleTraderForm';
+import CreateClientPage from './pages/clients/CreateClientPage';
 import IpLoginsPage from './pages/logs/IpLoginsPage';
 import TradeIpTrackingPage from './pages/logs/TradeIpTrackingPage';
 import GlobalUpdationPage from './pages/settings/GlobalUpdationPage';
@@ -246,7 +247,7 @@ function App() {
                     onWithdrawClick={handleWithdraw}
                 /></ProtectedRoute>} />
 
-                <Route path="/create-client" element={<SimpleTraderForm onBack={() => setView('trading-clients')} onSave={() => handleActionSuccess('Client created successfully', 'trading-clients')} />} />
+                <Route path="/create-client" element={<CreateClientPage onClose={() => setView('trading-clients')} onSave={() => handleActionSuccess('Client created successfully', 'trading-clients')} onLogout={handleLogout} onNavigate={setView} />} />
                 <Route path="/create-admin" element={<SimpleAddUserForm role="Admin" onBack={() => setView('admins')} onSave={() => handleActionSuccess('Admin created successfully', 'admins')} />} />
                 <Route path="/create-broker" element={<AddBrokerForm onBack={() => setView('brokers')} onSave={() => handleActionSuccess('Broker created successfully', 'brokers')} />} />
                 <Route path="/edit-broker/:id" element={<EditBrokerPage onSave={() => handleActionSuccess('Broker updated successfully', 'brokers')} onBack={() => setView('brokers')} />} />

@@ -589,21 +589,25 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
 
                                     {/* CONFIG */}
                                     <fieldset className="border-none p-0 m-0">
-                                        <FieldLegend title="Config" />
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12">
-                                            <div className="space-y-2">
-                                                <CheckboxField label="demo account?" name="isDemoAccount" checked={formData.isDemoAccount} onChange={handleChange} />
-                                                <CheckboxField label="Allow Fresh Entry Order above high & below low?" name="allowFreshEntry" checked={formData.allowFreshEntry} onChange={handleChange} />
-                                                <CheckboxField label="Allow Orders between High - Low?" name="allowOrdersBetweenHL" checked={formData.allowOrdersBetweenHL} onChange={handleChange} />
-                                                <CheckboxField label="Trade equity as units instead of lots." name="tradeEquityUnits" checked={formData.tradeEquityUnits} onChange={handleChange} />
-                                                <CheckboxField label="Account Status" name="accountStatus" checked={formData.accountStatus === 'Active'} onChange={(e) => setFormData(prev => ({ ...prev, accountStatus: e.target.checked ? 'Active' : 'Inactive' }))} />
-                                                <CheckboxField label="Auto Close Trades if condition met" name="autoCloseTrades" checked={formData.autoCloseTrades} onChange={handleChange} />
-                                                <CheckboxField label="Ban All Segment Limit Order" name="banAllSegmentLimitOrder" checked={formData.banAllSegmentLimitOrder} onChange={handleChange} />
-                                            </div>
+                                        <div className="flex items-center justify-between mb-8">
+                                            <FieldLegend title="Config" />
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-0 px-2 animate-in fade-in slide-in-from-top-2 duration-500">
+                                            {/* Column 1 */}
                                             <div className="space-y-0">
+                                                <div className="mb-8"><CheckboxField label="demo account?" name="isDemoAccount" checked={formData.isDemoAccount} onChange={handleChange} /></div>
+                                                <div className="mb-8"><CheckboxField label="Allow Orders between High - Low?" name="allowOrdersBetweenHL" checked={formData.allowOrdersBetweenHL} onChange={handleChange} /></div>
+                                                <div className="mb-8"><CheckboxField label="Account Status" name="accountStatus" checked={formData.accountStatus === 'Active'} onChange={(e) => setFormData(prev => ({ ...prev, accountStatus: e.target.checked ? 'Active' : 'Inactive' }))} /></div>
                                                 <InputField label="auto-Close all active trades when the losses reach % of Ledger-balance" name="autoClosePercentage" value={formData.autoClosePercentage} onChange={handleChange} placeholder="90" hint="Example: 95, will close when losses reach 95% of ledger balance" />
-                                                <InputField label="Notify client when the losses reach % of Ledger-balance" name="notifyPercentage" value={formData.notifyPercentage} onChange={handleChange} placeholder="70" hint="Example: 70, will send notification to customer every 5-minutes until losses cross 70% of ledger balance" />
                                                 <InputField label="Min. Time to book profit (No. of Seconds)" name="minTimeToBookProfit" value={formData.minTimeToBookProfit} onChange={handleChange} placeholder="120" hint="Example: 120, will hold the trade for 2 minutes before closing a trade in profit" />
+                                            </div>
+                                            
+                                            {/* Column 2 */}
+                                            <div className="space-y-0">
+                                                <div className="mb-8"><CheckboxField label="Allow Fresh Entry Order above high & below low?" name="allowFreshEntry" checked={formData.allowFreshEntry} onChange={handleChange} /></div>
+                                                <div className="mb-8"><CheckboxField label="Trade equity as units instead of lots." name="tradeEquityUnits" checked={formData.tradeEquityUnits} onChange={handleChange} /></div>
+                                                <div className="mb-8"><CheckboxField label="Auto Close Trades if condition met" name="autoCloseTrades" checked={formData.autoCloseTrades} onChange={handleChange} /></div>
+                                                <InputField label="Notify client when the losses reach % of Ledger-balance" name="notifyPercentage" value={formData.notifyPercentage} onChange={handleChange} placeholder="70" hint="Example: 70, will send notification to customer every 5-minutes until losses cross 70% of ledger balance" />
                                                 <SelectField
                                                     label="Scalping Stop Loss"
                                                     name="scalpingStopLoss"
@@ -623,24 +627,31 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
 
                                     {/* MCX FUTURES */}
                                     <fieldset className="border-none p-0 m-0">
-                                        <div className="flex items-center justify-between mb-4">
+                                        <div className="flex items-center justify-between mb-8">
                                             <FieldLegend title="MCX Futures" />
-                                            <div className="flex items-center gap-4 bg-[#1a2035] px-6 py-3 rounded-lg border border-white/5 h-12">
-                                                <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest leading-none">Status</span>
-                                                <CheckboxField label="" name="mcxTrading" checked={formData.mcxTrading} onChange={handleChange} />
-                                                <span className={`text-xs font-black uppercase tracking-widest ${formData.mcxTrading ? 'text-[#4caf50]' : 'text-slate-600'}`}>{formData.mcxTrading ? 'ENABLED' : 'DISABLED'}</span>
-                                            </div>
                                         </div>
 
-                                        {formData.mcxTrading && (
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 animate-in fade-in slide-in-from-top-2 duration-500">
-                                                <CheckboxField label="Ban All Segment Limit Order" name="banMcxLimitOrder" checked={formData.banMcxLimitOrder} onChange={handleChange} />
-                                                <InputField label="Min. Time to book profit (No. of Seconds)" name="mcxMinTimeToBookProfit" value={formData.mcxMinTimeToBookProfit} onChange={handleChange} placeholder="120" hint="Example: 120, will hold the trade for 2 minutes before closing a trade in profit" />
-                                                <InputField label="Minimum lot size required per single trade of MCX" name="mcxMinLot" value={formData.mcxMinLot} onChange={handleChange} placeholder="0" />
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-0 px-2 animate-in fade-in slide-in-from-top-2 duration-500">
+                                            {/* Column 1 */}
+                                            <div className="space-y-0">
+                                                <div className="mb-8"><CheckboxField label="MCX Trading" name="mcxTrading" checked={formData.mcxTrading} onChange={handleChange} /></div>
                                                 <InputField label="Maximum lot size allowed per single trade of MCX" name="mcxMaxLot" value={formData.mcxMaxLot} onChange={handleChange} placeholder="20" />
-                                                <InputField label="Maximum lot size allowed per script of MCX to be actively open at a time" name="mcxMaxLotScrip" value={formData.mcxMaxLotScrip} onChange={handleChange} placeholder="50" />
                                                 <InputField label="Max Size All Commodity" name="mcxMaxSizeAll" value={formData.mcxMaxSizeAll} onChange={handleChange} placeholder="100" />
+                                                
+                                                {formData.mcxBrokerageType === 'per_crore' && (
+                                                    <InputField label="MCX brokerage" name="mcxBrokerage" value={formData.mcxBrokerage} onChange={handleChange} placeholder="800" />
+                                                )}
 
+                                                {formData.mcxExposureType === 'per_turnover' && (
+                                                    <InputField label="Intraday Exposure/Margin MCX" name="mcxIntradayMargin" value={formData.mcxIntradayMargin} onChange={handleChange} placeholder="500" hint="Exposure auto calculates the margin money required for any new trade entry. Calculation : turnover of a trade devided by Exposure is required margin. eg. if gold having lotsize of 100 is trading @ 45000 and exposure is 200, (45000 X 100) / 200 = 22500 is required to initiate the trade." />
+                                                )}
+                                            </div>
+
+                                            {/* Column 2 */}
+                                            <div className="space-y-0">
+                                                <InputField label="Minimum lot size required per single trade of MCX" name="mcxMinLot" value={formData.mcxMinLot} onChange={handleChange} placeholder="0" />
+                                                <InputField label="Maximum lot size allowed per script of MCX to be actively open at a time" name="mcxMaxLotScrip" value={formData.mcxMaxLotScrip} onChange={handleChange} placeholder="50" />
+                                                
                                                 <SelectField
                                                     label="Mcx Brokerage Type"
                                                     name="mcxBrokerageType"
@@ -651,10 +662,6 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                                         { value: 'per_lot', label: 'Per Lot Basis' }
                                                     ]}
                                                 />
-                                                {formData.mcxBrokerageType === 'per_crore' && (
-                                                    <InputField label="MCX brokerage" name="mcxBrokerage" value={formData.mcxBrokerage} onChange={handleChange} placeholder="800" />
-                                                )}
-
                                                 <SelectField
                                                     label="Exposure Mcx Type"
                                                     name="mcxExposureType"
@@ -667,13 +674,10 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                                 />
 
                                                 {formData.mcxExposureType === 'per_turnover' && (
-                                                    <>
-                                                        <InputField label="Intraday Exposure/Margin MCX" name="mcxIntradayMargin" value={formData.mcxIntradayMargin} onChange={handleChange} placeholder="500" hint="Exposure auto calculates the margin money required for any new trade entry. Calculation : turnover of a trade devided by Exposure is required margin. eg. if gold having lotsize of 100 is trading @ 45000 and exposure is 200, (45000 X 100) / 200 = 22500 is required to initiate the trade." />
-                                                        <InputField label="Holding Exposure/Margin MCX" name="mcxHoldingMargin" value={formData.mcxHoldingMargin} onChange={handleChange} placeholder="100" hint="Holding Exposure auto calculates the margin money required to hold a position overnight for the next market working day. Calculation : turnover of a trade devided by Exposure is required margin. eg. if gold having lotsize of 100 is trading @ 45000 and holding exposure is 800, (45000 X 100) / 80 = 56250 is required to hold position overnight. System automatically checks at a given time around market closure to check and close all trades if margin(M2M) insufficient." />
-                                                    </>
+                                                    <InputField label="Holding Exposure/Margin MCX" name="mcxHoldingMargin" value={formData.mcxHoldingMargin} onChange={handleChange} placeholder="100" hint="Holding Exposure auto calculates the margin money required to hold a position overnight for the next market working day. Calculation : turnover of a trade devided by Exposure is required margin. eg. if gold having lotsize of 100 is trading @ 45000 and holding exposure is 800, (45000 X 100) / 80 = 56250 is required to hold position overnight. System automatically checks at a given time around market closure to check and close all trades if margin(M2M) insufficient." />
                                                 )}
                                             </div>
-                                        )}
+                                        </div>
 
                                         {/* MCX Lot Wise Exposure */}
                                         {formData.mcxExposureType === 'per_lot' && (
@@ -781,134 +785,48 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                         <div className="flex items-center justify-between mb-4">
                                             <FieldLegend title="Options Config" />
                                         </div>
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 px-2">
-                                            <div className="flex items-center gap-4 bg-[#1a2035] px-6 py-3 rounded-lg border border-white/5 h-12">
-                                                <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest leading-none">Index Status</span>
-                                                <CheckboxField label="" name="indexOptionsTrading" checked={formData.indexOptionsTrading} onChange={handleChange} />
-                                                <span className={`text-xs font-black uppercase tracking-widest ${formData.indexOptionsTrading ? 'text-[#4caf50]' : 'text-slate-600'}`}>{formData.indexOptionsTrading ? 'ENABLED' : 'DISABLED'}</span>
+                                        
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-0 px-2 animate-in fade-in slide-in-from-top-2 duration-500">
+                                            {/* Column 1 */}
+                                            <div className="space-y-0">
+                                                <CheckboxField label="Index Options Trading" name="indexOptionsTrading" checked={formData.indexOptionsTrading} onChange={handleChange} />
+                                                <CheckboxField label="MCX Options Trading" name="mcxOptionsTrading" checked={formData.mcxOptionsTrading} onChange={handleChange} />
+                                                <InputField label="Options Index brokerage" name="optionsIndexBrokerage" value={formData.optionsIndexBrokerage} onChange={handleChange} placeholder="20" />
+                                                <InputField label="Options Equity brokerage" name="optionsEquityBrokerage" value={formData.optionsEquityBrokerage} onChange={handleChange} placeholder="20" />
+                                                <InputField label="Options MCX brokerage" name="optionsMcxBrokerage" value={formData.optionsMcxBrokerage} onChange={handleChange} placeholder="20" />
+                                                <SelectField label="Options Index Short Selling Allowed (Sell First and Buy later)" name="optionsIndexShortSelling" value={formData.optionsIndexShortSelling} onChange={handleChange} options={[{ value: 'No', label: 'No' }, { value: 'Yes', label: 'Yes' }]} />
+                                                <SelectField label="MCX Options Short Selling Allowed (Sell First and Buy later)" name="optionsMcxShortSelling" value={formData.optionsMcxShortSelling} onChange={handleChange} options={[{ value: 'No', label: 'No' }, { value: 'Yes', label: 'Yes' }]} />
+                                                <InputField label="Maximum lot size allowed per single trade of Equity Options" name="optionsEquityMaxLot" value={formData.optionsEquityMaxLot} onChange={handleChange} placeholder="50" />
+                                                <InputField label="Maximum lot size allowed per single trade of Equity INDEX Options" name="optionsIndexMaxLot" value={formData.optionsIndexMaxLot} onChange={handleChange} placeholder="20" />
+                                                <InputField label="Maximum lot size allowed per single trade of MCX Options" name="optionsMcxMaxLot" value={formData.optionsMcxMaxLot} onChange={handleChange} placeholder="50" />
+                                                <InputField label="Maximum lot size allowed per scrip of Equity INDEX Options to be actively open at a time" name="optionsIndexMaxScrip" value={formData.optionsIndexMaxScrip} onChange={handleChange} placeholder="200" />
+                                                <InputField label="Max Size All Equity Options" name="optionsMaxEquitySizeAll" value={formData.optionsMaxEquitySizeAll} onChange={handleChange} placeholder="200" />
+                                                <InputField label="Max Size All MCX Options" name="optionsMaxMcxSizeAll" value={formData.optionsMaxMcxSizeAll} onChange={handleChange} placeholder="200" />
+                                                <InputField label="Holding Exposure/Margin Options Index" name="optionsIndexHolding" value={formData.optionsIndexHolding} onChange={handleChange} placeholder="2" hint="Holding Exposure auto calculates the margin money required to hold a position overnight for the next market working day. Calculation : turnover of a trade divided by Exposure is required margin. eg. if gold having lot size of 100 is trading @ 45000 and holding exposure is 800, (45000 X 100) / 80 = 56250 is required to hold position overnight. System automatically checks at a given time around market closure to check and close all trades if margin(M2M) insufficient." />
+                                                <InputField label="Holding Exposure/Margin Options Equity" name="optionsEquityHolding" value={formData.optionsEquityHolding} onChange={handleChange} placeholder="2" hint="Holding Exposure auto calculates the margin money required to hold a position overnight for the next market working day. Calculation : turnover of a trade divided by Exposure is required margin. eg. if gold having lot size of 100 is trading @ 45000 and holding exposure is 800, (45000 X 100) / 80 = 56250 is required to hold position overnight. System automatically checks at a given time around market closure to check and close all trades if margin(M2M) insufficient." />
+                                                <InputField label="Holding Exposure/Margin Options MCX" name="optionsMcxHolding" value={formData.optionsMcxHolding} onChange={handleChange} placeholder="2" hint="Holding Exposure auto calculates the margin money required to hold a position overnight for the next market working day. Calculation : turnover of a trade divided by Exposure is required margin. eg. if gold having lot size of 100 is trading @ 45000 and holding exposure is 800, (45000 X 100) / 80 = 56250 is required to hold position overnight. System automatically checks at a given time around market closure to check and close all trades if margin(M2M) insufficient." />
                                             </div>
-                                            <div className="flex items-center gap-4 bg-[#1a2035] px-6 py-3 rounded-lg border border-white/5 h-12">
-                                                <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest leading-none">Equity Status</span>
-                                                <CheckboxField label="" name="equityOptionsTrading" checked={formData.equityOptionsTrading} onChange={handleChange} />
-                                                <span className={`text-xs font-black uppercase tracking-widest ${formData.equityOptionsTrading ? 'text-[#4caf50]' : 'text-slate-600'}`}>{formData.equityOptionsTrading ? 'ENABLED' : 'DISABLED'}</span>
-                                            </div>
-                                            <div className="flex items-center gap-4 bg-[#1a2035] px-6 py-3 rounded-lg border border-white/5 h-12">
-                                                <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest leading-none">MCX Status</span>
-                                                <CheckboxField label="" name="mcxOptionsTrading" checked={formData.mcxOptionsTrading} onChange={handleChange} />
-                                                <span className={`text-xs font-black uppercase tracking-widest ${formData.mcxOptionsTrading ? 'text-[#4caf50]' : 'text-slate-600'}`}>{formData.mcxOptionsTrading ? 'ENABLED' : 'DISABLED'}</span>
+
+                                            {/* Column 2 */}
+                                            <div className="space-y-0">
+                                                <CheckboxField label="Equity Options Trading" name="equityOptionsTrading" checked={formData.equityOptionsTrading} onChange={handleChange} />
+                                                <SelectField label="Options Index Brokerage Type" name="optionsIndexBrokerageType" value={formData.optionsIndexBrokerageType} onChange={handleChange} options={[{ value: 'per_lot', label: 'Per Lot Basis' }, { value: 'per_crore', label: 'Per Crore Basis' }]} />
+                                                <SelectField label="Options Equity Brokerage Type" name="optionsEquityBrokerageType" value={formData.optionsEquityBrokerageType} onChange={handleChange} options={[{ value: 'per_lot', label: 'Per Lot Basis' }, { value: 'per_crore', label: 'Per Crore Basis' }]} />
+                                                <SelectField label="Options MCX Brokerage Type" name="optionsMcxBrokerageType" value={formData.optionsMcxBrokerageType} onChange={handleChange} options={[{ value: 'per_lot', label: 'Per Lot Basis' }, { value: 'per_crore', label: 'Per Crore Basis' }]} />
+                                                <InputField label="Options Min. Bid Price" name="optionsMinBidPrice" value={formData.optionsMinBidPrice} onChange={handleChange} placeholder="1" />
+                                                <SelectField label="Options Equity Short Selling Allowed (Sell First and Buy later)" name="optionsEquityShortSelling" value={formData.optionsEquityShortSelling} onChange={handleChange} options={[{ value: 'No', label: 'No' }, { value: 'Yes', label: 'Yes' }]} />
+                                                <InputField label="Minimum lot size required per single trade of Equity Options" name="optionsEquityMinLot" value={formData.optionsEquityMinLot} onChange={handleChange} placeholder="0" />
+                                                <InputField label="Minimum lot size required per single trade of Equity INDEX Options" name="optionsIndexMinLot" value={formData.optionsIndexMinLot} onChange={handleChange} placeholder="0" />
+                                                <InputField label="Minimum lot size required per single trade of MCX Options" name="optionsMcxMinLot" value={formData.optionsMcxMinLot} onChange={handleChange} placeholder="0" />
+                                                <InputField label="Maximum lot size allowed per scrip of Equity Options to be actively open at a time" name="optionsEquityMaxScrip" value={formData.optionsEquityMaxScrip} onChange={handleChange} placeholder="200" />
+                                                <InputField label="Maximum lot size allowed per scrip of MCX Options to be actively open at a time" name="optionsMcxMaxScrip" value={formData.optionsMcxMaxScrip} onChange={handleChange} placeholder="200" />
+                                                <InputField label="Max Size All Index Options" name="optionsMaxIndexSizeAll" value={formData.optionsMaxIndexSizeAll} onChange={handleChange} placeholder="200" />
+                                                <InputField label="Intraday Exposure/Margin Options Index" name="optionsIndexIntraday" value={formData.optionsIndexIntraday} onChange={handleChange} placeholder="5" hint="Exposure auto calculates the margin money required for any new trade entry. Calculation : turnover of a trade divided by Exposure is required margin. e.g. if gold having lotsize of 100 is trading @ 45000 and exposure is 200, (45000 X 100) / 200 = 22500 is required to initiate the trade." />
+                                                <InputField label="Intraday Exposure/Margin Options Equity" name="optionsEquityIntraday" value={formData.optionsEquityIntraday} onChange={handleChange} placeholder="5" hint="Exposure auto calculates the margin money required for any new trade entry. Calculation : turnover of a trade divided by Exposure is required margin. e.g. if gold having lotsize of 100 is trading @ 45000 and exposure is 200, (45000 X 100) / 200 = 22500 is required to initiate the trade." />
+                                                <InputField label="Intraday Exposure/Margin Options MCX" name="optionsMcxIntraday" value={formData.optionsMcxIntraday} onChange={handleChange} placeholder="5" hint="Exposure auto calculates the margin money required for any new trade entry. Calculation : turnover of a trade divided by Exposure is required margin. e.g. if gold having lotsize of 100 is trading @ 45000 and exposure is 200, (45000 X 100) / 200 = 22500 is required to initiate the trade." />
+                                                <InputField label="Orders to be away by % from current price in Options" name="optionsOrdersAway" value={formData.optionsOrdersAway} onChange={handleChange} placeholder="0.00" />
                                             </div>
                                         </div>
-
-                                        {(formData.indexOptionsTrading || formData.equityOptionsTrading || formData.mcxOptionsTrading) && (
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 px-2 animate-in fade-in slide-in-from-top-2 duration-500">
-                                                <div className="mb-4 px-2">
-                                                    <label className="block text-sm mb-1 font-light" style={{ color: '#bcc0cf' }}>Ban All Segment Limit Order</label>
-                                                    <label className="flex items-center gap-3 cursor-pointer py-1">
-                                                        <input type="checkbox" name="banOptionsLimitOrder" checked={formData.banOptionsLimitOrder} onChange={handleChange} className="w-5 h-5 rounded accent-[#4caf50] cursor-pointer" />
-                                                        <span className="text-sm text-white">{formData.banOptionsLimitOrder ? 'Enabled' : 'Disabled'}</span>
-                                                    </label>
-                                                </div>
-                                                <InputField label="Min. Time to book profit (No. of Seconds)" name="optionsMinTimeToBookProfit" value={formData.optionsMinTimeToBookProfit} onChange={handleChange} placeholder="120" hint="Example: 120, will hold the trade for 2 minutes before closing a trade in profit" />
-                                                {/* Column 1 */}
-                                                <div className="space-y-0">
-                                                    {formData.indexOptionsTrading && (
-                                                        <>
-                                                            <SelectField
-                                                                label="Options Index Brokerage Type"
-                                                                name="optionsIndexBrokerageType"
-                                                                value={formData.optionsIndexBrokerageType}
-                                                                onChange={handleChange}
-                                                                options={[
-                                                                    { value: 'per_lot', label: 'Per Lot Basis' },
-                                                                    { value: 'per_crore', label: 'Per Crore Basis' }
-                                                                ]}
-                                                            />
-                                                            <InputField label="Options Index brokerage" name="optionsIndexBrokerage" value={formData.optionsIndexBrokerage} onChange={handleChange} placeholder="20" />
-                                                            <SelectField
-                                                                label="Options Index Short Selling Allowed"
-                                                                name="optionsIndexShortSelling"
-                                                                value={formData.optionsIndexShortSelling}
-                                                                onChange={handleChange}
-                                                                options={[{ value: 'No', label: 'No' }, { value: 'Yes', label: 'Yes' }]}
-                                                            />
-                                                            <InputField label="Maximum lot size per single trade of INDEX Options" name="optionsIndexMaxLot" value={formData.optionsIndexMaxLot} onChange={handleChange} placeholder="20" />
-                                                            <InputField label="Min lot size per single trade of INDEX Options" name="optionsIndexMinLot" value={formData.optionsIndexMinLot} onChange={handleChange} placeholder="0" />
-                                                            <InputField label="Intraday Exposure Options Index" name="optionsIndexIntraday" value={formData.optionsIndexIntraday} onChange={handleChange} placeholder="5" />
-                                                            <InputField label="Holding Exposure Options Index" name="optionsIndexHolding" value={formData.optionsIndexHolding} onChange={handleChange} placeholder="2" />
-                                                        </>
-                                                    )}
-
-                                                    {formData.equityOptionsTrading && (
-                                                        <>
-                                                            <SelectField
-                                                                label="Options Equity Brokerage Type"
-                                                                name="optionsEquityBrokerageType"
-                                                                value={formData.optionsEquityBrokerageType}
-                                                                onChange={handleChange}
-                                                                options={[
-                                                                    { value: 'per_lot', label: 'Per Lot Basis' },
-                                                                    { value: 'per_crore', label: 'Per Crore Basis' }
-                                                                ]}
-                                                            />
-                                                            <InputField label="Options Equity brokerage" name="optionsEquityBrokerage" value={formData.optionsEquityBrokerage} onChange={handleChange} placeholder="20" />
-                                                            <SelectField
-                                                                label="Options Equity Short Selling Allowed"
-                                                                name="optionsEquityShortSelling"
-                                                                value={formData.optionsEquityShortSelling}
-                                                                onChange={handleChange}
-                                                                hint="(Sell First and Buy later)"
-                                                                options={[
-                                                                    { value: 'No', label: 'No' },
-                                                                    { value: 'Yes', label: 'Yes' }
-                                                                ]}
-                                                            />
-                                                            <InputField label="Max lot size per single trade of Equity Options" name="optionsEquityMaxLot" value={formData.optionsEquityMaxLot} onChange={handleChange} placeholder="50" />
-                                                            <InputField label="Min lot size per single trade of Equity Options" name="optionsEquityMinLot" value={formData.optionsEquityMinLot} onChange={handleChange} placeholder="0" />
-                                                            <InputField label="Intraday Exposure Options Equity" name="optionsEquityIntraday" value={formData.optionsEquityIntraday} onChange={handleChange} placeholder="5" />
-                                                            <InputField label="Holding Exposure Options Equity" name="optionsEquityHolding" value={formData.optionsEquityHolding} onChange={handleChange} placeholder="2" />
-                                                        </>
-                                                    )}
-                                                </div>
-
-                                                {/* Column 2 */}
-                                                <div className="space-y-0">
-                                                    {formData.mcxOptionsTrading && (
-                                                        <>
-                                                            <SelectField
-                                                                label="Options MCX Brokerage Type"
-                                                                name="optionsMcxBrokerageType"
-                                                                value={formData.optionsMcxBrokerageType}
-                                                                onChange={handleChange}
-                                                                options={[
-                                                                    { value: 'per_lot', label: 'Per Lot Basis' },
-                                                                    { value: 'per_crore', label: 'Per Crore Basis' }
-                                                                ]}
-                                                            />
-                                                            <InputField label="Options MCX brokerage" name="optionsMcxBrokerage" value={formData.optionsMcxBrokerage} onChange={handleChange} placeholder="20" />
-                                                            <SelectField
-                                                                label="MCX Options Short Selling Allowed"
-                                                                name="optionsMcxShortSelling"
-                                                                value={formData.optionsMcxShortSelling}
-                                                                onChange={handleChange}
-                                                                options={[{ value: 'No', label: 'No' }, { value: 'Yes', label: 'Yes' }]}
-                                                            />
-                                                            <InputField label="Max lot size per single trade of MCX Options" name="optionsMcxMaxLot" value={formData.optionsMcxMaxLot} onChange={handleChange} placeholder="50" />
-                                                            <InputField label="Min lot size per single trade of MCX Options" name="optionsMcxMinLot" value={formData.optionsMcxMinLot} onChange={handleChange} placeholder="0" />
-                                                            <InputField label="Intraday Exposure Options MCX" name="optionsMcxIntraday" value={formData.optionsMcxIntraday} onChange={handleChange} placeholder="5" />
-                                                            <InputField label="Holding Exposure Options MCX" name="optionsMcxHolding" value={formData.optionsMcxHolding} onChange={handleChange} placeholder="2" />
-                                                        </>
-                                                    )}
-                                                    <InputField label="Options Min. Bid Price" name="optionsMinBidPrice" value={formData.optionsMinBidPrice} onChange={handleChange} placeholder="1" />
-                                                    <InputField label="Orders to be away from current price" name="optionsOrdersAway" value={formData.optionsOrdersAway} onChange={handleChange} placeholder="10" />
-                                                    <InputField label="Max Size All Equity Options" name="optionsMaxEquitySizeAll" value={formData.optionsMaxEquitySizeAll} onChange={handleChange} placeholder="200" />
-                                                    <InputField label="Max Size All Index Options" name="optionsMaxIndexSizeAll" value={formData.optionsMaxIndexSizeAll} onChange={handleChange} placeholder="200" />
-                                                    <InputField label="Max Size All MCX Options" name="optionsMaxMcxSizeAll" value={formData.optionsMaxMcxSizeAll} onChange={handleChange} placeholder="200" />
-                                                    <InputField label="Maximum lot size allowed per scrip of Equity Options to be actively open at a time" name="optionsEquityMaxScrip" value={formData.optionsEquityMaxScrip} onChange={handleChange} placeholder="200" />
-                                                    <InputField label="Maximum lot size allowed per scrip of Equity INDEX Options to be actively open at a time" name="optionsIndexMaxScrip" value={formData.optionsIndexMaxScrip} onChange={handleChange} placeholder="200" />
-                                                    <InputField label="Maximum lot size allowed per scrip of MCX Options to be actively open at a time" name="optionsMcxMaxScrip" value={formData.optionsMcxMaxScrip} onChange={handleChange} placeholder="200" />
-                                                </div>
-                                            </div>
-                                        )}
                                     </fieldset>
 
 
