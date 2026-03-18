@@ -34,6 +34,7 @@ const accountRoutes = require('./routes/accountRoutes');
 const portfolioRoutes = require('./routes/portfolioRoutes');
 const supportRoutes = require('./routes/supportRoutes');
 const aiRoutes = require('./routes/aiRoutes');
+const { aiParse, executeVoiceCommand } = require('./controllers/aiController');
 const kiteRoutes = require('./routes/kiteRoutes');
 const bankRoutes = require('./routes/bankRoutes');
 const newClientBankRoutes = require('./routes/newClientBankRoutes');
@@ -69,6 +70,10 @@ app.use('/api/bank', bankRoutes);
 app.use('/api/new-client-bank', newClientBankRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationRoutes);
+
+// ── Root-level voice AI routes (no /api prefix, no auth required for direct access)
+app.post('/ai-parse', aiParse);
+app.post('/execute-command', executeVoiceCommand);
 
 // Routes Placeholder
 app.get('/', (req, res) => {

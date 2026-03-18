@@ -1,26 +1,23 @@
 /**
- * voiceService – Handles submission of audio recordings to the backend.
+ * voiceService – Handles submission of audio recordings and voice commands.
  *
  * If the backend endpoint is unavailable the error is propagated to callers.
  * No sensitive data is logged.
  */
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'https://api.example.com';
-const VOICE_ENDPOINT = `${BASE_URL}/voice/record`;
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const VOICE_ENDPOINT = `${BASE_URL}/api/voice/record`;
+const AI_PARSE_ENDPOINT = `${BASE_URL}/ai-parse`;
+const EXECUTE_COMMAND_ENDPOINT = `${BASE_URL}/execute-command`;
 const TIMEOUT_MS = 30_000;
+
+const getToken = () => localStorage.getItem('traders_token') || '';
 
 /**
  * Upload an audio Blob to the backend voice endpoint.
  * Returns { transcript, aiResponse, id } on success.
- * Throws an Error with a user-friendly message on failure.
- *
- * @param {Blob} audioBlob – WebM audio blob from MediaRecorder
- * @param {Object} meta    – Optional metadata (e.g. timestamp)
- * @returns {Promise<{transcript: string, aiResponse: string, id: string}>}
  */
 export const submitVoiceRecording = async (audioBlob, meta = {}) => {
-    const token = localStorage.getItem('traders_token') || '';
-
     const formData = new FormData();
     formData.append('audio', audioBlob, `recording_${Date.now()}.webm`);
     formData.append('meta', JSON.stringify(meta));
@@ -31,10 +28,7 @@ export const submitVoiceRecording = async (audioBlob, meta = {}) => {
     try {
         const res = await fetch(VOICE_ENDPOINT, {
             method: 'POST',
-            headers: {
-                Authorization: `Bearer ${token}`,
-                // Do NOT set Content-Type – browser sets multipart/form-data boundary automatically
-            },
+            headers: { Authorization: `Bearer ${getToken()}` },
             body: formData,
             signal: controller.signal,
         });
@@ -58,6 +52,85 @@ export const submitVoiceRecording = async (audioBlob, meta = {}) => {
         if (err.name === 'AbortError') {
             throw new Error('Request timed out. Please check your connection and try again.');
         }
+        throw err;
+    }
+};
+
+/**
+ * Send speech text to /ai-parse and return the parsed command JSON.
+ * @param {string} text – Captured speech transcript
+ * @returns {Promise<{ action: string, userId: number, amount: number }>}
+ */
+export const parseVoiceCommand = async (text) => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+    try {
+        const res = await fetch(AI_PARSE_ENDPOINT, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${getToken()}`,
+            },
+            body: JSON.stringify({ text }),
+            signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+
+        if (res.status === 401) {
+            localStorage.clear();
+            window.location.href = '/';
+            throw new Error('Session expired. Please login again.');
+        }
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.message || 'AI parsing failed. Please try again.');
+        }
+
+        return res.json();
+    } catch (err) {
+        clearTimeout(timeoutId);
+        if (err.name === 'AbortError') throw new Error('AI parse request timed out.');
+        throw err;
+    }
+};
+
+/**
+ * Send the parsed command to /execute-command.
+ * @param {object} commandData – JSON from /ai-parse
+ */
+export const executeCommand = async (commandData) => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+    try {
+        const res = await fetch(EXECUTE_COMMAND_ENDPOINT, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${getToken()}`,
+            },
+            body: JSON.stringify(commandData),
+            signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+
+        if (res.status === 401) {
+            localStorage.clear();
+            window.location.href = '/';
+            throw new Error('Session expired. Please login again.');
+        }
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.message || 'Command execution failed. Please try again.');
+        }
+
+        return res.json();
+    } catch (err) {
+        clearTimeout(timeoutId);
+        if (err.name === 'AbortError') throw new Error('Execute command request timed out.');
         throw err;
     }
 };
