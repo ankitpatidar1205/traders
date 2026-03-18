@@ -7,20 +7,8 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import useRiskManagement from '../hooks/useRiskManagement';
+import useNotifications from '../hooks/useNotifications';
 import defaultLogo from '../assets/shrishreenathjitraders.in.png';
-
-// ─── Notification data ────────────────────────────────────────────────────────
-const ALL_NOTIFICATIONS = [
-    { id: 1, title: 'NO CARRY FORWARD IN MARKET', message: 'NO CARRY FORWARD IN MARKET positions sq. Off @ closing', createdAt: '2026-02-13 10:20:05', type: 'alert' },
-    { id: 2, title: 'Update', message: 'Always check updated bank details in app before deposit', createdAt: '2026-02-12 06:12:04', type: 'info' },
-    { id: 3, title: 'Payin Details', message: 'Always check updated bank details in application before deposit', createdAt: '2026-02-11 06:04:16', type: 'info' },
-    { id: 4, title: 'No Carry Forward', message: 'No carry forward allowed today', createdAt: '2026-02-09 22:57:24', type: 'alert' },
-    { id: 5, title: 'Pacify IDFC Payin Closes', message: 'IDFC payin account is now closed', createdAt: '2026-02-09 12:11:23', type: 'warning' },
-    { id: 6, title: 'Account Details Changed', message: 'Bank account details have been updated', createdAt: '2026-02-09 12:11:00', type: 'warning' },
-    { id: 7, title: 'Software Update', message: "Don't take any fresh position, software update in 2-3 days", createdAt: '2024-10-23 10:59:06', type: 'info' },
-    { id: 8, title: 'Market Close Tomorrow', message: 'NSE and MCX Market remain close due to election', createdAt: '2024-11-19 14:51:44', type: 'alert' },
-];
-const DEFAULT_UNREAD_COUNT = 3;
 
 function timeAgo(dateStr) {
     const then = new Date(dateStr.replace(' ', 'T'));
@@ -102,15 +90,14 @@ const TopBar = ({ currentViewLabel, onLogout, onNavigate }) => {
         switchSegment(seg);
     };
 
+    const { notifications, unreadCount, markRead, markAllRead } = useNotifications();
+
     const { m2m, margin, riskState } = useRiskManagement(124500, 250000);
     const [showDropdown, setShowDropdown] = useState(false);
     const [showNotifPanel, setShowNotifPanel] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
     const [settingsSearch, setSettingsSearch] = useState('');
 
-    const [unreadIds, setUnreadIds] = useState(
-        () => new Set(ALL_NOTIFICATIONS.slice(0, DEFAULT_UNREAD_COUNT).map(n => n.id))
-    );
     const [communicationSettings, setCommunicationSettings] = useState({
         whatsapp: true,
         email: true
@@ -131,14 +118,13 @@ const TopBar = ({ currentViewLabel, onLogout, onNavigate }) => {
         return () => document.removeEventListener('mousedown', handler);
     }, []);
 
-    const unreadCount = unreadIds.size;
     const PREVIEW_LIMIT = 6;
-    const notifPreview = ALL_NOTIFICATIONS.slice(0, PREVIEW_LIMIT);
+    const notifPreview = notifications.slice(0, PREVIEW_LIMIT);
 
-    const handleMarkAllRead = () => setUnreadIds(new Set());
+    const handleMarkAllRead = () => markAllRead();
     const handleDismissNotif = (id, e) => {
         e.stopPropagation();
-        setUnreadIds(prev => { const s = new Set(prev); s.delete(id); return s; });
+        markRead(id);
     };
 
     const handleViewAllNotifs = () => { setShowNotifPanel(false); onNavigate?.('notifications'); };
@@ -412,15 +398,21 @@ const TopBar = ({ currentViewLabel, onLogout, onNavigate }) => {
                             </div>
 
                             <div className="max-h-[340px] overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.1) transparent' }}>
+                                {notifPreview.length === 0 && (
+                                    <div className="flex flex-col items-center py-10 gap-2 text-slate-500">
+                                        <Bell className="w-8 h-8 opacity-30" />
+                                        <p className="text-[12px]">No notifications</p>
+                                    </div>
+                                )}
                                 {notifPreview.map((notif) => {
-                                    const isUnread = unreadIds.has(notif.id);
+                                    const isUnread = !notif.is_read;
                                     const style = TYPE_STYLE[notif.type] || TYPE_STYLE.info;
                                     return (
                                         <div
                                             key={notif.id}
                                             className="group relative flex gap-3 px-4 py-3 border-b border-white/5 cursor-pointer transition-all hover:bg-white/4"
                                             style={{ background: isUnread ? style.bg : 'transparent' }}
-                                            onClick={() => setUnreadIds(prev => { const s = new Set(prev); s.delete(notif.id); return s; })}
+                                            onClick={() => markRead(notif.id)}
                                         >
                                             <div className="flex-shrink-0 pt-1">
                                                 <span className="block w-2 h-2 rounded-full mt-0.5" style={{ background: isUnread ? style.dot : 'rgba(255,255,255,0.15)' }} />
@@ -430,7 +422,7 @@ const TopBar = ({ currentViewLabel, onLogout, onNavigate }) => {
                                                     <p className={`text-[12px] font-bold uppercase tracking-wide leading-tight truncate ${isUnread ? 'text-white' : 'text-slate-300'}`}>
                                                         {notif.title}
                                                     </p>
-                                                    <span className="text-[10px] text-slate-500 whitespace-nowrap flex-shrink-0 mt-0.5">{timeAgo(notif.createdAt)}</span>
+                                                    <span className="text-[10px] text-slate-500 whitespace-nowrap flex-shrink-0 mt-0.5">{timeAgo(notif.created_at || notif.createdAt)}</span>
                                                 </div>
                                                 <p className="text-[11px] text-slate-400 leading-relaxed mt-1 line-clamp-2">{notif.message}</p>
                                             </div>

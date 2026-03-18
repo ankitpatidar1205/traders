@@ -58,12 +58,12 @@ const DEFAULT_THEME = {
 
 const applyThemeToCss = (theme) => {
     const root = document.documentElement;
-    if (theme.sidebarColor)    root.style.setProperty('--sidebar-color',    theme.sidebarColor);
-    if (theme.navbarColor)     root.style.setProperty('--navbar-color',     theme.navbarColor);
-    if (theme.primaryColor)    root.style.setProperty('--primary-color',    theme.primaryColor);
-    if (theme.buttonColor)     root.style.setProperty('--button-color',     theme.buttonColor);
-    if (theme.backgroundColor) root.style.setProperty('--bg-color',         theme.backgroundColor);
-    if (theme.textColor)       root.style.setProperty('--text-color',       theme.textColor);
+    root.style.setProperty('--sidebar-color',    theme.sidebarColor    || '#1a2035');
+    root.style.setProperty('--navbar-color',     theme.navbarColor     || '#288c6c');
+    root.style.setProperty('--primary-color',    theme.primaryColor    || '#4ea752');
+    root.style.setProperty('--button-color',     theme.buttonColor     || '#4CAF50');
+    root.style.setProperty('--bg-color',         theme.backgroundColor || '#1a2035');
+    root.style.setProperty('--text-color',       theme.textColor       || '#ffffff');
 };
 
 export const AuthProvider = ({ children }) => {

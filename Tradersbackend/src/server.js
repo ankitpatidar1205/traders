@@ -3,6 +3,9 @@ const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
 const mockEngine = require('./utils/mockEngine');
+const kiteTicker = require('./utils/kiteTicker');
+const runMigrations = require('./config/migrate');
+const { setIo }     = require('./config/socket');
 require('dotenv').config();
 
 const app = express();
@@ -35,7 +38,8 @@ const aiRoutes = require('./routes/aiRoutes');
 const kiteRoutes = require('./routes/kiteRoutes');
 const bankRoutes = require('./routes/bankRoutes');
 const newClientBankRoutes = require('./routes/newClientBankRoutes');
-const adminRoutes = require('./routes/adminRoutes');
+const adminRoutes        = require('./routes/adminRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 const { logIp } = require('./middleware/logger');
 
 // Middleware
@@ -65,19 +69,25 @@ app.use('/api/kite', kiteRoutes);
 app.use('/api/bank', bankRoutes);
 app.use('/api/new-client-bank', newClientBankRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Routes Placeholder
 app.get('/', (req, res) => {
   res.send('Traders API is running...');
 });
 
-// Socket.io logic for Live Prices
+// Socket.io logic
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
+  // Client sends { userId, role } right after connecting
+  socket.on('join', ({ userId, role }) => {
+    if (userId) socket.join(`user:${userId}`);
+    if (role)   socket.join(`role:${role}`);
+  });
+
   socket.on('subscribe_market', (scrips) => {
     console.log(`User ${socket.id} subscribed to:`, scrips);
-    // Join a room for these scrips
   });
 
   socket.on('disconnect', () => {
@@ -85,15 +95,54 @@ io.on('connection', (socket) => {
   });
 });
 
-// Simulation of price updates for Socket.io using the dedicated Mock Engine
+// ── Price Engine: Kite Ticker (real) or Mock Engine (fallback) ──
+let usingLiveData = false;
+
+// Mock engine fallback — always running as backup
 mockEngine.on('update', (prices) => {
-  io.emit('price_update', prices);
+    if (!usingLiveData) {
+        io.emit('price_update', prices);
+    }
+});
+
+// Kite Ticker — real-time WebSocket prices
+kiteTicker.on('update', (prices) => {
+    usingLiveData = true;
+    io.emit('price_update', prices);
+});
+
+kiteTicker.on('full_update', (fullPrices) => {
+    io.emit('price_full_update', fullPrices);
 });
 
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-});
+
+// Share io instance with controllers (before migrations)
+setIo(io);
+
+// Run DB migrations first, then start server
+runMigrations()
+    .then(async () => {
+        server.listen(PORT, () => {
+            console.log(`🚀 Server running on port ${PORT}`);
+        });
+
+        // Try to start Kite Ticker for live data
+        try {
+            const started = await kiteTicker.start();
+            if (started) {
+                console.log('📈 Kite Ticker started — live market data active');
+            } else {
+                console.log('📉 Kite Ticker not available — using mock engine for prices');
+            }
+        } catch (err) {
+            console.log('📉 Kite Ticker failed:', err.message, '— using mock engine');
+        }
+    })
+    .catch((err) => {
+        console.error('❌ Migration failed, server not started:', err.message);
+        process.exit(1);
+    });
 
 // Trigger nodemon restart
 

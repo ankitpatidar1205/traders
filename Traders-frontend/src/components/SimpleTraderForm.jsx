@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, User, DollarSign, Lock, Shield, Mail } from 'lucide-react';
+import { ArrowLeft, User, DollarSign, Lock, Shield, Mail, Phone } from 'lucide-react';
 import * as api from '../services/api';
 
 const SimpleTraderForm = ({ onBack, onSave }) => {
@@ -8,6 +8,7 @@ const SimpleTraderForm = ({ onBack, onSave }) => {
     const [formData, setFormData] = useState({
         fullName: '',
         email: '',
+        mobile: '',
         username: '',
         password: '',
         creditLimit: '0',
@@ -39,11 +40,14 @@ const SimpleTraderForm = ({ onBack, onSave }) => {
         try {
             // Step 1: Create the user
             const result = await api.createClient({
-                fullName: formData.fullName,
-                email: formData.email,
-                username: formData.username,
-                password: formData.password,
+                fullName: formData.fullName || undefined,
+                email: formData.email || undefined,
+                mobile: formData.mobile || undefined,
+                username: formData.username || undefined,
+                password: formData.password || undefined,
                 creditLimit: formData.creditLimit,
+                isDemo: formData.isDemo,
+                status: formData.accountStatus ? 'Active' : 'Suspended',
                 role: 'TRADER'
             });
 
@@ -54,6 +58,7 @@ const SimpleTraderForm = ({ onBack, onSave }) => {
                 allowFreshEntry: formData.allowFreshEntry,
                 allowOrdersBetweenHL: formData.allowOrdersBetweenHL,
                 tradeEquityUnits: formData.tradeEquityUnits,
+                autoCloseEnabled: formData.autoCloseEnabled,
                 autoClosePct: formData.autoClosePct,
                 notifyPct: formData.notifyPct,
                 minProfitTime: formData.minProfitTime,
@@ -97,7 +102,6 @@ const SimpleTraderForm = ({ onBack, onSave }) => {
                                     name="fullName"
                                     value={formData.fullName}
                                     onChange={handleChange}
-                                    required
                                     className="w-full bg-[#1a2035] border border-white/10 rounded px-10 py-3 text-white focus:outline-none focus:border-[#4caf50] transition-all"
                                     placeholder="Enter full name"
                                 />
@@ -112,9 +116,22 @@ const SimpleTraderForm = ({ onBack, onSave }) => {
                                     name="email"
                                     value={formData.email}
                                     onChange={handleChange}
-                                    required
                                     className="w-full bg-[#1a2035] border border-white/10 rounded px-10 py-3 text-white focus:outline-none focus:border-[#4caf50] transition-all"
                                     placeholder="email@example.com"
+                                />
+                            </div>
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-slate-400 text-xs font-bold uppercase tracking-widest px-1">Mobile</label>
+                            <div className="relative">
+                                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                                <input
+                                    type="text"
+                                    name="mobile"
+                                    value={formData.mobile}
+                                    onChange={handleChange}
+                                    className="w-full bg-[#1a2035] border border-white/10 rounded px-10 py-3 text-white focus:outline-none focus:border-[#4caf50] transition-all"
+                                    placeholder="Enter mobile number"
                                 />
                             </div>
                         </div>
@@ -127,7 +144,6 @@ const SimpleTraderForm = ({ onBack, onSave }) => {
                                     name="username"
                                     value={formData.username}
                                     onChange={handleChange}
-                                    required
                                     className="w-full bg-[#1a2035] border border-white/10 rounded px-10 py-3 text-white focus:outline-none focus:border-[#4caf50] transition-all"
                                     placeholder="trader_user"
                                 />
@@ -142,7 +158,6 @@ const SimpleTraderForm = ({ onBack, onSave }) => {
                                     name="password"
                                     value={formData.password}
                                     onChange={handleChange}
-                                    required
                                     className="w-full bg-[#1a2035] border border-white/10 rounded px-10 py-3 text-white focus:outline-none focus:border-[#4caf50] transition-all"
                                     placeholder="Enter password"
                                 />
@@ -157,7 +172,6 @@ const SimpleTraderForm = ({ onBack, onSave }) => {
                                     name="creditLimit"
                                     value={formData.creditLimit}
                                     onChange={handleChange}
-                                    required
                                     className="w-full bg-[#1a2035] border border-white/10 rounded px-10 py-3 text-white focus:outline-none focus:border-[#4caf50] transition-all"
                                     placeholder="0"
                                 />

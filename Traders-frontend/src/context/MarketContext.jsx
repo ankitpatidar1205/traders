@@ -9,6 +9,7 @@ export const useMarket = () => useContext(MarketContext);
 
 export const MarketProvider = ({ children }) => {
     const [prices, setPrices] = useState({});
+    const [fullPrices, setFullPrices] = useState({});
     const [connected, setConnected] = useState(false);
     const [indices, setIndices] = useState([]);
     const [watchlist, setWatchlist] = useState([]);
@@ -42,6 +43,10 @@ export const MarketProvider = ({ children }) => {
             setPrices(newPrices);
         });
 
+        socket.on('price_full_update', (newFullPrices) => {
+            setFullPrices(newFullPrices);
+        });
+
         socket.on('disconnect', () => {
             setConnected(false);
         });
@@ -50,7 +55,7 @@ export const MarketProvider = ({ children }) => {
     }, [user]);
 
     return (
-        <MarketContext.Provider value={{ prices, connected, indices, watchlist }}>
+        <MarketContext.Provider value={{ prices, fullPrices, connected, indices, watchlist }}>
             {children}
         </MarketContext.Provider>
     );

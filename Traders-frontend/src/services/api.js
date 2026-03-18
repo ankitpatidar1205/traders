@@ -85,7 +85,7 @@ export const verifyTransactionPassword = async (password) => {
 export const getClients = async (params = {}) => {
     const query = new URLSearchParams(params).toString();
     const res = await fetch(`${BASE_URL}/users?${query}`, { headers: getHeaders() });
-    return handleResponse(res);
+    return handleResponse(res);    
 };
 
 export const getClientById = async (id) => {
@@ -598,5 +598,123 @@ export const saveAdminPanelSettings = async (userId, theme, logoFile, profileIma
 
 export const getAdminPanelSettings = async (userId) => {
     const res = await fetch(`${BASE_URL}/admin/panel-settings/${userId}`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+// ─── NOTIFICATIONS ────────────────────────────────────
+export const getNotifications = async () => {
+    const res = await fetch(`${BASE_URL}/notifications`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const markNotificationRead = async (id) => {
+    const res = await fetch(`${BASE_URL}/notifications/${id}/read`, { method: 'PUT', headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const markAllNotificationsRead = async () => {
+    const res = await fetch(`${BASE_URL}/notifications/read-all`, { method: 'PUT', headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const createNotification = async (data) => {
+    const res = await fetch(`${BASE_URL}/notifications`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify(data),
+    });
+    return handleResponse(res);
+};
+
+export const deleteNotification = async (id) => {
+    const res = await fetch(`${BASE_URL}/notifications/${id}`, { method: 'DELETE', headers: getHeaders() });
+    return handleResponse(res);
+};
+
+// ─── KITE API ─────────────────────────────────────────
+export const getKiteLoginURL = async () => {
+    const res = await fetch(`${BASE_URL}/kite/login`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const getKiteStatus = async () => {
+    const res = await fetch(`${BASE_URL}/kite/status`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const disconnectKite = async () => {
+    const res = await fetch(`${BASE_URL}/kite/disconnect`, { method: 'POST', headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const getKiteProfile = async () => {
+    const res = await fetch(`${BASE_URL}/kite/profile`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const getKiteMargins = async () => {
+    const res = await fetch(`${BASE_URL}/kite/margins`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const getKiteHoldings = async () => {
+    const res = await fetch(`${BASE_URL}/kite/holdings`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const getKitePositions = async () => {
+    const res = await fetch(`${BASE_URL}/kite/positions`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const getKiteOrders = async () => {
+    const res = await fetch(`${BASE_URL}/kite/orders`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const getKiteTrades = async () => {
+    const res = await fetch(`${BASE_URL}/kite/trades`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const getKiteQuote = async (instruments) => {
+    const res = await fetch(`${BASE_URL}/kite/quote?i=${encodeURIComponent(instruments)}`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const getKiteLTP = async (instruments) => {
+    const res = await fetch(`${BASE_URL}/kite/quote/ltp?i=${encodeURIComponent(instruments)}`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const getKiteInstruments = async () => {
+    const res = await fetch(`${BASE_URL}/kite/instruments`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const getKiteTickerStatus = async () => {
+    const res = await fetch(`${BASE_URL}/kite/ticker/status`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const getKiteTickerPrices = async () => {
+    const res = await fetch(`${BASE_URL}/kite/ticker/prices`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
+export const subscribeKiteTicker = async (tokens, instrumentMap) => {
+    const res = await fetch(`${BASE_URL}/kite/ticker/subscribe`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ tokens, instrumentMap }),
+    });
+    return handleResponse(res);
+};
+
+export const reconnectKiteTicker = async () => {
+    const res = await fetch(`${BASE_URL}/kite/ticker/reconnect`, {
+        method: 'POST',
+        headers: getHeaders(),
+    });
     return handleResponse(res);
 };

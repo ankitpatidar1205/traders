@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, Clock, Info } from 'lucide-react';
+import * as api from '../services/api';
 
 const CollapsibleSection = ({ title, children, isOpen, onToggle, icon: Icon }) => (
   <div className="mb-6 bg-[#1a2236] rounded-lg border border-[#2d3748] overflow-hidden transition-all duration-300 shadow-sm hover:shadow-md">
@@ -231,9 +232,18 @@ const ClientDetailsForm = ({ onBack, onSave, mode = 'edit', initialData = null }
     accountStatus: true,
     clientGroup: 'Default',
     dealerMapping: 'Admin',
-    creditLimit: '0',
-    demoAccount: false,
+    creditLimit: initialData?.credit_limit ?? '0',
+    demoAccount: initialData?.is_demo ? true : false,
     segment: 'NIFTY50', // Primary segment
+    // Config settings
+    allowFreshEntry: true,
+    allowOrdersBetweenHL: true,
+    tradeEquityUnits: false,
+    autoCloseEnabled: true,
+    autoClosePct: '90',
+    notifyPct: '70',
+    minProfitTime: '120',
+    scalpingSlEnabled: 'Enabled',
     alerts: {
       risk: true,
       tradeCut: true,
@@ -266,23 +276,62 @@ const ClientDetailsForm = ({ onBack, onSave, mode = 'edit', initialData = null }
   };
 
   const [errors, setErrors] = useState({});
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
 
-  const validate = () => {
-    let newErrors = {};
-    if (!formData.name) newErrors.name = 'Name is required';
-    if (!formData.username) newErrors.username = 'Username is required';
-    if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = 'Valid Email is required';
-    if (!formData.mobile || !/^\d{10}$/.test(formData.mobile)) newErrors.mobile = 'Valid 10-digit Mobile is required';
+  const handleSave = async () => {
+    const userId = initialData?.id;
+    if (!userId) { onSave(formData); return; }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+    setSaving(true);
+    setSaveError('');
+    try {
+      // Step 1: Update user profile fields
+      await api.updateUser(userId, {
+        fullName: formData.name || undefined,
+        email: formData.email || undefined,
+        mobile: formData.mobile || undefined,
+        city: formData.city || undefined,
+        creditLimit: formData.creditLimit,
+        isDemo: formData.demoAccount,
+        status: formData.accountStatus ? 'Active' : 'Suspended',
+      });
 
-  const handleSave = () => {
-    if (validate()) {
+      // Step 2: Update client settings + full config as JSON
+      await api.updateClientSettings(userId, {
+        allowFreshEntry: formData.allowFreshEntry,
+        allowOrdersBetweenHL: formData.allowOrdersBetweenHL,
+        tradeEquityUnits: formData.tradeEquityUnits,
+        autoCloseEnabled: formData.autoCloseEnabled,
+        autoClosePct: formData.autoClosePct,
+        notifyPct: formData.notifyPct,
+        minProfitTime: formData.minProfitTime,
+        scalpingSlEnabled: formData.scalpingSlEnabled,
+        config: { alerts: formData.alerts, segments: formData.segments },
+      });
+
+      // Step 3: Password change if provided
+      if (formData.password) {
+        await api.updateUserPasswords(userId, { newPassword: formData.password });
+      }
+
+      // Step 4: Upload documents if any files selected
+      const docs = formData.docs || {};
+      const hasFiles = Object.values(docs).some(v => v instanceof File);
+      if (hasFiles) {
+        const docFd = new FormData();
+        if (docs.pan instanceof File)       docFd.append('panScreenshot', docs.pan);
+        if (docs.aadhaar instanceof File)   docFd.append('aadharFront', docs.aadhaar);
+        if (docs.agreement instanceof File) docFd.append('bankProof', docs.agreement);
+        if (docs.photo instanceof File)     docFd.append('photo', docs.photo);
+        await api.updateDocuments(userId, docFd);
+      }
+
       onSave(formData);
-    } else {
-      alert('Please fix the errors in the form before saving.');
+    } catch (err) {
+      setSaveError(err.message || 'Failed to save');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -438,12 +487,18 @@ const ClientDetailsForm = ({ onBack, onSave, mode = 'edit', initialData = null }
           <SegmentFields segmentKey="crypto" label="Crypto (Bitcoin etc.)" formData={formData} onChange={handleChange} handleSegmentChange={handleSegmentChange} toggleSection={toggleSection} openSections={openSections} errors={errors} />
 
           {/* Action Button */}
-          <div className="pt-10 pb-6">
+          <div className="pt-10 pb-6 space-y-3">
+            {saveError && (
+              <div className="bg-red-500/10 border border-red-500/30 text-red-400 rounded px-4 py-3 text-sm">
+                {saveError}
+              </div>
+            )}
             <button
               onClick={handleSave}
-              className="w-full md:w-auto bg-gradient-to-r from-[#4CAF50] to-[#43a047] hover:from-[#43a047] hover:to-[#388e3c] text-white font-black py-4 px-12 rounded-lg transition-all uppercase tracking-widest text-sm shadow-[0_10px_20px_-5px_rgba(76,175,80,0.4)] active:scale-95"
+              disabled={saving}
+              className="w-full md:w-auto bg-gradient-to-r from-[#4CAF50] to-[#43a047] hover:from-[#43a047] hover:to-[#388e3c] text-white font-black py-4 px-12 rounded-lg transition-all uppercase tracking-widest text-sm shadow-[0_10px_20px_-5px_rgba(76,175,80,0.4)] active:scale-95 disabled:opacity-60"
             >
-              {mode === 'create' ? 'Verify & Create Client' : 'Update Configuration'}
+              {saving ? 'SAVING...' : (mode === 'create' ? 'Verify & Create Client' : 'Update Configuration')}
             </button>
           </div>
         </div>

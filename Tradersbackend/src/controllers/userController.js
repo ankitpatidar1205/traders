@@ -147,12 +147,16 @@ const updateUser = async (req, res) => {
 const updateClientSettings = async (req, res) => {
     const {
         allowFreshEntry, allowOrdersBetweenHL, tradeEquityUnits,
+        autoCloseEnabled,
         autoClosePct, notifyPct, minProfitTime, scalpingSlEnabled,
         config  // full complex config JSON (all segment data)
     } = req.body;
 
     try {
-        const configJson = config ? JSON.stringify(config) : null;
+        // Merge autoCloseEnabled into config JSON so it persists
+        const configObj = config || {};
+        if (autoCloseEnabled !== undefined) configObj.autoCloseEnabled = autoCloseEnabled;
+        const configJson = Object.keys(configObj).length > 0 ? JSON.stringify(configObj) : null;
 
         await db.execute(`
             INSERT INTO client_settings
