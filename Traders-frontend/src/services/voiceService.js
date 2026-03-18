@@ -5,10 +5,10 @@
  * No sensitive data is logged.
  */
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-const VOICE_ENDPOINT = `${BASE_URL}/api/voice/record`;
-const AI_PARSE_ENDPOINT = `${BASE_URL}/ai-parse`;
-const EXECUTE_COMMAND_ENDPOINT = `${BASE_URL}/execute-command`;
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const VOICE_ENDPOINT = `${BASE_URL}/voice/record`;
+const AI_PARSE_ENDPOINT = `${BASE_URL}/ai/ai-parse`;
+const EXECUTE_COMMAND_ENDPOINT = `${BASE_URL}/ai/execute-command`;
 const TIMEOUT_MS = 30_000;
 
 const getToken = () => localStorage.getItem('traders_token') || '';
