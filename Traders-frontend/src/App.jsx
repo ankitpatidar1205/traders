@@ -87,6 +87,7 @@ function App() {
 
             // Proceed with AuthContext login
             authLogin(response.user.username, response.user.role, {
+                ...response.user,
                 userId: response.user.id,
                 fullName: response.user.fullName,
             });
@@ -228,18 +229,18 @@ function App() {
                 <Route path="/accounts" element={<ProtectedRoute viewId="accounts"><AccountsPage /></ProtectedRoute>} />
                 <Route path="/banned" element={<ProtectedRoute viewId="banned"><BannedLimitOrdersPage /></ProtectedRoute>} />
                 <Route path="/bank" element={<ProtectedRoute viewId="bank"><BankDetailsPage /></ProtectedRoute>} />
-                <Route path="/trades" element={<TradesPage trades={trades} onCreateClick={() => setView('create-trade')} />} />
+                <Route path="/trades" element={<ProtectedRoute viewId="trades"><TradesPage trades={trades} onCreateClick={() => setView('create-trade')} /></ProtectedRoute>} />
                 <Route path="/tickers" element={<ProtectedRoute viewId="tickers"><TickersPage /></ProtectedRoute>} />
-                <Route path="/broker-m2m" element={<BrokerM2MPage />} />
-                <Route path="/active-positions" element={<ActivePositionsPage onNavigate={setView} />} />
+                <Route path="/broker-m2m" element={<ProtectedRoute viewId="broker-m2m"><BrokerM2MPage /></ProtectedRoute>} />
+                <Route path="/active-positions" element={<ProtectedRoute viewId="active-positions"><ActivePositionsPage onNavigate={setView} /></ProtectedRoute>} />
                 <Route path="/funds" element={<TraderFundsPage onNavigate={setView} />} />
                 <Route path="/create-fund" element={<CreateFundForm onBack={() => setView('funds')} onSave={(data) => handleActionSuccess('Fund entry created successfully', 'funds')} />} />
-                <Route path="/active-trades" element={<ActiveTradesPage />} />
-                <Route path="/closed-trades" element={<ClosedTradesPage />} />
-                <Route path="/market-watch" element={<MarketWatchPage />} />
+                <Route path="/active-trades" element={<ProtectedRoute viewId="active-trades"><ActiveTradesPage /></ProtectedRoute>} />
+                <Route path="/closed-trades" element={<ProtectedRoute viewId="closed-trades"><ClosedTradesPage /></ProtectedRoute>} />
+                <Route path="/market-watch" element={<ProtectedRoute viewId="market-watch"><MarketWatchPage /></ProtectedRoute>} />
                 <Route path="/action-ledger" element={<ProtectedRoute viewId="action-ledger"><ActionLedgerPage /></ProtectedRoute>} />
                 <Route path="/notifications" element={<NotificationsPage />} />
-                <Route path="/closed-positions" element={<ClosedPositionsPage />} />
+                <Route path="/closed-positions" element={<ProtectedRoute viewId="closed-positions"><ClosedPositionsPage /></ProtectedRoute>} />
                 
                 <Route path="/trading-clients" element={<ProtectedRoute viewId="trading-clients"><TradingClientsPage
                     onLogout={handleLogout}
@@ -279,8 +280,8 @@ function App() {
                 <Route path="/deposit-requests" element={<ProtectedRoute viewId="deposit-requests"><DepositRequestsPage /></ProtectedRoute>} />
                 <Route path="/negative-balance" element={<ProtectedRoute viewId="negative-balance"><NegativeBalanceTxnsPage /></ProtectedRoute>} />
                 
-                <Route path="/pending-orders" element={<PendingOrdersPage />} />
-                <Route path="/scrip-data" element={<ScripDataPage />} />
+                <Route path="/pending-orders" element={<ProtectedRoute viewId="pending-orders"><PendingOrdersPage /></ProtectedRoute>} />
+                <Route path="/scrip-data" element={<ProtectedRoute viewId="scrip-data"><ScripDataPage /></ProtectedRoute>} />
                 <Route path="/group-trades" element={<ProtectedRoute viewId="group-trades"><GroupTradesPage /></ProtectedRoute>} />
                 <Route path="/ip-logins" element={<ProtectedRoute viewId="ip-logins"><IpLoginsPage /></ProtectedRoute>} />
                 <Route path="/trade-ip-tracking" element={<ProtectedRoute viewId="trade-ip-tracking"><TradeIpTrackingPage /></ProtectedRoute>} />

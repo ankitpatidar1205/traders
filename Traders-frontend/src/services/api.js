@@ -342,6 +342,11 @@ export const updateUser = async (id, data) => {
 };
 
 // ─── CLIENT SETTINGS ─────────────────────────────────
+export const getClientSettings = async (id) => {
+    const res = await fetch(`${BASE_URL}/users/${id}`, { headers: getHeaders() });
+    return handleResponse(res);
+};
+
 export const updateClientSettings = async (id, data) => {
     const res = await fetch(`${BASE_URL}/users/${id}/settings`, {
         method: 'PUT',
