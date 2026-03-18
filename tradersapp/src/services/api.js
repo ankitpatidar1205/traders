@@ -27,8 +27,14 @@ const getHeaders = async () => {
 
 const handleResponse = async (response) => {
     if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        throw new Error(err.message || 'Something went wrong.');
+        try {
+            const err = await response.json();
+            console.log('Server error response:', err);
+            throw new Error(err.message || `HTTP ${response.status}: Something went wrong.`);
+        } catch (parseErr) {
+            console.log('Failed to parse error response, raw status:', response.status);
+            throw new Error(`HTTP Error ${response.status}`);
+        }
     }
     return response.json();
 };
@@ -125,28 +131,41 @@ export const changePassword = async (currentPassword, newPassword) => {
 };
 
 export const createDeposit = async (amount, screenshotUri) => {
-    const formData = new FormData();
-    formData.append('amount', amount);
-    formData.append('type', 'DEPOSIT');
+    try {
+        const formData = new FormData();
+        formData.append('amount', amount);
+        formData.append('type', 'DEPOSIT');
 
-    if (screenshotUri) {
-        const filename = screenshotUri.split('/').pop();
-        const match = /\.(\w+)$/.exec(filename);
-        const type = match ? `image/${match[1]}` : `image`;
-        formData.append('screenshot', {
-            uri: screenshotUri,
-            name: filename,
-            type
+        if (screenshotUri) {
+            const filename = screenshotUri.split('/').pop();
+            const match = /\.(\w+)$/.exec(filename);
+            const type = match ? `image/${match[1]}` : `image`;
+            formData.append('screenshot', {
+                uri: screenshotUri,
+                name: filename,
+                type
+            });
+        }
+
+        const headers = await getHeaders();
+        delete headers['Content-Type'];
+
+        console.log('DEBUG: Sending deposit request to:', `${BASE_URL}/requests`);
+
+        const res = await fetch(`${BASE_URL}/requests`, {
+            method: 'POST',
+            headers: headers,
+            body: formData,
         });
+
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({ message: 'Unknown error' }));
+            throw new Error(err.message || `Server error: ${res.status}`);
+        }
+
+        return res.json();
+    } catch (error) {
+        console.error('Deposit error:', error.message);
+        throw error;
     }
-
-    const headers = await getHeaders();
-    delete headers['Content-Type'];
-
-    const res = await fetch(`${BASE_URL}/requests`, {
-        method: 'POST',
-        headers: headers,
-        body: formData,
-    });
-    return handleResponse(res);
 };

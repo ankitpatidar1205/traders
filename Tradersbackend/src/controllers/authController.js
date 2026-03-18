@@ -78,7 +78,7 @@ const login = async (req, res) => {
         
         // Granular fields for the improved schema
         const deviceModel = req.body.deviceInfo || device;
-        const os = req.body.os || (userAgent?.includes('Android') ? 'Android' : userAgent?.includes('iPhone') ? 'iOS' : 'Web');
+        const os = req.body.os || (userAgent?.includes('Android') || userAgent?.includes('okhttp') ? 'Android' : userAgent?.includes('iPhone') ? 'iOS' : 'Web');
         const city = req.body.city || (location.includes(',') ? location.split(',')[0].trim() : '');
         const country = req.body.country || (location.includes(',') ? location.split(',')[1].trim() : '');
         const deviceInfo = req.body.deviceInfo || userAgent || 'Unknown';

@@ -20,11 +20,13 @@ import ScreenWrapper from '../../components/ScreenWrapper';
 const { width } = Dimensions.get('window');
 
 const OrderDetailScreen = ({ route, navigation }) => {
-    const { name = 'ALUMINIUM', item = {} } = route.params || {};
+    const { name = 'ALUMINIUM', item = {}, category = '' } = route.params || {};
     const { addTrade, addNotification, livePrices } = useTrades();
     const livePrice = livePrices[name] || item.ltp || '308.15';
 
     const displayItemName = name.includes('26FEBFUT') ? name : `${name.toUpperCase()}26FEBFUT`;
+    const isNSE = category.includes('NSE'); // Check category from watchlist
+    const quantityLabel = isNSE ? 'Lot' : 'Quantity';
 
     const [activeTab, setActiveTab] = useState('Market');
     const [orderType, setOrderType] = useState('Mega');
@@ -73,7 +75,7 @@ const OrderDetailScreen = ({ route, navigation }) => {
                 <View style={{ width: 40 }} />
                 <Text style={styles.title}>{displayItemName}</Text>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.closeBtn}>
-                    <X size={32} color="white" />
+                    <X size={24} color="white" />
                 </TouchableOpacity>
             </View>
 
@@ -105,9 +107,9 @@ const OrderDetailScreen = ({ route, navigation }) => {
                 </View>
 
 
-                {/* Form Fields - Label changed to Quantity as per user request */}
+                {/* Form Fields - Label changes based on market type (Lot for NSE, Quantity for MCX) */}
                 <View style={styles.fieldBlock}>
-                    <Text style={styles.hintLabel}>Quantity</Text>
+                    <Text style={styles.hintLabel}>{quantityLabel}</Text>
                     <TextInput
                         style={styles.valInput}
                         value={lots}
@@ -233,30 +235,32 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 15,
-        paddingVertical: 10,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
         backgroundColor: 'transparent',
     },
     title: {
         color: 'white',
-        fontSize: 18,
-        fontWeight: 'bold',
+        fontSize: 16,
+        fontWeight: '700',
         textAlign: 'center',
         flex: 1,
+        letterSpacing: 0.5,
     },
     closeBtn: {
-        padding: 5,
+        padding: 4,
     },
     content: {
-        paddingHorizontal: 15,
-        paddingTop: 5,
+        paddingHorizontal: 12,
+        paddingTop: 3,
+        paddingBottom: 15,
     },
     tabOuter: {
         flexDirection: 'row',
-        height: 44,
+        height: 40,
         borderRadius: 2,
         overflow: 'hidden',
-        marginBottom: 8,
+        marginBottom: 10,
     },
     tabPart: {
         flex: 1,
@@ -270,8 +274,8 @@ const styles = StyleSheet.create({
         backgroundColor: '#1E2D44',
     },
     tabLabel: {
-        fontSize: 17,
-        fontWeight: '600',
+        fontSize: 14,
+        fontWeight: '700',
     },
     labelWhite: {
         color: 'white',
@@ -311,30 +315,32 @@ const styles = StyleSheet.create({
         fontWeight: '500',
     },
     fieldBlock: {
-        marginTop: 10,
-        marginBottom: 20,
+        marginTop: 8,
+        marginBottom: 12,
     },
     hintLabel: {
-        color: 'white',
-        fontSize: 17,
+        color: '#B0BEC5',
+        fontSize: 12,
+        fontWeight: '600',
+        marginBottom: 6,
     },
     valInput: {
         color: 'white',
-        fontSize: 20,
-        height: 32,
+        fontSize: 16,
+        height: 28,
         padding: 0,
-        fontWeight: '500',
+        fontWeight: '700',
     },
     lineDivider: {
         height: 1,
-        backgroundColor: 'rgba(255,255,255,0.7)',
-        marginTop: 5,
+        backgroundColor: 'rgba(255,255,255,0.5)',
+        marginTop: 4,
     },
     marketPriceRow: {
         flexDirection: 'row',
-        height: 60,
-        marginTop: 15, // Gap added back
-        marginBottom: 20,
+        height: 55,
+        marginTop: 8,
+        marginBottom: 12,
         borderRadius: 2,
         overflow: 'hidden',
     },
@@ -345,49 +351,54 @@ const styles = StyleSheet.create({
     },
     marketPriceLabel: {
         color: 'white',
-        fontSize: 14,
+        fontSize: 11,
+        fontWeight: '600',
     },
     marketPriceVal: {
         color: 'white',
-        fontSize: 24,
-        fontWeight: 'bold',
+        fontSize: 18,
+        fontWeight: '700',
+        marginTop: 2,
     },
     actionGrid: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginTop: 15, // Gap added back
-        marginVertical: 15,
+        marginTop: 8,
+        marginBottom: 12,
     },
     btnAction: {
         flex: 0.49,
-        height: 48,
+        height: 44,
         justifyContent: 'center',
         alignItems: 'center',
         borderRadius: 2,
     },
     btnActionText: {
         color: 'white',
-        fontSize: 16,
-        fontWeight: 'bold',
+        fontSize: 13,
+        fontWeight: '700',
     },
     statsWrapper: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        marginTop: 10,
+        marginTop: 8,
     },
     statCell: {
         width: '33.33%',
-        marginBottom: 15, // Increased vertical gap to match screenshot
+        marginBottom: 12,
+        paddingHorizontal: 4,
     },
     statCellLabel: {
-        color: 'rgba(255,255,255,0.8)',
-        fontSize: 14,
-        marginBottom: 2,
+        color: '#B0BEC5',
+        fontSize: 11,
+        marginBottom: 3,
+        opacity: 0.85,
+        fontWeight: '600',
     },
     statCellValue: {
         color: 'white',
-        fontSize: 20,
-        fontWeight: 'bold',
+        fontSize: 14,
+        fontWeight: '700',
     },
     modalBgLayer: {
         flex: 1,

@@ -1,13 +1,19 @@
 const ImageKit = require('imagekit');
 
-let imagekit;
+const credentialsPresent = 
+    process.env.IMAGEKIT_PUBLIC_KEY && 
+    process.env.IMAGEKIT_PRIVATE_KEY && 
+    process.env.IMAGEKIT_URL_ENDPOINT;
 
-if (process.env.IMAGEKIT_PUBLIC_KEY && process.env.IMAGEKIT_PRIVATE_KEY && process.env.IMAGEKIT_URL_ENDPOINT) {
+let imagekit = null;
+
+if (credentialsPresent) {
     imagekit = new ImageKit({
         publicKey: process.env.IMAGEKIT_PUBLIC_KEY,
         privateKey: process.env.IMAGEKIT_PRIVATE_KEY,
         urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT
     });
+    console.log('✅ ImageKit initialized successfully');
 } else {
     console.warn("⚠️ ImageKit environment variables are missing. Image uploads will not work.");
     imagekit = {
@@ -18,12 +24,12 @@ if (process.env.IMAGEKIT_PUBLIC_KEY && process.env.IMAGEKIT_PRIVATE_KEY && proce
 
 /**
  * Upload a file buffer to ImageKit
- * @param {Buffer} fileBuffer - The file buffer
- * @param {string} fileName - Original file name
- * @param {string} folder - Folder path in ImageKit (e.g., '/traders/kyc')
- * @returns {Promise<{url: string, fileId: string, name: string}>}
  */
 const uploadFile = async (fileBuffer, fileName, folder = '/traders/documents') => {
+    if (!imagekit) {
+        console.error('❌ ImageKit NOT initialized. Cannot upload file.');
+        throw new Error('ImageKit credentials missing. Please check backend config.');
+    }
     const response = await imagekit.upload({
         file: fileBuffer.toString('base64'),
         fileName: fileName,
@@ -42,7 +48,7 @@ const uploadFile = async (fileBuffer, fileName, folder = '/traders/documents') =
  * Delete a file from ImageKit by fileId
  */
 const deleteFile = async (fileId) => {
-    if (!fileId) return;
+    if (!imagekit || !fileId) return;
     try {
         await imagekit.deleteFile(fileId);
     } catch (err) {

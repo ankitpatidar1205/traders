@@ -83,39 +83,60 @@ const updateRequestStatus = async (req, res) => {
 };
 
 const createRequest = async (req, res) => {
-    const { 
-        amount, 
-        type, 
-        bankName, 
-        accountHolder, 
-        accountNumber, 
-        ifscCode, 
-        upiId, 
-        paymentMethod 
+    console.log('\n\n=== CREATING DEPOSIT REQUEST ===');
+    console.log('User ID:', req.user?.id);
+    console.log('User Role:', req.user?.role);
+    console.log('Body:', req.body);
+    console.log('File:', req.file ? { name: req.file.filename, size: req.file.size } : 'No file');
+
+    const {
+        amount,
+        type,
+        bankName,
+        accountHolder,
+        accountNumber,
+        ifscCode,
+        upiId,
+        paymentMethod
     } = req.body; // type: DEPOSIT or WITHDRAW
     const userId = req.user.id;
     let screenshotUrl = null;
 
-    if (req.file) {
-        // Assume file is uploaded to /uploads/
-        screenshotUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
-    }
+    console.log('Extracted: amount=' + amount + ', type=' + type);
 
     try {
+        // Validate required fields
+        if (!amount || !type) {
+            return res.status(400).json({ message: 'Amount and type are required' });
+        }
+
+        if (req.file) {
+            // Assume file is uploaded to /uploads/
+            screenshotUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+            console.log('DEBUG: Screenshot URL:', screenshotUrl);
+        }
+
         const [result] = await db.execute(
             'INSERT INTO payment_requests (user_id, amount, type, screenshot_url, bank_name, account_holder, account_number, ifsc_code, upi_id, payment_method, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "PENDING")',
-            [userId, amount, type, screenshotUrl, bankName, accountHolder, accountNumber, ifscCode, upiId, paymentMethod]
+            [userId, amount, type, screenshotUrl, bankName || null, accountHolder || null, accountNumber || null, ifscCode || null, upiId || null, paymentMethod || null]
         );
-        
-        await logAction(userId, `CREATE_${type}_REQUEST`, 'payment_requests', `User created ${type} request of ${amount}`);
-        
-        res.status(201).json({ 
-            message: 'Request created successfully', 
-            id: result.insertId 
+
+        console.log('DEBUG: Request created with ID:', result.insertId);
+
+        // Log action (don't fail if logging fails)
+        try {
+            await logAction(userId, `CREATE_${type}_REQUEST`, 'payment_requests', `User created ${type} request of ${amount}`);
+        } catch (logErr) {
+            console.warn('Warning: Failed to log action:', logErr.message);
+        }
+
+        res.status(201).json({
+            message: 'Request created successfully',
+            id: result.insertId
         });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Internal Server Error' });
+        console.error('ERROR in createRequest:', err.message, err.stack);
+        res.status(500).json({ message: err.message || 'Internal Server Error' });
     }
 };
 

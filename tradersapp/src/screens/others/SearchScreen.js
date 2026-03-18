@@ -132,8 +132,8 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 15,
-        paddingVertical: 10,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
         backgroundColor: 'transparent',
     },
     backBtn: {
@@ -142,12 +142,12 @@ const styles = StyleSheet.create({
     headerInput: {
         flex: 1,
         color: 'white',
-        fontSize: 18,
+        fontSize: 16,
         fontWeight: '500',
     },
     clearBtnText: {
         color: 'white',
-        fontSize: 16,
+        fontSize: 13,
         fontWeight: '500',
         marginLeft: 10,
     },
@@ -156,8 +156,8 @@ const styles = StyleSheet.create({
     },
     itemRow: {
         flexDirection: 'row',
-        paddingVertical: 6, // Reduced from 12
-        paddingHorizontal: 15,
+        paddingVertical: 8,
+        paddingHorizontal: 12,
         alignItems: 'flex-start',
     },
     leftCol: {
@@ -176,20 +176,21 @@ const styles = StyleSheet.create({
     },
     symbolName: {
         color: 'white',
-        fontSize: 18,
-        fontWeight: 'bold',
+        fontSize: 14,
+        fontWeight: '700',
         marginBottom: 2,
     },
     subText: {
         color: 'white',
-        fontSize: 14,
-        opacity: 0.9,
+        fontSize: 11,
+        opacity: 0.8,
         marginBottom: 2,
     },
     labelValueText: {
         color: 'white',
-        fontSize: 14,
-        opacity: 0.9,
+        fontSize: 11,
+        opacity: 0.8,
+        fontWeight: '500',
     },
     priceBox: {
         paddingHorizontal: 0,
@@ -202,8 +203,8 @@ const styles = StyleSheet.create({
     },
     priceValText: {
         color: 'white',
-        fontSize: 16,
-        fontWeight: 'bold',
+        fontSize: 13,
+        fontWeight: '700',
     },
     checkSquare: {
         width: 20,
@@ -213,8 +214,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     divider: {
-        height: 0.5,
-        backgroundColor: 'rgba(255,255,255,0.2)',
+        height: 1,
+        backgroundColor: 'rgba(255,255,255,0.3)',
         marginHorizontal: 15,
     }
 });

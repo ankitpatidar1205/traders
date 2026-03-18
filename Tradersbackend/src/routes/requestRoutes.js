@@ -18,7 +18,18 @@ const storage = multer.diskStorage({
 const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 
 router.get('/', authMiddleware, getRequests);
-router.post('/', authMiddleware, upload.single('screenshot'), createRequest);
+
+// POST with multer error handling
+router.post('/', authMiddleware, (req, res, next) => {
+    upload.single('screenshot')(req, res, (err) => {
+        if (err) {
+            console.error('Multer error:', err.message);
+            return res.status(400).json({ message: 'File upload error: ' + err.message });
+        }
+        next();
+    });
+}, createRequest);
+
 router.put('/:id', authMiddleware, roleMiddleware(['SUPERADMIN', 'ADMIN']), updateRequestStatus);
 
 module.exports = router;

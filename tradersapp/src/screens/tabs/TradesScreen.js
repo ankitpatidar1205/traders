@@ -293,18 +293,20 @@ const styles = StyleSheet.create({
     },
     header: {
         alignItems: 'center',
-        paddingVertical: 10,
-        backgroundColor: 'transparent', // Light shadow hatane ke liye
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        backgroundColor: 'transparent',
     },
     headerTitle: {
-        fontSize: 26,
-        fontWeight: 'bold',
+        fontSize: 18,
+        fontWeight: '700',
         color: 'white',
+        letterSpacing: 0.5,
     },
     tabBar: {
         flexDirection: 'row',
         backgroundColor: 'black',
-        height: 48,
+        height: 42,
     },
     tab: {
         flex: 1,
@@ -317,7 +319,7 @@ const styles = StyleSheet.create({
     },
     tabText: {
         color: '#757575',
-        fontSize: 14,
+        fontSize: 12,
         fontWeight: '700',
     },
     activeTabText: {
@@ -332,9 +334,9 @@ const styles = StyleSheet.create({
     },
     emptyText: {
         color: 'white',
-        fontSize: 16,
-        textAlign: 'right', // Right aligned like photo
-        opacity: 0.9,
+        fontSize: 13,
+        textAlign: 'right',
+        opacity: 0.8,
     },
     emptyDivider: {
         height: 0.5,
@@ -373,13 +375,13 @@ const styles = StyleSheet.create({
     },
     symbolNameLarge: {
         color: 'white',
-        fontSize: 15,
-        fontWeight: 'bold',
+        fontSize: 13,
+        fontWeight: '700',
     },
     ltpText: {
         color: 'white',
-        fontSize: 17,
-        fontWeight: 'bold',
+        fontSize: 14,
+        fontWeight: '700',
         marginBottom: 5,
     },
     boughtBadge: {
@@ -400,36 +402,36 @@ const styles = StyleSheet.create({
         opacity: 0.8,
     },
     traderText: {
-        color: 'white',
-        fontSize: 13,
-        opacity: 0.7,
+        color: '#B0BEC5',
+        fontSize: 11,
+        opacity: 0.85,
     },
     closeTradeBtn: {
         backgroundColor: '#C64756',
-        paddingHorizontal: 12,
-        paddingVertical: 5,
+        paddingHorizontal: 10,
+        paddingVertical: 4,
         borderRadius: 2,
     },
     closeTradeBtnText: {
         color: 'white',
-        fontSize: 13,
-        fontWeight: 'bold',
+        fontSize: 11,
+        fontWeight: '700',
     },
     setTargetBtn: {
         backgroundColor: '#2D864D',
-        paddingHorizontal: 10,
-        paddingVertical: 5,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
         borderRadius: 2,
     },
     setTargetBtnText: {
         color: 'white',
-        fontSize: 13,
-        fontWeight: 'bold',
+        fontSize: 11,
+        fontWeight: '700',
     },
     marginText: {
-        color: 'white',
-        fontSize: 12,
-        opacity: 0.6,
+        color: '#B0BEC5',
+        fontSize: 10,
+        opacity: 0.7,
     },
     divider: {
         height: 0.5,
@@ -450,8 +452,8 @@ const styles = StyleSheet.create({
     },
     symbolName: {
         color: 'white',
-        fontSize: 14,
-        fontWeight: '900',
+        fontSize: 13,
+        fontWeight: '700',
     },
     closedBadges: {
         flexDirection: 'row',
@@ -464,8 +466,8 @@ const styles = StyleSheet.create({
     },
     pnlBadgeText: {
         color: '#D32F2F',
-        fontWeight: 'bold',
-        fontSize: 13,
+        fontWeight: '700',
+        fontSize: 11,
     },
     qtyBadge: {
         borderRadius: 4,
@@ -474,8 +476,8 @@ const styles = StyleSheet.create({
     },
     qtyBadgeText: {
         color: '#D32F2F',
-        fontWeight: 'bold',
-        fontSize: 13,
+        fontWeight: '700',
+        fontSize: 11,
     },
     closedPricesRow: {
         flexDirection: 'row',
@@ -492,34 +494,34 @@ const styles = StyleSheet.create({
     },
     priceLabel: {
         color: '#B0BEC5',
-        fontSize: 12,
+        fontSize: 10,
         marginRight: 5,
     },
     priceBoxRed: {
-        backgroundColor: '#EF9A9A', // Light Red
+        backgroundColor: '#EF9A9A',
         paddingHorizontal: 6,
         paddingVertical: 2,
         borderRadius: 2,
     },
     priceBoxGreen: {
-        backgroundColor: '#A5D6A7', // Light Green
+        backgroundColor: '#A5D6A7',
         paddingHorizontal: 6,
         paddingVertical: 2,
         borderRadius: 2,
     },
     priceBoxText: {
-        color: 'black', // Usually dark text on light bg in these trading apps
-        fontWeight: 'bold',
-        fontSize: 13,
+        color: 'black',
+        fontWeight: '700',
+        fontSize: 11,
     },
     closedTimeRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
     },
     timeValue: {
-        color: 'white',
-        fontSize: 14,
-        fontWeight: 'bold',
+        color: '#B0BEC5',
+        fontSize: 11,
+        fontWeight: '700',
     },
 
     // Modal
@@ -591,50 +593,55 @@ const styles = StyleSheet.create({
     itemRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'flex-start',
+        alignItems: 'center',
         marginBottom: 8,
+        paddingHorizontal: 8,
     },
     leftCol: {
-        flex: 1.2,
+        flex: 1.3,
         justifyContent: 'center',
+        paddingRight: 10,
     },
     priceColGrid: {
-        flex: 1.1,
+        flex: 1,
         alignItems: 'center',
-        justifyContent: 'flex-start',
+        justifyContent: 'center',
     },
     symbolNameGrid: {
         color: 'white',
-        fontSize: 18,
-        fontWeight: 'bold',
+        fontSize: 14,
+        fontWeight: '700',
     },
     dateTextGrid: {
-        color: 'white',
-        fontSize: 14,
+        color: '#B0BEC5',
+        fontSize: 11,
         marginVertical: 2,
+        opacity: 0.8,
     },
     labelsBottomGrid: {
-        color: 'white',
-        fontSize: 14,
+        color: '#B0BEC5',
+        fontSize: 11,
+        marginTop: 3,
+        opacity: 0.8,
     },
     priceBoxGrid: {
-        paddingHorizontal: 0,
-        paddingVertical: 8,
-        borderRadius: 6,
-        width: '90%',
-        maxWidth: 100,
+        paddingHorizontal: 8,
+        paddingVertical: 6,
+        borderRadius: 4,
+        width: '95%',
+        maxWidth: 90,
         alignItems: 'center',
-        marginBottom: 6,
+        marginBottom: 4,
     },
     priceValTextGrid: {
         color: 'white',
-        fontSize: 16,
-        fontWeight: 'bold',
+        fontSize: 13,
+        fontWeight: '700',
     },
     labelSmallGrid: {
-        color: 'white',
-        fontSize: 15,
-        opacity: 0.9,
+        color: '#B0BEC5',
+        fontSize: 11,
+        opacity: 0.85,
     },
     actionRowGrid: {
         flexDirection: 'row',

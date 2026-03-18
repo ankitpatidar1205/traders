@@ -1,9 +1,7 @@
 const mysql = require('mysql2/promise');
 require('dotenv').config();
 
-const pool = mysql.createPool({
-  host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT || '3306'),
+const dbConfig = {
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || 'tradersdb',
@@ -11,7 +9,17 @@ const pool = mysql.createPool({
   connectionLimit: 10,
   connectTimeout: 30000,
   queueLimit: 0
-});
+};
+
+// Use socketPath if provided (for XAMPP/MariaDB local connection)
+if (process.env.DB_SOCKET_PATH) {
+  dbConfig.socketPath = process.env.DB_SOCKET_PATH;
+} else {
+  dbConfig.host = process.env.DB_HOST || 'localhost';
+  dbConfig.port = parseInt(process.env.DB_PORT || '3306');
+}
+
+const pool = mysql.createPool(dbConfig);
 
 // Test connection
 pool.getConnection()

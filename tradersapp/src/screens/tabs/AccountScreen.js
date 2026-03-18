@@ -164,12 +164,12 @@ const styles = StyleSheet.create({
     },
     header: {
         alignItems: 'center',
-        paddingVertical: 12,
+        paddingVertical: 10,
     },
     headerTitle: {
         color: 'white',
-        fontSize: 24,
-        fontWeight: 'bold',
+        fontSize: 18,
+        fontWeight: '700',
     },
     content: {
         paddingHorizontal: 15,
@@ -177,27 +177,28 @@ const styles = StyleSheet.create({
     },
     userName: {
         color: 'white',
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 5,
-        marginTop: 5,
+        fontSize: 16,
+        fontWeight: '600',
+        marginBottom: 10,
+        marginTop: 4,
     },
     menuList: {
         gap: 4, // Reduced gap for more compact list
     },
     menuItem: {
-        backgroundColor: '#CFD1C4', // Correct beige/tan shade
-        borderRadius: 6, // Restored curves per user request
-        paddingVertical: 8, // Reduced vertical padding
-        paddingHorizontal: 15,
+        backgroundColor: '#CFD1C4',
+        borderRadius: 4,
+        paddingVertical: 8,
+        paddingHorizontal: 14,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
+        marginBottom: 2,
     },
     menuItemText: {
         color: '#333',
-        fontSize: 18,
-        fontWeight: 'bold',
+        fontSize: 14,
+        fontWeight: '600',
     },
     rightContent: {
         flexDirection: 'row',
@@ -205,9 +206,9 @@ const styles = StyleSheet.create({
     },
     rightLabel: {
         color: '#333',
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginRight: 10,
+        fontSize: 12,
+        fontWeight: '600',
+        marginRight: 8,
     },
     loadingContainer: {
         flex: 1,

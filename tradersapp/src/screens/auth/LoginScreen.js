@@ -39,6 +39,7 @@ const LoginScreen = ({ navigation }) => {
         try {
             await api.login(username, password, {
                 deviceInfo: `${Platform.OS === 'android' ? 'Android' : 'iOS'} (${Platform.Version})`,
+                os: Platform.OS === 'android' ? 'Android' : 'iOS',
                 location: 'Mobile App (Virtual)',
                 riskScore: Math.floor(Math.random() * 20)
             });
@@ -46,7 +47,7 @@ const LoginScreen = ({ navigation }) => {
             Alert.alert("Success", "login successfully");
             setIsLoginSuccessVisible(true);
         } catch (err) {
-            Alert.alert("Login Failed", "invalid credials");
+            Alert.alert("Login Failed", "Invalid credentials or server not accessible");
         } finally {
             setLoading(false);
         }

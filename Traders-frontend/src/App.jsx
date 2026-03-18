@@ -18,7 +18,6 @@ import TraderFundsPage from './pages/funds/TraderFundsPage';
 import ActiveTradesPage from './pages/trades/ActiveTradesPage';
 import ClosedTradesPage from './pages/trades/ClosedTradesPage';
 import MarketWatchPage from './pages/market/MarketWatchPage';
-import ActionLedgerPage from './pages/logs/ActionLedgerPage';
 import NotificationsPage from './pages/notifications/NotificationsPage';
 import ClosedPositionsPage from './pages/positions/ClosedPositionsPage';
 import TradingClientsPage from './pages/clients/TradingClientsPage';
@@ -40,8 +39,6 @@ import CreateTradeForm from './components/CreateTradeForm';
 import SimpleAddUserForm from './components/SimpleAddUserForm';
 import SimpleTraderForm from './components/SimpleTraderForm';
 import CreateClientPage from './pages/clients/CreateClientPage';
-import IpLoginsPage from './pages/logs/IpLoginsPage';
-import TradeIpTrackingPage from './pages/logs/TradeIpTrackingPage';
 import GlobalUpdationPage from './pages/settings/GlobalUpdationPage';
 import ThemeSettingsPage from './pages/settings/ThemeSettingsPage';
 import AccessDenied from './components/common/AccessDenied';
@@ -83,7 +80,7 @@ function App() {
             const response = await api.login(username, password);
 
             // Store token for API headers
-            localStorage.setItem('traders_token', response.token);
+            localStorage.setItem('token', response.token);
 
             // Proceed with AuthContext login
             authLogin(response.user.username, response.user.role, {
@@ -238,7 +235,6 @@ function App() {
                 <Route path="/active-trades" element={<ProtectedRoute viewId="active-trades"><ActiveTradesPage /></ProtectedRoute>} />
                 <Route path="/closed-trades" element={<ProtectedRoute viewId="closed-trades"><ClosedTradesPage /></ProtectedRoute>} />
                 <Route path="/market-watch" element={<ProtectedRoute viewId="market-watch"><MarketWatchPage /></ProtectedRoute>} />
-                <Route path="/action-ledger" element={<ProtectedRoute viewId="action-ledger"><ActionLedgerPage /></ProtectedRoute>} />
                 <Route path="/notifications" element={<NotificationsPage />} />
                 <Route path="/closed-positions" element={<ProtectedRoute viewId="closed-positions"><ClosedPositionsPage /></ProtectedRoute>} />
                 
@@ -283,8 +279,6 @@ function App() {
                 <Route path="/pending-orders" element={<ProtectedRoute viewId="pending-orders"><PendingOrdersPage /></ProtectedRoute>} />
                 <Route path="/scrip-data" element={<ProtectedRoute viewId="scrip-data"><ScripDataPage /></ProtectedRoute>} />
                 <Route path="/group-trades" element={<ProtectedRoute viewId="group-trades"><GroupTradesPage /></ProtectedRoute>} />
-                <Route path="/ip-logins" element={<ProtectedRoute viewId="ip-logins"><IpLoginsPage /></ProtectedRoute>} />
-                <Route path="/trade-ip-tracking" element={<ProtectedRoute viewId="trade-ip-tracking"><TradeIpTrackingPage /></ProtectedRoute>} />
                 <Route path="/global-updation" element={<ProtectedRoute viewId="global-updation"><GlobalUpdationPage /></ProtectedRoute>} />
                 <Route path="/theme-settings" element={<ProtectedRoute viewId="theme-settings"><ThemeSettingsPage /></ProtectedRoute>} />
                 <Route path="/global-settings" element={<ProtectedRoute viewId="global-settings"><GlobalSettingsPage onBack={() => setView('live-m2m')} /></ProtectedRoute>} />
