@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { RotateCcw, SquarePen, ArrowUp, ArrowDown, Eye, Copy, Trash2 } from 'lucide-react';
+import { RotateCcw, SquarePen, ArrowUp, ArrowDown, Eye, Copy, Settings } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import * as api from '../../services/api';
 import ClientDetailPage from './ClientDetailPage';
@@ -10,6 +10,8 @@ import RecalculateBrokeragePage from './RecalculateBrokeragePage';
 import ChangePasswordPage from './ChangePasswordPage';
 import DeleteClientPage from './DeleteClientPage';
 import Toast from '../../components/common/Toast';
+
+import GlobalSettingsPage from '../settings/GlobalSettingsPage';
 
 const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavigate }) => {
     const { isSuperAdmin, isAdmin } = useAuth();
@@ -28,6 +30,7 @@ const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavig
     const [showRecalculatePage, setShowRecalculatePage] = useState(false);
     const [showChangePasswordPage, setShowChangePasswordPage] = useState(false);
     const [showDeletePage, setShowDeletePage] = useState(false);
+    const [showClientSettings, setShowClientSettings] = useState(false);
     const [toast, setToast] = useState({ message: '', type: 'success' });
 
     const fetchClients = async () => {
@@ -213,7 +216,7 @@ const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavig
                                     <tr key={client.id} className="border-t border-white/5 hover:bg-white/[0.02] transition-colors">
                                         <td className="px-4 py-6">{index + 1}</td>
                                         <td className="px-4 py-6">
-                                            <div className="flex flex-col items-start gap-3 pl-2">
+                                            <div className="flex flex-col items-start gap-1.5 pl-2">
                                                 <div className="action-icons">
                                                     <button className="action-icon action-icon-view" onClick={() => handleView(client)} title="View">
                                                         <Eye className="w-4 h-4" />
@@ -224,8 +227,8 @@ const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavig
                                                     <button className="action-icon action-icon-copy" onClick={() => handleCopy(client)} title="Copy">
                                                         <Copy className="w-4 h-4" />
                                                     </button>
-                                                    <button className="action-icon action-icon-delete" onClick={() => { setSelectedClient(client); setShowDeletePage(true); }} title="Delete">
-                                                        <Trash2 className="w-4 h-4" />
+                                                    <button className="action-icon action-icon-settings" onClick={() => { setSelectedClient(client); setShowClientSettings(true); }} title="Client Settings">
+                                                        <Settings className="w-4 h-4" />
                                                     </button>
                                                 </div>
                                                 <div className="flex items-center gap-2">
@@ -419,7 +422,21 @@ const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavig
                 />
             )}
 
-            {/* Delete Client Modal */}
+            {/* Client Global Settings Modal (Replcaed Delete with this) */}
+            {showClientSettings && selectedClient && (
+                <div className="fixed inset-0 z-[60] overflow-hidden flex flex-col bg-[#1a2035]">
+                    <GlobalSettingsPage 
+                        clientId={selectedClient.id} 
+                        clientName={selectedClient.username}
+                        onBack={() => {
+                            setShowClientSettings(false);
+                            setSelectedClient(null);
+                        }} 
+                    />
+                </div>
+            )}
+
+            {/* Delete Client Modal - Kept for reference or if still needed elsewhere, but hidden from main table now */}
             {showDeletePage && selectedClient && (
                 <DeleteClientPage
                     client={selectedClient}

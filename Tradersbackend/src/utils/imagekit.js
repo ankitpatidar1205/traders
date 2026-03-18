@@ -1,10 +1,20 @@
 const ImageKit = require('imagekit');
 
-const imagekit = new ImageKit({
-    publicKey: process.env.IMAGEKIT_PUBLIC_KEY,
-    privateKey: process.env.IMAGEKIT_PRIVATE_KEY,
-    urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT
-});
+let imagekit;
+
+if (process.env.IMAGEKIT_PUBLIC_KEY && process.env.IMAGEKIT_PRIVATE_KEY && process.env.IMAGEKIT_URL_ENDPOINT) {
+    imagekit = new ImageKit({
+        publicKey: process.env.IMAGEKIT_PUBLIC_KEY,
+        privateKey: process.env.IMAGEKIT_PRIVATE_KEY,
+        urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT
+    });
+} else {
+    console.warn("⚠️ ImageKit environment variables are missing. Image uploads will not work.");
+    imagekit = {
+        upload: async () => { throw new Error("ImageKit not configured"); },
+        deleteFile: async () => { console.warn("ImageKit not configured, cannot delete file"); }
+    };
+}
 
 /**
  * Upload a file buffer to ImageKit

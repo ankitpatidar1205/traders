@@ -269,7 +269,7 @@ html * {
 .action-icons {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 5px;
 }
 
 .action-icon {

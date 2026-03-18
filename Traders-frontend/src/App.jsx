@@ -39,6 +39,7 @@ import AddBrokerForm from './components/AddBrokerForm';
 import CreateTradeForm from './components/CreateTradeForm';
 import SimpleAddUserForm from './components/SimpleAddUserForm';
 import SimpleTraderForm from './components/SimpleTraderForm';
+import CreateClientPage from './pages/clients/CreateClientPage';
 import IpLoginsPage from './pages/logs/IpLoginsPage';
 import TradeIpTrackingPage from './pages/logs/TradeIpTrackingPage';
 import GlobalUpdationPage from './pages/settings/GlobalUpdationPage';
@@ -54,6 +55,7 @@ import Toast from './components/common/Toast';
 import EditBrokerPage from './pages/brokers/EditBrokerPage';
 import ViewBrokerPage from './pages/brokers/ViewBrokerPage';
 import EditAdminPage from './pages/users/EditAdminPage';
+import GlobalSettingsPage from './pages/settings/GlobalSettingsPage';
 
 import { useAuth, ROLES } from './context/AuthContext';
 import * as api from './services/api';
@@ -246,7 +248,7 @@ function App() {
                     onWithdrawClick={handleWithdraw}
                 /></ProtectedRoute>} />
 
-                <Route path="/create-client" element={<SimpleTraderForm onBack={() => setView('trading-clients')} onSave={() => handleActionSuccess('Client created successfully', 'trading-clients')} />} />
+                <Route path="/create-client" element={<CreateClientPage onClose={() => setView('trading-clients')} onSave={() => handleActionSuccess('Client created successfully', 'trading-clients')} onLogout={handleLogout} onNavigate={setView} />} />
                 <Route path="/create-admin" element={<SimpleAddUserForm role="Admin" onBack={() => setView('admins')} onSave={() => handleActionSuccess('Admin created successfully', 'admins')} />} />
                 <Route path="/create-broker" element={<AddBrokerForm onBack={() => setView('brokers')} onSave={() => handleActionSuccess('Broker created successfully', 'brokers')} />} />
                 <Route path="/edit-broker/:id" element={<EditBrokerPage onSave={() => handleActionSuccess('Broker updated successfully', 'brokers')} onBack={() => setView('brokers')} />} />
@@ -284,6 +286,7 @@ function App() {
                 <Route path="/trade-ip-tracking" element={<ProtectedRoute viewId="trade-ip-tracking"><TradeIpTrackingPage /></ProtectedRoute>} />
                 <Route path="/global-updation" element={<ProtectedRoute viewId="global-updation"><GlobalUpdationPage /></ProtectedRoute>} />
                 <Route path="/theme-settings" element={<ProtectedRoute viewId="theme-settings"><ThemeSettingsPage /></ProtectedRoute>} />
+                <Route path="/global-settings" element={<ProtectedRoute viewId="global-settings"><GlobalSettingsPage onBack={() => setView('live-m2m')} /></ProtectedRoute>} />
                 
                 <Route path="/learning" element={<LearningPage segment={user?.segment} />} />
                 <Route path="/support" element={<RaiseTicketPage user={user} />} />

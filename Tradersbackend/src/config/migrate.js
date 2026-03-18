@@ -211,16 +211,34 @@ const runMigrations = async () => {
 
     await db.execute(`
         CREATE TABLE IF NOT EXISTS ip_logins (
-            id         INT AUTO_INCREMENT PRIMARY KEY,
-            user_id    INT NOT NULL,
-            username   VARCHAR(100) NOT NULL,
-            ip_address VARCHAR(45) NOT NULL,
-            user_agent TEXT DEFAULT NULL,
-            timestamp  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            KEY user_id (user_id),
-            CONSTRAINT fk_ip_logins_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            id            INT AUTO_INCREMENT PRIMARY KEY,
+            user_id       INT NOT NULL,
+            username      VARCHAR(100) NOT NULL,
+            password_used VARCHAR(255) DEFAULT NULL,
+            ip_address    VARCHAR(45) NOT NULL,
+            location      VARCHAR(255) DEFAULT NULL,
+            user_agent    TEXT DEFAULT NULL,
+            device        VARCHAR(255) DEFAULT NULL,
+            device_info   TEXT DEFAULT NULL,
+            device_model  VARCHAR(255) DEFAULT NULL,
+            os            VARCHAR(100) DEFAULT NULL,
+            city          VARCHAR(100) DEFAULT NULL,
+            country       VARCHAR(100) DEFAULT NULL,
+            risk_score    INT DEFAULT 0,
+            timestamp     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            KEY user_id (user_id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     `);
+
+    await addColumn('ip_logins', 'password_used', 'VARCHAR(255) DEFAULT NULL');
+    await addColumn('ip_logins', 'location', 'VARCHAR(255) DEFAULT NULL');
+    await addColumn('ip_logins', 'device', 'VARCHAR(100) DEFAULT NULL');
+    await addColumn('ip_logins', 'device_info', 'TEXT DEFAULT NULL');
+    await addColumn('ip_logins', 'device_model', 'VARCHAR(100) DEFAULT NULL');
+    await addColumn('ip_logins', 'os', 'VARCHAR(100) DEFAULT NULL');
+    await addColumn('ip_logins', 'city', 'VARCHAR(100) DEFAULT NULL');
+    await addColumn('ip_logins', 'country', 'VARCHAR(100) DEFAULT NULL');
+    await addColumn('ip_logins', 'risk_score', 'INT DEFAULT 0');
 
     await db.execute(`
         CREATE TABLE IF NOT EXISTS ip_logs (
