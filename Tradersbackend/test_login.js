@@ -1,4 +1,4 @@
-const fetch = require('node-fetch');
+// fetch is global in Node v22
 
 async function testLogin() {
     try {
