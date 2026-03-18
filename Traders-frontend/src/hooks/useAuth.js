@@ -5,7 +5,7 @@
  * Use this in any component to access auth functions and user data
  *
  * Example:
- * const { user, login, logout, isLoggedIn } = useAuth();
+ * const { user,  logout, isLoggedIn } = useAuth();
  */
 
 import { useState, useCallback, useEffect } from 'react';
@@ -45,7 +45,7 @@ export const useAuth = () => {
     const [error, setError] = useState(null);
 
     // ───────────────────────────────────────────────────────────────────────
-    // INITIALIZE - Check if user is already logged in
+    // INITIALIZE - Check if user is already logged 
     // ───────────────────────────────────────────────────────────────────────
 
     useEffect(() => {
