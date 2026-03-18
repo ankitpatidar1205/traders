@@ -19,12 +19,12 @@ const PortfolioScreen = () => {
 
     return (
         <ScreenWrapper>
-            {/* Centered Portfolio Header */}
+            {/* Portfolio Header */}
             <View style={styles.header}>
                 <Text style={styles.headerTitle}>Portfolio</Text>
             </View>
 
-            {/* Exact Stats Layout from Screenshot */}
+            {/* Stats Layout */}
             <View style={styles.contentContainer}>
 
                 {/* Row 1: Ledger & Margin */}
@@ -33,6 +33,7 @@ const PortfolioScreen = () => {
                         <Text style={styles.statLabel}>Ledger Balance</Text>
                         <Text style={styles.statValue}>{ledgerBalance.toFixed(0)}</Text>
                     </View>
+                    <View style={styles.spacer} />
                     <View style={styles.statBox}>
                         <Text style={styles.statLabel}>Margin Available</Text>
                         <Text style={styles.statValue}>{marginAvailable.toFixed(0)}</Text>
@@ -48,6 +49,7 @@ const PortfolioScreen = () => {
                             {activePL.toFixed(2)}
                         </Text>
                     </View>
+                    <View style={styles.spacer} />
                     <View style={styles.statBox}>
                         <Text style={styles.statLabel}>M2M</Text>
                         <Text style={[styles.statValue, { color: activePL >= 0 ? '#4CAF50' : '#FF5252' }]}>
@@ -80,42 +82,50 @@ const styles = StyleSheet.create({
     },
     header: {
         alignItems: 'center',
-        paddingVertical: 10, // Even more compact
-        marginBottom: 5,
+        paddingVertical: 12,
+        paddingHorizontal: 20,
+        marginBottom: 24,
     },
     headerTitle: {
         color: 'white',
-        fontSize: 26,
-        fontWeight: 'bold',
+        fontSize: 20,
+        fontWeight: '700',
+        letterSpacing: 0.5,
     },
     contentContainer: {
-        paddingHorizontal: 20,
+        paddingHorizontal: 16,
     },
     statsRow: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
-        paddingVertical: 12, // Increased for more space
+        alignItems: 'stretch',
+        paddingVertical: 10,
     },
     statBox: {
         flex: 1,
+        paddingHorizontal: 8,
+    },
+    spacer: {
+        width: 12,
     },
     statLabel: {
-        color: 'white',
-        fontSize: 14, // Reduced from 16
-        fontWeight: '500',
-        marginBottom: 4,
-        opacity: 0.8,
+        color: '#94A3B8',
+        fontSize: 11,
+        fontWeight: '600',
+        marginBottom: 6,
+        letterSpacing: 0.3,
+        textTransform: 'uppercase',
     },
     statValue: {
-        color: 'white',
-        fontSize: 24, // Reduced from 28
-        fontWeight: 'bold',
+        color: '#FFFFFF',
+        fontSize: 18,
+        fontWeight: '700',
+        letterSpacing: 0.2,
     },
     divider: {
-        height: 1.2, // Thicker
-        backgroundColor: 'rgba(255,255,255,0.25)', // Slightly more visible
+        height: 1,
+        backgroundColor: 'rgba(255,255,255,0.15)',
         width: '100%',
-        marginVertical: 0,
+        marginVertical: 2,
     },
 });
 

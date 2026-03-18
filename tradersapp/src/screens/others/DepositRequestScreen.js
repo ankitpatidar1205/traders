@@ -38,7 +38,25 @@ const DepositRequestScreen = ({ navigation }) => {
             Alert.alert("Success", "Screenshot uploaded successfully! Funds will be added shortly.");
             navigation.goBack();
         } catch (err) {
-            Alert.alert("Error", err.message || "Failed to submit request");
+            console.error('Deposit error:', err);
+            const errorMsg = err.message || "Failed to submit request";
+            Alert.alert(
+                "Upload Failed",
+                errorMsg,
+                [
+                    {
+                        text: "Retry",
+                        onPress: () => {
+                            // User can retry
+                        }
+                    },
+                    {
+                        text: "Cancel",
+                        onPress: () => navigation.goBack(),
+                        style: 'cancel'
+                    }
+                ]
+            );
         } finally {
             setIsUploading(false);
         }

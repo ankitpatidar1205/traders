@@ -84,7 +84,7 @@ const DashboardScreen = ({ navigation }) => {
         return (
             <TouchableOpacity
                 activeOpacity={0.7}
-                onPress={() => navigation.navigate('OrderDetail', { item, name: item.name })}
+                onPress={() => navigation.navigate('OrderDetail', { item, name: item.name, category: item.category })}
                 style={styles.itemWrapper}
             >
                 <View style={styles.itemRow}>
@@ -125,12 +125,12 @@ const DashboardScreen = ({ navigation }) => {
             {/* Center Title */}
             <View style={styles.headerTitleContainer}>
                 <View style={styles.headerSideContainer}>
-                    <TouchableOpacity 
-                        style={styles.aiBtn} 
+                    <TouchableOpacity
+                        style={styles.aiBtn}
                         onPress={() => navigation.navigate('AiAssistant')}
                     >
                         <Animated.View style={{ transform: [{ translateY: floatAnim }] }}>
-                            <CuteBot size={42} />
+                            <CuteBot size={32} />
                         </Animated.View>
                     </TouchableOpacity>
                 </View>
@@ -139,14 +139,11 @@ const DashboardScreen = ({ navigation }) => {
 
                 <View style={[styles.headerSideContainer, { alignItems: 'flex-end' }]}>
                     <View style={styles.rightIcons}>
-                        <TouchableOpacity style={styles.headerIconButton} onPress={() => {/* Wallet Action */}}>
-                            <Wallet size={24} color="white" strokeWidth={2} />
-                            <View style={styles.iconBadge}>
-                                <Text style={styles.badgeText}>6</Text>
-                            </View>
+                        <TouchableOpacity style={styles.headerIconButton} onPress={() => navigation.navigate('Account', { screen: 'Funds' })}>
+                            <Wallet size={18} color="white" strokeWidth={2} />
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.headerIconButton} onPress={() => navigation.navigate('Notifications')}>
-                            <Bell size={24} color="white" strokeWidth={2} />
+                            <Bell size={18} color="white" strokeWidth={2} />
                             {unreadAdminCount > 0 && (
                                 <View style={styles.iconBadge}>
                                     <Text style={styles.badgeText}>
@@ -177,14 +174,14 @@ const DashboardScreen = ({ navigation }) => {
             {/* White Search Bar */}
             <View style={styles.searchSection}>
                 <View style={styles.searchBar}>
-                    <Search size={20} color="#9E9E9E" />
+                    <Search size={18} color="#9E9E9E" />
                     <TouchableOpacity
                         style={styles.searchClickable}
                         onPress={() => navigation.navigate('Search')}
                     >
                         <Text style={styles.searchPlaceholder}>Search & Add</Text>
                     </TouchableOpacity>
-                    <Filter size={20} color="#9E9E9E" />
+                    <Filter size={18} color="#9E9E9E" />
                 </View>
             </View>
 
@@ -226,39 +223,56 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     headerTitleContainer: {
-        paddingTop: 10,
-        paddingBottom: 10,
+        paddingTop: 6,
+        paddingBottom: 6,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: 15,
-        height: 65,
+        paddingHorizontal: 12,
+        height: 50,
     },
     headerSideContainer: {
-        width: 100,
+        width: 60,
         justifyContent: 'center',
+        alignItems: 'center',
     },
     headerText: {
         color: 'white',
-        fontSize: 26,
-        fontWeight: 'bold',
+        fontSize: 18,
+        fontWeight: '700',
+        letterSpacing: 0.5,
+        flex: 1,
+        textAlign: 'center',
     },
     headerIconButton: {
-        width: 42,
-        height: 42,
-        borderRadius: 21,
-        backgroundColor: 'rgba(255,255,255,0.12)', // Refined glassmorphism
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: 'rgba(255,255,255,0.12)',
         justifyContent: 'center',
         alignItems: 'center',
-        marginLeft: 10,
+        marginLeft: 6,
         position: 'relative',
     },
     aiBtn: {
-        padding: 5,
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: 'rgba(147, 51, 234, 0.15)',
+        borderWidth: 1.5,
+        borderColor: '#9333EA',
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#9333EA',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.4,
+        shadowRadius: 10,
+        elevation: 6,
     },
     rightIcons: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'flex-end',
     },
     iconBadge: {
         position: 'absolute',
@@ -281,7 +295,7 @@ const styles = StyleSheet.create({
     tabBar: {
         flexDirection: 'row',
         backgroundColor: 'black',
-        height: 48,
+        height: 42,
     },
     tab: {
         flex: 1,
@@ -294,53 +308,55 @@ const styles = StyleSheet.create({
     },
     tabText: {
         color: '#757575',
-        fontSize: 14,
+        fontSize: 12,
         fontWeight: '700',
     },
     activeTabText: {
         color: 'white',
     },
     searchSection: {
-        paddingHorizontal: 0, // Left and Right se chipka hua
+        paddingHorizontal: 0,
         paddingTop: 0,
-        paddingBottom: 0, // Flush with tabs and watchlist
+        paddingBottom: 0,
     },
     searchBar: {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: 'white',
-        paddingHorizontal: 15,
-        height: 50,
-        borderRadius: 0, // Square edges to stay flush
+        paddingHorizontal: 12,
+        height: 45,
+        borderRadius: 0,
     },
     searchClickable: {
         flex: 1,
-        paddingHorizontal: 10,
+        paddingHorizontal: 8,
     },
     searchPlaceholder: {
-        color: '#424242',
-        fontSize: 18,
+        color: '#757575',
+        fontSize: 14,
         fontWeight: '500',
     },
     listContent: {
         paddingHorizontal: 15,
     },
     itemWrapper: {
-        paddingVertical: 6, // Reduced from 12
+        paddingVertical: 8,
     },
     itemRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'flex-start',
+        alignItems: 'center',
+        paddingHorizontal: 8,
     },
     leftCol: {
-        flex: 1.2,
+        flex: 1.3,
         justifyContent: 'center',
+        paddingRight: 10,
     },
     priceCol: {
-        flex: 1.1,
+        flex: 1,
         alignItems: 'center',
-        justifyContent: 'flex-start',
+        justifyContent: 'center',
     },
     midCol: {
         flex: 1,
@@ -352,17 +368,20 @@ const styles = StyleSheet.create({
     },
     symbolName: {
         color: 'white',
-        fontSize: 18, // Slightly larger
-        fontWeight: 'bold',
+        fontSize: 14,
+        fontWeight: '700',
     },
     dateText: {
-        color: 'white',
-        fontSize: 14,
+        color: '#B0BEC5',
+        fontSize: 11,
         marginVertical: 2,
+        opacity: 0.8,
     },
     labelsBottom: {
-        color: 'white',
-        fontSize: 14,
+        color: '#B0BEC5',
+        fontSize: 11,
+        marginTop: 3,
+        opacity: 0.8,
     },
     priceTextMain: {
         color: 'white',
@@ -371,23 +390,23 @@ const styles = StyleSheet.create({
         marginBottom: 4,
     },
     priceBox: {
-        paddingHorizontal: 0,
-        paddingVertical: 8,
-        borderRadius: 6,
-        width: '90%', // Use percentage for better relative scaling
-        maxWidth: 100,
+        paddingHorizontal: 8,
+        paddingVertical: 6,
+        borderRadius: 4,
+        width: '95%',
+        maxWidth: 90,
         alignItems: 'center',
-        marginBottom: 6,
+        marginBottom: 4,
     },
     priceValText: {
         color: 'white',
-        fontSize: 16,
-        fontWeight: 'bold',
+        fontSize: 13,
+        fontWeight: '700',
     },
     labelSmall: {
-        color: 'white',
-        fontSize: 15, // Matching screenshot
-        opacity: 0.9,
+        color: '#B0BEC5',
+        fontSize: 11,
+        opacity: 0.85,
     },
     separator: {
         height: 0.5,

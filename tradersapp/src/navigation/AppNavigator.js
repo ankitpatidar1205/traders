@@ -78,12 +78,12 @@ const MainTabs = () => {
                 tabBarIcon: ({ focused, color, size }) => {
                     let icon;
                     const iconProps = {
-                        size: 28,
+                        size: 24,
                         color: color,
                     };
 
                     if (route.name === 'Watchlist') {
-                        return <Text style={{ color, fontSize: 24, fontWeight: 'bold' }}>₹</Text>;
+                        return <Text style={{ color, fontSize: 20, fontWeight: 'bold' }}>₹</Text>;
                     } else if (route.name === 'Trades') {
                         icon = <BookText {...iconProps} />;
                     } else if (route.name === 'Portfolio') {
@@ -98,13 +98,20 @@ const MainTabs = () => {
                 tabBarStyle: {
                     backgroundColor: 'black',
                     borderTopWidth: 0,
-                    height: 85,
-                    paddingBottom: 25,
+                    height: 100,
+                    paddingBottom: 0,
                     paddingTop: 0,
+                    paddingHorizontal: 0,
                 },
                 tabBarLabelStyle: {
                     fontSize: 14,
                     fontWeight: '600',
+                    marginTop: 2,
+                    marginBottom: 4,
+                },
+                tabBarItemStyle: {
+                    paddingVertical: 0,
+                    paddingBottom: 0,
                 },
                 headerShown: false,
             })}
