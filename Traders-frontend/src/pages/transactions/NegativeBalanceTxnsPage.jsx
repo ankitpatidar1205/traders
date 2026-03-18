@@ -37,7 +37,7 @@ const NegativeBalanceTxnsPage = () => {
     };
 
     return (
-        <div className="flex flex-col h-full bg-[#1a2035] space-y-8 overflow-y-auto p-4">
+        <div className="flex flex-col h-full bg-[#1a2035] space-y-4 md:space-y-8 overflow-y-auto px-3 sm:px-4 md:px-6 py-3 sm:py-4">
             {/* Top Date Filter Section */}
             <div className="flex flex-col md:flex-row gap-4 items-center">
                 <div className="grid grid-cols-2 bg-white rounded overflow-hidden shadow-lg w-full md:w-auto">

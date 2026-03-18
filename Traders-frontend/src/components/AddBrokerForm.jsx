@@ -421,7 +421,7 @@ const AddBrokerForm = ({ onBack, onSave, brokerId, mode = 'add' }) => {
                 )}
 
                 {/* Main Card Wrapper with Floating Header */}
-                <div className="relative bg-[#202940] w-full p-8 lg:p-12 rounded-sm shadow-2xl border border-white/5 mt-16 animate-fadeIn">
+                <div className="relative bg-[#202940] w-full p-4 sm:p-6 md:p-8 lg:p-12 rounded-sm shadow-2xl border border-white/5 mt-14 sm:mt-16 animate-fadeIn">
 
                     {/* Floating Header Ribbon */}
                     <div className="absolute -top-6 left-6 z-20">

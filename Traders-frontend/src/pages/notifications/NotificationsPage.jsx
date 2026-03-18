@@ -55,10 +55,10 @@ const NotificationsPage = () => {
     };
 
     return (
-        <div className="flex flex-col h-full bg-[#1a2035] space-y-5 overflow-y-auto">
+        <div className="flex flex-col h-full bg-[#1a2035] space-y-4 overflow-y-auto px-3 sm:px-4 md:px-6 py-3 sm:py-4">
             {/* Header */}
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                     {canSend && (
                         <button
                             onClick={() => setShowModal(true)}

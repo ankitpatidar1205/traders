@@ -61,9 +61,9 @@ const GlobalUpdationPage = () => {
     };
 
     return (
-        <div className=" space-y-8 animate-fade-in custom-scrollbar bg-[#1a2035] min-h-screen">
+        <div className="space-y-4 sm:space-y-8 animate-fade-in custom-scrollbar bg-[#1a2035] min-h-screen px-3 sm:px-4 md:px-6">
             {/* Enterprise Header */}
-            <div className="bg-gradient-to-r from-[#202940] to-[#151c2c] p-10 rounded-2xl border border-white/5 shadow-2xl relative overflow-hidden">
+            <div className="bg-gradient-to-r from-[#202940] to-[#151c2c] p-4 sm:p-6 md:p-10 rounded-2xl border border-white/5 shadow-2xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-10 opacity-5">
                     <Database className="w-64 h-64 text-white" />
                 </div>
@@ -74,7 +74,7 @@ const GlobalUpdationPage = () => {
                                 <ShieldCheck className="w-8 h-8 text-[#4CAF50]" />
                             </div>
                             <div>
-                                <h2 className="text-3xl font-black text-white tracking-tighter">Global Batch Execution</h2>
+                                <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tighter">Global Batch Execution</h2>
                                 <p className="text-[#4CAF50] text-[10px] font-black uppercase tracking-[0.2em] mt-1 italic">Enterprise Surveillance & Control Mode</p>
                             </div>
                         </div>
@@ -115,7 +115,7 @@ const GlobalUpdationPage = () => {
                 <div className="lg:col-span-2 bg-[#202940] rounded-2xl border border-white/5 shadow-3xl relative overflow-hidden">
                     <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-[#01B4EA] to-transparent opacity-30"></div>
 
-                    <div className="p-12">
+                    <div className="p-4 sm:p-6 md:p-12">
                         {step === 1 && (
                             <div className="space-y-10 animate-fade-in">
                                 <div className="space-y-2">

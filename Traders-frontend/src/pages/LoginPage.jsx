@@ -67,7 +67,7 @@ const LoginPage = ({ onLogin }) => {
             <div style={{
                 position: 'relative', zIndex: 2,
                 width: '420px',
-                maxWidth: 'calc(100vw - 40px)',
+                maxWidth: 'calc(100vw - 24px)',
                 paddingTop: '36px',
             }}>
                 <form onSubmit={handleSubmit} autoComplete="off">
@@ -111,7 +111,7 @@ const LoginPage = ({ onLogin }) => {
                     }}>
 
                         {/* ── Form body — top padding = remaining half of header ── */}
-                        <div style={{ padding: '42px 26px 28px 26px' }}>
+                        <div style={{ padding: '42px 16px 24px 16px' }}>
 
                             {/* Error */}
                             {error && (

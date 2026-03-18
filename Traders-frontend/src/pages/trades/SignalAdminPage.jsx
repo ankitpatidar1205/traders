@@ -168,7 +168,7 @@ const SignalAdminPage = () => {
                             </button>
                         </div>
 
-                        <form onSubmit={handleAddSignal} className="p-8 grid grid-cols-2 gap-6">
+                        <form onSubmit={handleAddSignal} className="p-4 sm:p-6 md:p-8 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                             <div className="col-span-1">
                                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block">Symbol / Script</label>
                                 <input

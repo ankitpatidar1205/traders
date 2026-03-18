@@ -93,7 +93,7 @@ const LiveM2MDetailPage = ({ selectedClient, onBack, onClientClick }) => {
     };
 
     return (
-        <div className="flex flex-col h-full bg-[#1a2035] p-6 space-y-12 overflow-y-auto custom-scrollbar">
+        <div className="flex flex-col h-full bg-[#1a2035] px-3 sm:px-4 md:px-6 py-3 sm:py-4 space-y-6 sm:space-y-12 overflow-y-auto custom-scrollbar">
 
             {/* Broker Summary Header Cards - Derived from List */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

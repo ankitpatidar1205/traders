@@ -24,9 +24,9 @@ const ScripDataPage = () => {
     const minutes = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0'));
 
     return (
-        <div className="flex flex-col h-full text-[#a0aec0] space-y-6">
+        <div className="flex flex-col h-full text-[#a0aec0] space-y-4 sm:space-y-6 px-3 sm:px-4 md:px-6 py-3 sm:py-4">
             {/* Top Filter Bar */}
-            <div className="bg-[#151c2c] p-6 rounded-lg border border-[#2d3748] shadow-xl">
+            <div className="bg-[#151c2c] p-4 sm:p-6 rounded-lg border border-[#2d3748] shadow-xl">
                 <div className="flex flex-col md:flex-row gap-0.5 mb-2">
                     <div className="flex-[3] bg-white rounded-l overflow-hidden border-r border-slate-200">
                         <input

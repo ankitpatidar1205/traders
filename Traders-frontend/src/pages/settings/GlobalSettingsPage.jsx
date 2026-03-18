@@ -199,7 +199,7 @@ const GlobalSettingsPage = ({ onBack, clientId = null, clientName = '' }) => {
     };
 
     return (
-        <div className="min-h-full bg-[#1a2035] p-10 pb-32 overflow-y-auto">
+        <div className="min-h-full bg-[#1a2035] px-3 sm:px-6 md:px-10 py-4 sm:py-6 md:py-10 pb-16 sm:pb-24 md:pb-32 overflow-y-auto">
             <div className="max-w-7xl mx-auto">
                 <div className="mb-8">
                     <button className="bg-[#4caf50] hover:bg-[#43a047] text-white px-5 py-2.5 rounded font-medium text-[15px] shadow-lg transition-all uppercase tracking-wide">
