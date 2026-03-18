@@ -33,14 +33,12 @@ export const ROLE_MENU_ACCESS = {
         'learning', 'support', 'voice-modulation', 'signal-admin', 'signals',
     ],
     BROKER: [
-        'live-m2m', 'active-positions', 'closed-positions', 'trades',
-        'trading-clients', 'funds', 'notifications', 'pending-orders',
+        'live-m2m', 'trading-clients', 'funds', 'notifications',
         'change-password', 'change-transaction-password',
         'learning', 'support', 'voice-modulation', 'signals',
     ],
     TRADER: [
-        'live-m2m', 'market-watch', 'notifications', 'active-positions',
-        'closed-positions', 'trades', 'closed-trades', 'pending-orders',
+        'live-m2m', 'market-watch', 'notifications',
         'funds', 'change-password', 'change-transaction-password',
         'learning', 'support', 'voice-modulation', 'signals',
     ],
@@ -220,6 +218,17 @@ export const AuthProvider = ({ children }) => {
         else localStorage.removeItem('traders_logo');
     };
 
+    const canViewBackup = () => {
+        if (!user) return false;
+        if ([ROLES.SUPERADMIN, ROLES.ADMIN].includes(user.role)) return true;
+        if (user.role === ROLES.BROKER) {
+            // Check nested permissions if available, or direct field
+            const perms = user.permissions || {};
+            return perms.canViewBackupData === true || user.canViewBackupData === true;
+        }
+        return false;
+    };
+
     const canAccess = (menuId) => {
         if (!user) return false;
         // SUPERADMIN always uses static list
@@ -236,7 +245,18 @@ export const AuthProvider = ({ children }) => {
             return (ROLE_MENU_ACCESS[ROLES.ADMIN] || []).includes(menuId);
         }
         // BROKER / TRADER
-        return (ROLE_MENU_ACCESS[user.role] || []).includes(menuId);
+        let accessibleItems = [...(ROLE_MENU_ACCESS[user.role] || [])];
+        
+        // Dynamically add backup-related sensitive items for brokers with permission
+        if (user.role === ROLES.BROKER && canViewBackup()) {
+            accessibleItems = [
+                ...accessibleItems,
+                'trades', 'active-positions', 'closed-positions', 'closed-trades', 
+                'deleted-trades', 'pending-orders', 'action-ledger', 'group-trades'
+            ];
+        }
+
+        return accessibleItems.includes(menuId);
     };
 
     const isSuperAdmin = () => user?.role === ROLES.SUPERADMIN;
@@ -248,7 +268,7 @@ export const AuthProvider = ({ children }) => {
         <AuthContext.Provider value={{
             user, currentSegment,
             login, logout, switchSegment,
-            canAccess, isSuperAdmin, isAdmin, isBroker, isClient,
+            canAccess, isSuperAdmin, isAdmin, isBroker, isClient, canViewBackup,
             menuPermissions, theme, logoPath, profileImagePath,
             applyInitData, updateTheme, updateLogoPath,
         }}>
