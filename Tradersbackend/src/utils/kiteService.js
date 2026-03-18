@@ -11,18 +11,19 @@ const SESSION_FILE = path.join(__dirname, '../data/kite_session.json');
 class KiteService {
     constructor() {
         this.accessToken = null;
-        this.initializationPromise = null;
-        this.lastFailedToken = null;
-        
+        this.sessionData = null;
+
         // Ensure data directory exists
         const dataDir = path.join(__dirname, '../data');
         if (!fs.existsSync(dataDir)) {
             fs.mkdirSync(dataDir, { recursive: true });
         }
-        
-        // Try to load existing session
+
+        // Load existing session if available
         this.loadSession();
     }
+
+    // ─── SESSION MANAGEMENT ───────────────────────────────
 
     loadSession() {
         try {
@@ -31,100 +32,87 @@ class KiteService {
                 if (content && content !== '{}') {
                     const data = JSON.parse(content);
                     if (data.access_token) {
-                        this.accessToken = data.access_token;
-                        this.lastFailedToken = null; // Clear failure flag if we found a token
-                        console.log('📂 Existing Kite session loaded from file.');
+                        // Check if session is from today (Kite tokens expire at ~6 AM next day)
+                        const savedDate = new Date(data.saved_at || 0).toDateString();
+                        const today = new Date().toDateString();
+
+                        if (savedDate === today) {
+                            this.accessToken = data.access_token;
+                            this.sessionData = data;
+                            console.log('📂 Kite session loaded (today\'s token)');
+                        } else {
+                            console.log('⚠️  Kite session expired (old date). Need fresh login.');
+                            this.accessToken = null;
+                            this.sessionData = null;
+                        }
                     }
                 }
             }
         } catch (err) {
-            console.error('Error loading Kite session:', err);
+            console.error('Error loading Kite session:', err.message);
         }
     }
 
     saveSession(data) {
         try {
-            fs.writeFileSync(SESSION_FILE, JSON.stringify(data, null, 2));
-            console.log('💾 Kite session saved to file.');
+            const sessionData = {
+                ...data,
+                saved_at: new Date().toISOString(),
+            };
+            fs.writeFileSync(SESSION_FILE, JSON.stringify(sessionData, null, 2));
+            console.log('💾 Kite session saved.');
         } catch (err) {
-            console.error('Error saving Kite session:', err);
+            console.error('Error saving Kite session:', err.message);
         }
     }
 
-    async getHeaders() {
-        if (!this.accessToken) {
-            this.loadSession(); // Try reloading if manually edited
-        }
-
-        if (!this.accessToken) {
-            if (this.initializationPromise) {
-                console.log('⏳ Authentication in progress, waiting...');
-                await this.initializationPromise;
-                return this.createHeaders();
-            }
-
-            const requestToken = process.env.KITE_REQUEST_TOKEN;
-            
-            if (!requestToken) {
-                throw new Error('Missing KITE_REQUEST_TOKEN in .env');
-            }
-
-            if (requestToken === this.lastFailedToken) {
-                throw new Error(`The provided Request Token ${requestToken.substring(0, 5)}... has already failed/expired. Please get a NEW one.`);
-            }
-
-            console.log('🔄 Access token missing. Attempting authentication with KITE_REQUEST_TOKEN...');
-            this.initializationPromise = (async () => {
-                try {
-                    const session = await this.generateSession(requestToken);
-                    this.accessToken = session.access_token;
-                    this.saveSession(session);
-                } catch (err) {
-                    this.lastFailedToken = requestToken;
-                    this.initializationPromise = null;
-                    throw err;
-                }
-            })();
-            
-            await this.initializationPromise;
-        }
-        return this.createHeaders();
-    }
-
-    createHeaders() {
-        if (!this.accessToken) throw new Error('Authentication required');
-        return {
-            'X-Kite-Version': '3',
-            'Authorization': `token ${API_KEY}:${this.accessToken}`,
-            'Content-Type': 'application/x-www-form-urlencoded'
-        };
-    }
-
-    async generateSession(requestToken) {
+    clearSession() {
+        this.accessToken = null;
+        this.sessionData = null;
         try {
-            const params = new URLSearchParams();
-            params.append('api_key', API_KEY);
-            params.append('request_token', requestToken);
-            params.append('checksum', this.generateChecksum(requestToken));
+            if (fs.existsSync(SESSION_FILE)) fs.unlinkSync(SESSION_FILE);
+        } catch (e) { /* ignore */ }
+    }
 
-            const response = await fetch(`${BASE_URL}/session/token`, {
-                method: 'POST',
-                headers: {
-                    'X-Kite-Version': '3',
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: params
-            });
+    // ─── AUTH FLOW ────────────────────────────────────────
 
-            const data = await response.json();
-            if (data.status === 'success') {
-                return data.data;
-            } else {
-                throw new Error(data.message || 'Authentication failed');
-            }
-        } catch (error) {
-            console.error('Kite Session Error:', error.message);
-            throw error;
+    // Step 1: Get Zerodha login URL
+    getLoginURL() {
+        if (!API_KEY) throw new Error('KITE_API_KEY not set in .env');
+        return `https://kite.trade/connect/login?api_key=${API_KEY}&v=3`;
+    }
+
+    // Step 2: Callback handler — Zerodha redirects here with request_token
+    async handleCallback(requestToken) {
+        if (!requestToken) throw new Error('request_token is required');
+        if (!API_KEY || !API_SECRET) throw new Error('KITE_API_KEY or KITE_API_SECRET not set');
+
+        const checksum = this.generateChecksum(requestToken);
+
+        const params = new URLSearchParams();
+        params.append('api_key', API_KEY);
+        params.append('request_token', requestToken);
+        params.append('checksum', checksum);
+
+        const response = await fetch(`${BASE_URL}/session/token`, {
+            method: 'POST',
+            headers: {
+                'X-Kite-Version': '3',
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: params
+        });
+
+        const data = await response.json();
+
+        if (data.status === 'success') {
+            this.accessToken = data.data.access_token;
+            this.sessionData = data.data;
+            this.saveSession(data.data);
+            console.log('✅ Kite session created successfully');
+            return data.data;
+        } else {
+            throw new Error(data.message || 'Kite authentication failed');
         }
     }
 
@@ -134,29 +122,46 @@ class KiteService {
         return hash.digest('hex');
     }
 
-    async getProfile() {
-        return this.makeRequest('/user/profile');
+    // ─── STATUS ───────────────────────────────────────────
+
+    isAuthenticated() {
+        return !!this.accessToken;
     }
 
-    async getMargins() {
-        return this.makeRequest('/user/margins');
+    getStatus() {
+        return {
+            connected: !!this.accessToken,
+            api_key: API_KEY ? `${API_KEY.substring(0, 4)}...` : null,
+            user: this.sessionData?.user_name || null,
+            user_id: this.sessionData?.user_id || null,
+            email: this.sessionData?.email || null,
+            broker: this.sessionData?.broker || null,
+            login_time: this.sessionData?.login_time || null,
+            saved_at: this.sessionData?.saved_at || null,
+        };
     }
 
-    async getHoldings() {
-        return this.makeRequest('/portfolio/holdings');
+    // ─── API HEADERS ──────────────────────────────────────
+
+    createHeaders() {
+        if (!this.accessToken) {
+            throw new Error('Kite not connected. Please login first via /api/kite/login');
+        }
+        return {
+            'X-Kite-Version': '3',
+            'Authorization': `token ${API_KEY}:${this.accessToken}`,
+            'Content-Type': 'application/x-www-form-urlencoded'
+        };
     }
 
-    async getPositions() {
-        return this.makeRequest('/portfolio/positions');
-    }
+    // ─── API METHODS ──────────────────────────────────────
 
-    async getOrders() {
-        return this.makeRequest('/orders');
-    }
-
-    async getTrades() {
-        return this.makeRequest('/trades');
-    }
+    async getProfile() { return this.makeRequest('/user/profile'); }
+    async getMargins() { return this.makeRequest('/user/margins'); }
+    async getHoldings() { return this.makeRequest('/portfolio/holdings'); }
+    async getPositions() { return this.makeRequest('/portfolio/positions'); }
+    async getOrders() { return this.makeRequest('/orders'); }
+    async getTrades() { return this.makeRequest('/trades'); }
 
     async getQuote(instruments) {
         const query = Array.isArray(instruments) ? instruments.join(',') : instruments;
@@ -168,39 +173,35 @@ class KiteService {
         return this.makeRequest(`/quote/ltp?i=${query}`);
     }
 
-    async getInstruments() {
-        return this.makeRequest('/instruments');
-    }
+    async getInstruments() { return this.makeRequest('/instruments'); }
 
     async getHistoricalData(instrumentToken, interval, from, to) {
         return this.makeRequest(`/instruments/historical/${instrumentToken}/${interval}?from=${from}&to=${to}`);
     }
 
+    // ─── GENERIC REQUEST ──────────────────────────────────
+
     async makeRequest(endpoint, method = 'GET', body = null) {
-        try {
-            const headers = await this.getHeaders();
-            const response = await fetch(`${BASE_URL}${endpoint}`, {
-                method,
-                headers,
-                body: body ? JSON.stringify(body) : null
-            });
+        const headers = this.createHeaders();
 
-            if (response.status === 403) {
-                // Token expired during request, clear session
-                this.accessToken = null;
-                if (fs.existsSync(SESSION_FILE)) fs.unlinkSync(SESSION_FILE);
-                throw new Error('Kite Session Expired. Please provide a new Request Token.');
-            }
+        const response = await fetch(`${BASE_URL}${endpoint}`, {
+            method,
+            headers,
+            body: body ? JSON.stringify(body) : null
+        });
 
-            const data = await response.json();
-            if (data.status === 'success') {
-                return data.data;
-            } else {
-                throw new Error(data.message || 'Kite API request failed');
-            }
-        } catch (error) {
-            console.error(`Kite API Error [${endpoint}]:`, error.message);
-            throw error;
+        // Token expired
+        if (response.status === 403) {
+            this.clearSession();
+            throw new Error('Kite session expired. Please login again via /api/kite/login');
+        }
+
+        const data = await response.json();
+
+        if (data.status === 'success') {
+            return data.data;
+        } else {
+            throw new Error(data.message || 'Kite API request failed');
         }
     }
 }

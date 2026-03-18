@@ -5,7 +5,7 @@ import mountainBg from '../assets/wallpapers/mountain-peak.jpg';
 const LoginPage = ({ onLogin }) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const [role, setRole] = useState('admin');
+    const role = 'admin';
     const [error, setError] = useState('');
 
     const QUICK_LOGIN = [
@@ -112,50 +112,6 @@ const LoginPage = ({ onLogin }) => {
 
                         {/* ── Form body — top padding = remaining half of header ── */}
                         <div style={{ padding: '42px 26px 28px 26px' }}>
-
-                            {/* Role selector */}
-                            <div style={{ marginBottom: '22px' }}>
-                                <label style={{
-                                    display: 'block',
-                                    color: '#94a3b8',
-                                    fontSize: '11px',
-                                    fontWeight: '700',
-                                    textTransform: 'uppercase',
-                                    letterSpacing: '0.06em',
-                                    marginBottom: '8px',
-                                }}>
-                                    User Role
-                                </label>
-                                <div style={{ display: 'flex', gap: '8px' }}>
-                                    {[
-                                        { value: 'superadmin', label: 'Super Admin', color: '#f59e0b' },
-                                        { value: 'admin', label: 'Admin', color: '#4caf50' },
-                                        { value: 'broker', label: 'Broker', color: '#3b82f6' },
-                                    ].map(r => (
-                                        <button
-                                            key={r.value}
-                                            type="button"
-                                            onClick={() => setRole(r.value)}
-                                            style={{
-                                                flex: 1,
-                                                padding: '7px 4px',
-                                                borderRadius: '5px',
-                                                fontSize: '10px',
-                                                fontWeight: '700',
-                                                textTransform: 'uppercase',
-                                                letterSpacing: '0.03em',
-                                                cursor: 'pointer',
-                                                transition: 'all 0.2s',
-                                                background: role === r.value ? r.color : 'rgba(255,255,255,0.05)',
-                                                color: role === r.value ? '#fff' : '#94a3b8',
-                                                border: `1px solid ${role === r.value ? r.color : 'rgba(255,255,255,0.10)'}`,
-                                            }}
-                                        >
-                                            {r.label}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
 
                             {/* Error */}
                             {error && (

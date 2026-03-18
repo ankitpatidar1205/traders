@@ -1,5 +1,6 @@
 const express = require('express');
 const kiteService = require('../utils/kiteService');
+const kiteTicker = require('../utils/kiteTicker');
 const { authMiddleware } = require('../middleware/auth');
 
 const router = express.Router();
@@ -8,13 +9,99 @@ const asyncHandler = (fn) => (req, res, next) => {
     Promise.resolve(fn(req, res, next)).catch(next);
 };
 
-router.post('/token', authMiddleware, asyncHandler(async (req, res) => {
-    const { requestToken } = req.body;
-    if (!requestToken) return res.status(400).json({ error: 'Request token required' });
-    
-    const result = await kiteService.generateSession(requestToken);
-    res.json(result);
+// ── AUTH FLOW ─────────────────────────────────────────
+
+// Step 1: Get login URL (frontend calls this, then redirects user)
+router.get('/login', authMiddleware, (req, res) => {
+    try {
+        const url = kiteService.getLoginURL();
+        res.json({ login_url: url });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Step 2: Zerodha redirects here after login (NO auth needed — this is a redirect from Zerodha)
+router.get('/callback', asyncHandler(async (req, res) => {
+    const { request_token, status } = req.query;
+
+    if (status === 'cancelled') {
+        return res.send(`
+            <html><body style="background:#1a1a2e;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0">
+                <div style="text-align:center">
+                    <h1 style="color:#e74c3c">❌ Login Cancelled</h1>
+                    <p>You cancelled the Zerodha login.</p>
+                    <script>setTimeout(()=>window.close(),3000)</script>
+                </div>
+            </body></html>
+        `);
+    }
+
+    if (!request_token) {
+        return res.status(400).send(`
+            <html><body style="background:#1a1a2e;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0">
+                <div style="text-align:center">
+                    <h1 style="color:#e74c3c">❌ Error</h1>
+                    <p>No request_token received from Zerodha.</p>
+                </div>
+            </body></html>
+        `);
+    }
+
+    try {
+        const session = await kiteService.handleCallback(request_token);
+
+        // Start Kite Ticker for live data
+        try {
+            kiteTicker.disconnect();
+            kiteTicker.fallbackToMock = false;
+            await kiteTicker.start();
+        } catch (e) {
+            console.log('Ticker start after login failed:', e.message);
+        }
+
+        // Return success page that auto-closes
+        const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+        res.send(`
+            <html><body style="background:#1a1a2e;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0">
+                <div style="text-align:center">
+                    <h1 style="color:#2ecc71">✅ Kite Connected Successfully!</h1>
+                    <p>User: <strong>${session.user_name || session.user_id || 'N/A'}</strong></p>
+                    <p>Redirecting back...</p>
+                    <script>
+                        setTimeout(() => {
+                            window.location.href = '${FRONTEND_URL}/kite-dashboard';
+                        }, 2000);
+                    </script>
+                </div>
+            </body></html>
+        `);
+    } catch (err) {
+        res.status(500).send(`
+            <html><body style="background:#1a1a2e;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0">
+                <div style="text-align:center">
+                    <h1 style="color:#e74c3c">❌ Authentication Failed</h1>
+                    <p>${err.message}</p>
+                    <p style="color:#888">Try logging in again.</p>
+                </div>
+            </body></html>
+        `);
+    }
 }));
+
+// Check connection status
+router.get('/status', authMiddleware, (req, res) => {
+    res.json(kiteService.getStatus());
+});
+
+// Disconnect / logout
+router.post('/disconnect', authMiddleware, (req, res) => {
+    kiteService.clearSession();
+    kiteTicker.disconnect();
+    res.json({ success: true, message: 'Kite disconnected' });
+});
+
+// ── KITE DATA APIs ────────────────────────────────────
 
 router.get('/profile', authMiddleware, asyncHandler(async (req, res) => {
     const data = await kiteService.getProfile();
@@ -70,6 +157,46 @@ router.get('/instruments/historical/:instrumentToken/:interval', authMiddleware,
     const { from, to } = req.query;
     const data = await kiteService.getHistoricalData(instrumentToken, interval, from, to);
     res.json(data);
+}));
+
+// ── Kite Ticker (WebSocket) routes ──
+
+router.get('/ticker/status', authMiddleware, asyncHandler(async (req, res) => {
+    res.json({
+        connected: kiteTicker.isConnected(),
+        fallbackToMock: kiteTicker.fallbackToMock,
+        subscribedCount: kiteTicker.subscribedTokens.length,
+    });
+}));
+
+router.get('/ticker/prices', authMiddleware, asyncHandler(async (req, res) => {
+    res.json(kiteTicker.getPrices());
+}));
+
+router.post('/ticker/subscribe', authMiddleware, asyncHandler(async (req, res) => {
+    const { tokens, instrumentMap } = req.body;
+    if (!tokens || !Array.isArray(tokens)) {
+        return res.status(400).json({ error: 'tokens array required' });
+    }
+    if (instrumentMap) kiteTicker.setInstrumentMap(instrumentMap);
+    kiteTicker.subscribe(tokens);
+    res.json({ success: true, subscribedCount: kiteTicker.subscribedTokens.length });
+}));
+
+router.post('/ticker/unsubscribe', authMiddleware, asyncHandler(async (req, res) => {
+    const { tokens } = req.body;
+    if (!tokens || !Array.isArray(tokens)) {
+        return res.status(400).json({ error: 'tokens array required' });
+    }
+    kiteTicker.unsubscribe(tokens);
+    res.json({ success: true, subscribedCount: kiteTicker.subscribedTokens.length });
+}));
+
+router.post('/ticker/reconnect', authMiddleware, asyncHandler(async (req, res) => {
+    kiteTicker.disconnect();
+    kiteTicker.fallbackToMock = false;
+    const started = await kiteTicker.start();
+    res.json({ success: started, connected: kiteTicker.isConnected() });
 }));
 
 module.exports = router;
