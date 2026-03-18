@@ -11,6 +11,8 @@ import ChangePasswordPage from './ChangePasswordPage';
 import DeleteClientPage from './DeleteClientPage';
 import Toast from '../../components/common/Toast';
 
+import GlobalSettingsPage from '../settings/GlobalSettingsPage';
+
 const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavigate }) => {
     const { isSuperAdmin, isAdmin } = useAuth();
     const [clients, setClients] = useState([]);
@@ -28,6 +30,7 @@ const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavig
     const [showRecalculatePage, setShowRecalculatePage] = useState(false);
     const [showChangePasswordPage, setShowChangePasswordPage] = useState(false);
     const [showDeletePage, setShowDeletePage] = useState(false);
+    const [showClientSettings, setShowClientSettings] = useState(false);
     const [toast, setToast] = useState({ message: '', type: 'success' });
 
     const fetchClients = async () => {
@@ -217,15 +220,6 @@ const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavig
                                                 <div className="flex items-center gap-1.5">
                                                     <button className="text-white hover:opacity-80 transition-opacity" onClick={() => handleView(client)} title="View">
                                                         <Eye className="w-[18px] h-[18px] stroke-[2.5]" />
-                                                    </button>
-                                                    <button className="text-white hover:opacity-80 transition-opacity" onClick={() => handleEdit(client)} title="Edit">
-                                                        <SquarePen className="w-[18px] h-[18px] stroke-[2.5]" />
-                                                    </button>
-                                                    <button className="text-white hover:opacity-80 transition-opacity" onClick={() => handleCopy(client)} title="Copy">
-                                                        <Copy className="w-[18px] h-[18px] stroke-[2.5]" />
-                                                    </button>
-                                                    <button className="text-white hover:opacity-80 transition-opacity" onClick={() => { setSelectedClient(client); setShowChangePasswordPage(true); }} title="Settings">
-                                                        <Settings className="w-[18px] h-[18px] stroke-[2.5]" />
                                                     </button>
                                                 </div>
                                                 <div className="flex items-center gap-2">
@@ -419,7 +413,21 @@ const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavig
                 />
             )}
 
-            {/* Delete Client Modal */}
+            {/* Client Global Settings Modal (Replcaed Delete with this) */}
+            {showClientSettings && selectedClient && (
+                <div className="fixed inset-0 z-[60] overflow-hidden flex flex-col bg-[#1a2035]">
+                    <GlobalSettingsPage 
+                        clientId={selectedClient.id} 
+                        clientName={selectedClient.username}
+                        onBack={() => {
+                            setShowClientSettings(false);
+                            setSelectedClient(null);
+                        }} 
+                    />
+                </div>
+            )}
+
+            {/* Delete Client Modal - Kept for reference or if still needed elsewhere, but hidden from main table now */}
             {showDeletePage && selectedClient && (
                 <DeleteClientPage
                     client={selectedClient}
