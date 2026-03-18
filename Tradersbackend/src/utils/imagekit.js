@@ -1,5 +1,6 @@
 const ImageKit = require('imagekit');
 
+<<<<<<< HEAD
 const credentialsPresent = 
     process.env.IMAGEKIT_PUBLIC_KEY && 
     process.env.IMAGEKIT_PRIVATE_KEY && 
@@ -8,14 +9,28 @@ const credentialsPresent =
 let imagekit = null;
 
 if (credentialsPresent) {
+=======
+let imagekit;
+
+if (process.env.IMAGEKIT_PUBLIC_KEY && process.env.IMAGEKIT_PRIVATE_KEY && process.env.IMAGEKIT_URL_ENDPOINT) {
+>>>>>>> 6694af3079890b923ddc1171fd740e38789f3849
     imagekit = new ImageKit({
         publicKey: process.env.IMAGEKIT_PUBLIC_KEY,
         privateKey: process.env.IMAGEKIT_PRIVATE_KEY,
         urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT
     });
+<<<<<<< HEAD
     console.log('✅ ImageKit initialized successfully');
 } else {
     console.warn('⚠️ ImageKit credentials missing in .env. Image uploads will not work.');
+=======
+} else {
+    console.warn("⚠️ ImageKit environment variables are missing. Image uploads will not work.");
+    imagekit = {
+        upload: async () => { throw new Error("ImageKit not configured"); },
+        deleteFile: async () => { console.warn("ImageKit not configured, cannot delete file"); }
+    };
+>>>>>>> 6694af3079890b923ddc1171fd740e38789f3849
 }
 
 /**

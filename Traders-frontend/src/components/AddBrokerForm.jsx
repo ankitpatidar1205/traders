@@ -182,7 +182,8 @@ const AddBrokerForm = ({ onBack, onSave, brokerId, mode = 'add' }) => {
             createClientsAllowed: 'No',
             clientTasksAllowed: 'No',
             tradeActivityAllowed: 'No',
-            notificationsAllowed: 'No'
+            notificationsAllowed: 'No',
+            canViewBackupData: 'No'
         },
 
         // Segments
@@ -517,6 +518,7 @@ const AddBrokerForm = ({ onBack, onSave, brokerId, mode = 'add' }) => {
                                 <PermissionRow label="Client Tasks Allowed (Account Reset, Recalculate brokerage etc.)" options={['Yes', 'No']} value={formData.permissions.clientTasksAllowed} onChange={(e) => handlePermissionChange('clientTasksAllowed', e.target.value)} disabled={isViewOnly} />
                                 <PermissionRow label="Trade Activity Allowed (Create, Update, Restore, Delete Trade)" options={['Yes', 'No']} value={formData.permissions.tradeActivityAllowed} onChange={(e) => handlePermissionChange('tradeActivityAllowed', e.target.value)} disabled={isViewOnly} />
                                 <PermissionRow label="Notifications Allowed" options={['Yes', 'No']} value={formData.permissions.notificationsAllowed} onChange={(e) => handlePermissionChange('notificationsAllowed', e.target.value)} disabled={isViewOnly} />
+                                <PermissionRow label="Can View Backup Data" options={['Yes', 'No']} value={formData.permissions.canViewBackupData || 'No'} onChange={(e) => handlePermissionChange('canViewBackupData', e.target.value)} disabled={isViewOnly} />
                             </div>
                         </div>
 

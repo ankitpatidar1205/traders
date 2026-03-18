@@ -1,586 +1,420 @@
 /**
  * Centralized API Service
- * All API calls go through this file
+ *
+ * Uses Axios with automatic JWT token handling via interceptors
+ * NO manual Authorization headers needed - token is attached automatically!
  */
 
-// Local development
+import api from '../utils/api';
+
+// ─── CONFIG ──────────────────────────────────────────
 const SERVER_IP = 'localhost';
 const PORT = '5000';
 export const BASE_URL = import.meta.env.VITE_API_URL || `http://${SERVER_IP}:${PORT}/api`;
 export const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || `http://${SERVER_IP}:${PORT}`;
 
-// Production backend on Railway (uncomment below & comment above to use live)
-// const PRODUCTION_URL = 'https://trader-production-e063.up.railway.app';
-// export const BASE_URL = import.meta.env.VITE_API_URL || `${PRODUCTION_URL}/api`;
-// export const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || PRODUCTION_URL;
-
-const getHeaders = () => ({
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${localStorage.getItem('traders_token') || ''}`,
-});
-
-const handleResponse = async (response) => {
-    if (response.status === 401) {
-        localStorage.clear();
-        window.location.href = '/';
-        throw new Error('Session expired. Please login again.');
-    }
-    if (response.status === 403) {
-        throw new Error('Access Denied. You do not have permission.');
-    }
-    if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        throw new Error(err.message || 'Something went wrong.');
-    }
-    return response.json();
-};
-
 // ─── AUTH ────────────────────────────────────────────
 export const login = async (username, password) => {
-    const res = await fetch(`${BASE_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-    });
-    return handleResponse(res);
+    const response = await api.post('/auth/login', { username, password });
+    return response.data;
 };
 
 // ─── PASSWORD ────────────────────────────────────────
 export const resetPassword = async (userId) => {
-    const res = await fetch(`${BASE_URL}/users/${userId}/reset-password`, {
-        method: 'POST',
-        headers: getHeaders(),
-    });
-    return handleResponse(res);
+    const response = await api.post(`/users/${userId}/reset-password`);
+    return response.data;
 };
 
 export const changePassword = async (newPassword) => {
-    const res = await fetch(`${BASE_URL}/auth/change-password`, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify({ newPassword }),
-    });
-    return handleResponse(res);
+    const response = await api.post('/auth/change-password', { newPassword });
+    return response.data;
 };
 
 export const changeTransactionPassword = async (newPassword, currentPassword) => {
-    const res = await fetch(`${BASE_URL}/auth/change-transaction-password`, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify({ newPassword, currentPassword }),
+    const response = await api.post('/auth/change-transaction-password', {
+        newPassword,
+        currentPassword
     });
-    return handleResponse(res);
+    return response.data;
 };
 
 export const verifyTransactionPassword = async (password) => {
-    const res = await fetch(`${BASE_URL}/auth/verify-transaction-password`, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify({ password }),
-    });
-    return handleResponse(res);
+    const response = await api.post('/auth/verify-transaction-password', { password });
+    return response.data;
 };
 
 // ─── CLIENTS ─────────────────────────────────────────
 export const getClients = async (params = {}) => {
-    const query = new URLSearchParams(params).toString();
-    const res = await fetch(`${BASE_URL}/users?${query}`, { headers: getHeaders() });
-    return handleResponse(res);    
+    const response = await api.get('/users', { params });
+    return response.data;
 };
 
 export const getClientById = async (id) => {
-    const res = await fetch(`${BASE_URL}/users/${id}`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get(`/users/${id}`);
+    return response.data;
 };
 
 export const createClient = async (data) => {
-    const res = await fetch(`${BASE_URL}/auth/create-user`, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify(data),
-    });
-    return handleResponse(res);
+    const response = await api.post('/auth/create-user', data);
+    return response.data;
 };
 
 // ─── BROKERS ─────────────────────────────────────────
 export const getBrokerList = async () => {
-    const res = await fetch(`${BASE_URL}/brokers`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get('/brokers');
+    return response.data;
 };
 
 export const createBroker = async (data) => {
-    const res = await fetch(`${BASE_URL}/brokers`, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify(data),
-    });
-    return handleResponse(res);
+    const response = await api.post('/brokers', data);
+    return response.data;
 };
 
 // ─── POSITIONS ───────────────────────────────────────
 export const getActivePositions = async (filters = {}) => {
-    const query = new URLSearchParams(filters).toString();
-    const res = await fetch(`${BASE_URL}/trades/active?${query}`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get('/trades/active', { params: filters });
+    return response.data;
 };
 
 export const getClosedPositions = async (filters = {}) => {
-    const query = new URLSearchParams(filters).toString();
-    const res = await fetch(`${BASE_URL}/trades/closed?status=CLOSED&${query}`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get('/trades/closed', {
+        params: { status: 'CLOSED', ...filters }
+    });
+    return response.data;
 };
 
 // ─── TRADES ──────────────────────────────────────────
 export const getTrades = async (filters = {}) => {
-    const query = new URLSearchParams(filters).toString();
-    const res = await fetch(`${BASE_URL}/trades?${query}`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get('/trades', { params: filters });
+    return response.data;
 };
 
 export const createTrade = async (data) => {
-    const res = await fetch(`${BASE_URL}/trades`, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify(data),
-    });
-    return handleResponse(res);
+    const response = await api.post('/trades', data);
+    return response.data;
 };
 
 export const placeOrder = async (data) => {
-    const res = await fetch(`${BASE_URL}/trades/place`, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify(data),
-    });
-    return handleResponse(res);
+    const response = await api.post('/trades/place', data);
+    return response.data;
 };
 
 export const closeTrade = async (id, data = {}) => {
-    const res = await fetch(`${BASE_URL}/trades/${id}/close`, {
-        method: 'PUT',
-        headers: getHeaders(),
-        body: JSON.stringify(data),
-    });
-    return handleResponse(res);
+    const response = await api.put(`/trades/${id}/close`, data);
+    return response.data;
 };
 
 export const deleteTrade = async (id) => {
-    const res = await fetch(`${BASE_URL}/trades/${id}`, {
-        method: 'DELETE',
-        headers: getHeaders(),
-    });
-    return handleResponse(res);
+    const response = await api.delete(`/trades/${id}`);
+    return response.data;
 };
 
 // ─── FUNDS ───────────────────────────────────────────
 export const getTraderFunds = async (filters = {}) => {
-    const query = new URLSearchParams(filters).toString();
-    const res = await fetch(`${BASE_URL}/funds?${query}`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get('/funds', { params: filters });
+    return response.data;
 };
 
 export const createFund = async (data) => {
-    const res = await fetch(`${BASE_URL}/funds`, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify(data),
-    });
-    return handleResponse(res);
+    const response = await api.post('/funds', data);
+    return response.data;
 };
 
 // ─── MARGIN ──────────────────────────────────────────
 export const getNetHoldingMargin = async (clientId) => {
-    const res = await fetch(`${BASE_URL}/portfolio/${clientId}/margin`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get(`/portfolio/${clientId}/margin`);
+    return response.data;
 };
 
 // ─── REQUESTS ────────────────────────────────────────
 export const getRequests = async (params = {}) => {
-    const query = new URLSearchParams(params).toString();
-    const res = await fetch(`${BASE_URL}/requests?${query}`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get('/requests', { params });
+    return response.data;
 };
 
 export const updateRequestStatus = async (requestId, status, remark) => {
-    const res = await fetch(`${BASE_URL}/requests/${requestId}`, {
-        method: 'PUT', // Changed from POST to PUT based on typical REST practices for updates
-        headers: getHeaders(),
-        body: JSON.stringify({ status, remark }),
-    });
-    return handleResponse(res);
+    const response = await api.put(`/requests/${requestId}`, { status, remark });
+    return response.data;
 };
 
 export const getDepositRequests = async () => {
-    const res = await fetch(`${BASE_URL}/requests/deposits`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get('/requests/deposits');
+    return response.data;
 };
 
 export const getWithdrawalRequests = async () => {
-    const res = await fetch(`${BASE_URL}/requests/withdrawals`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get('/requests/withdrawals');
+    return response.data;
 };
 
 export const approveRequest = async (requestId, type) => {
-    const res = await fetch(`${BASE_URL}/requests/${requestId}/approve`, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify({ type }),
-    });
-    return handleResponse(res);
+    const response = await api.post(`/requests/${requestId}/approve`, { type });
+    return response.data;
 };
 
 export const rejectRequest = async (requestId, type) => {
-    const res = await fetch(`${BASE_URL}/requests/${requestId}/reject`, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify({ type }),
-    });
-    return handleResponse(res);
+    const response = await api.post(`/requests/${requestId}/reject`, { type });
+    return response.data;
 };
 
 // ─── IP / SECURITY ───────────────────────────────────
 export const getIpLogins = async (params = {}) => {
-    const query = new URLSearchParams(params).toString();
-    const res = await fetch(`${BASE_URL}/security/ip-tracking?${query}`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get('/security/ip-tracking', { params });
+    return response.data;
 };
 
 export const deleteIpLogin = async (id) => {
-    const res = await fetch(`${BASE_URL}/security/ip-tracking/${id}`, {
-        method: 'DELETE',
-        headers: getHeaders(),
-    });
-    return handleResponse(res);
+    const response = await api.delete(`/security/ip-tracking/${id}`);
+    return response.data;
 };
-// Security API logic updated
 
 export const getTradeIpTracking = async () => {
-    const res = await fetch(`${BASE_URL}/security/trade-ip`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get('/security/trade-ip');
+    return response.data;
 };
 
 // ─── GLOBAL (SUPERADMIN ONLY) ────────────────────────
 export const getGlobalSettings = async () => {
-    const res = await fetch(`${BASE_URL}/admin/global-settings`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get('/admin/global-settings');
+    return response.data;
 };
 
 export const getActionLedger = async (params = {}) => {
-    const query = new URLSearchParams(params).toString();
-    const res = await fetch(`${BASE_URL}/system/audit-log?${query}`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get('/system/audit-log', { params });
+    return response.data;
 };
 
 export const getScrips = async () => {
-    const res = await fetch(`${BASE_URL}/system/scrips`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get('/system/scrips');
+    return response.data;
 };
 
 export const getTickers = async () => {
-    const res = await fetch(`${BASE_URL}/system/tickers`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get('/system/tickers');
+    return response.data;
 };
 
 export const createTicker = async (data) => {
-    const res = await fetch(`${BASE_URL}/system/tickers`, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify(data),
-    });
-    return handleResponse(res);
+    const response = await api.post('/system/tickers', data);
+    return response.data;
 };
 
 export const deleteTicker = async (id) => {
-    const res = await fetch(`${BASE_URL}/system/tickers/${id}`, {
-        method: 'DELETE',
-        headers: getHeaders(),
-    });
-    return handleResponse(res);
+    const response = await api.delete(`/system/tickers/${id}`);
+    return response.data;
 };
 
 // ─── BANNED LIMIT ORDERS ────────────────────────────
 export const getBannedOrders = async () => {
-    const res = await fetch(`${BASE_URL}/system/banned-orders`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get('/system/banned-orders');
+    return response.data;
 };
 
 export const createBannedOrder = async (data) => {
-    const res = await fetch(`${BASE_URL}/system/banned-orders`, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify(data),
-    });
-    return handleResponse(res);
+    const response = await api.post('/system/banned-orders', data);
+    return response.data;
 };
 
 export const deleteBannedOrders = async (ids) => {
-    const res = await fetch(`${BASE_URL}/system/banned-orders/delete-multiple`, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify({ ids }),
-    });
-    return handleResponse(res);
+    const response = await api.post('/system/banned-orders/delete-multiple', { ids });
+    return response.data;
 };
 
 export const updateGlobalSettings = async (data) => {
-    const res = await fetch(`${BASE_URL}/admin/global-settings`, {
-        method: 'PUT',
-        headers: getHeaders(),
-        body: JSON.stringify(data),
-    });
-    return handleResponse(res);
+    const response = await api.put('/admin/global-settings', data);
+    return response.data;
 };
 
 // ─── USER PROFILE UPDATE ─────────────────────────────
 export const updateUser = async (id, data) => {
-    const res = await fetch(`${BASE_URL}/users/${id}`, {
-        method: 'PUT',
-        headers: getHeaders(),
-        body: JSON.stringify(data),
-    });
-    return handleResponse(res);
+    const response = await api.put(`/users/${id}`, data);
+    return response.data;
 };
 
 // ─── CLIENT SETTINGS ─────────────────────────────────
-export const updateClientSettings = async (id, data) => {
-    const res = await fetch(`${BASE_URL}/users/${id}/settings`, {
-        method: 'PUT',
-        headers: getHeaders(),
-        body: JSON.stringify(data),
-    });
+export const getClientSettings = async (id) => {
+    const res = await fetch(`${BASE_URL}/users/${id}`, { headers: getHeaders() });
     return handleResponse(res);
+};
+
+export const updateClientSettings = async (id, data) => {
+    const response = await api.put(`/users/${id}/settings`, data);
+    return response.data;
 };
 
 // ─── BROKER SHARES ───────────────────────────────────
 export const getBrokerShares = async (id) => {
-    const res = await fetch(`${BASE_URL}/users/${id}/broker-shares`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get(`/users/${id}/broker-shares`);
+    return response.data;
 };
 
 export const updateBrokerShares = async (id, data) => {
-    const res = await fetch(`${BASE_URL}/users/${id}/broker-shares`, {
-        method: 'PUT',
-        headers: getHeaders(),
-        body: JSON.stringify(data),
-    });
-    return handleResponse(res);
+    const response = await api.put(`/users/${id}/broker-shares`, data);
+    return response.data;
 };
 
 // ─── DOCUMENTS ───────────────────────────────────────
 export const getDocuments = async (id) => {
-    const res = await fetch(`${BASE_URL}/users/${id}/documents`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get(`/users/${id}/documents`);
+    return response.data;
 };
 
 export const updateDocuments = async (id, formData) => {
-    // formData is FormData (for file upload) or plain object (text only)
-    const isFormData = formData instanceof FormData;
-    const res = await fetch(`${BASE_URL}/users/${id}/documents`, {
-        method: 'PUT',
-        headers: isFormData
-            ? { 'Authorization': `Bearer ${localStorage.getItem('traders_token') || ''}` }
-            : getHeaders(),
-        body: isFormData ? formData : JSON.stringify(formData),
+    // Handle FormData (file uploads)
+    const response = await api.put(`/users/${id}/documents`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
     });
-    return handleResponse(res);
+    return response.data;
 };
 
 // ─── USER SEGMENTS ───────────────────────────────────
 export const getUserSegments = async (id) => {
-    const res = await fetch(`${BASE_URL}/users/${id}/segments`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get(`/users/${id}/segments`);
+    return response.data;
 };
 
 export const updateUserSegments = async (id, segments) => {
-    const res = await fetch(`${BASE_URL}/users/${id}/segments`, {
-        method: 'PUT',
-        headers: getHeaders(),
-        body: JSON.stringify({ segments }),
-    });
-    return handleResponse(res);
+    const response = await api.put(`/users/${id}/segments`, { segments });
+    return response.data;
 };
 
 // ─── PASSWORDS (update via admin) ────────────────────
 export const updateUserPasswords = async (id, data) => {
-    const res = await fetch(`${BASE_URL}/users/${id}/passwords`, {
-        method: 'PUT',
-        headers: getHeaders(),
-        body: JSON.stringify(data),
-    });
-    return handleResponse(res);
+    const response = await api.put(`/users/${id}/passwords`, data);
+    return response.data;
 };
 
 export const updateUserStatus = async (userId, status) => {
-    const res = await fetch(`${BASE_URL}/users/${userId}/status`, {
-        method: 'PUT',
-        headers: getHeaders(),
-        body: JSON.stringify({ status }),
-    });
-    return handleResponse(res);
+    const response = await api.put(`/users/${userId}/status`, { status });
+    return response.data;
 };
 
 export const deleteUser = async (userId) => {
-    const res = await fetch(`${BASE_URL}/users/${userId}`, {
-        method: 'DELETE',
-        headers: getHeaders(),
-    });
-    return handleResponse(res);
+    const response = await api.delete(`/users/${userId}`);
+    return response.data;
 };
 
 // ─── DASHBOARD / MARKET ─────────────────────────────
 export const getIndices = async () => {
-    const res = await fetch(`${BASE_URL}/dashboard/indices`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get('/dashboard/indices');
+    return response.data;
 };
 
 export const getWatchlist = async () => {
-    const res = await fetch(`${BASE_URL}/dashboard/watchlist`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get('/dashboard/watchlist');
+    return response.data;
 };
 
 export const getLiveM2M = async () => {
-    const res = await fetch(`${BASE_URL}/dashboard/live-m2m`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get('/dashboard/live-m2m');
+    return response.data;
 };
 
 export const getBrokerM2M = async () => {
-    const res = await fetch(`${BASE_URL}/dashboard/broker-m2m`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get('/dashboard/broker-m2m');
+    return response.data;
 };
 
 export const getHierarchyAccounts = async (params = {}) => {
-    const query = new URLSearchParams(params).toString();
-    const res = await fetch(`${BASE_URL}/accounts/hierarchy?${query}`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get('/accounts/hierarchy', { params });
+    return response.data;
 };
 
 export const getGroupTrades = async (filters = {}) => {
-    const query = new URLSearchParams(filters).toString();
-    const res = await fetch(`${BASE_URL}/trades/group?${query}`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get('/trades/group', { params: filters });
+    return response.data;
 };
 
 export const getTradeAudit = async () => {
-    const res = await fetch(`${BASE_URL}/security/trade-audit`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get('/security/trade-audit');
+    return response.data;
 };
 
 export const globalBatchUpdate = async (data) => {
-    const res = await fetch(`${BASE_URL}/system/global-update`, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify(data),
-    });
-    return handleResponse(res);
+    const response = await api.post('/system/global-update', data);
+    return response.data;
 };
 
 export const getNegativeBalances = async () => {
-    const res = await fetch(`${BASE_URL}/accounts/negative-alerts`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get('/accounts/negative-alerts');
+    return response.data;
 };
 
 // ─── BANK DETAILS ─────────────────────────────────────
 export const getBanks = async () => {
-    const res = await fetch(`${BASE_URL}/bank`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get('/bank');
+    return response.data;
 };
 
 export const createBank = async (data) => {
-    const res = await fetch(`${BASE_URL}/bank`, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify(data),
-    });
-    return handleResponse(res);
+    const response = await api.post('/bank', data);
+    return response.data;
 };
 
 export const updateBank = async (id, data) => {
-    const res = await fetch(`${BASE_URL}/bank/${id}`, {
-        method: 'PUT',
-        headers: getHeaders(),
-        body: JSON.stringify(data),
-    });
-    return handleResponse(res);
+    const response = await api.put(`/bank/${id}`, data);
+    return response.data;
 };
 
 export const deleteBank = async (id) => {
-    const res = await fetch(`${BASE_URL}/bank/${id}`, {
-        method: 'DELETE',
-        headers: getHeaders(),
-    });
-    return handleResponse(res);
+    const response = await api.delete(`/bank/${id}`);
+    return response.data;
 };
 
 export const toggleBankStatus = async (id) => {
-    const res = await fetch(`${BASE_URL}/bank/${id}/toggle-status`, {
-        method: 'PATCH',
-        headers: getHeaders(),
-    });
-    return handleResponse(res);
+    const response = await api.patch(`/bank/${id}/toggle-status`);
+    return response.data;
 };
 
 // ─── NEW CLIENT BANK (Payment Details for Deposits) ──
 export const getNewClientBank = async () => {
-    const res = await fetch(`${BASE_URL}/new-client-bank`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get('/new-client-bank');
+    return response.data;
 };
 
 export const updateNewClientBank = async (data) => {
-    const res = await fetch(`${BASE_URL}/new-client-bank`, {
-        method: 'PUT',
-        headers: getHeaders(),
-        body: JSON.stringify(data),
-    });
-    return handleResponse(res);
+    const response = await api.put('/new-client-bank', data);
+    return response.data;
 };
 
 // ─── ADMIN PANEL: PERMISSIONS, THEME, LOGO ───────────
-
 export const getInitData = async () => {
-    const res = await fetch(`${BASE_URL}/admin/init`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get('/admin/init');
+    return response.data;
 };
 
 export const getAdminMenuPermissions = async (userId) => {
-    const res = await fetch(`${BASE_URL}/admin/menu-permissions/${userId}`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get(`/admin/menu-permissions/${userId}`);
+    return response.data;
 };
 
 export const saveAdminMenuPermissions = async (userId, menuPermissions) => {
-    const res = await fetch(`${BASE_URL}/admin/menu-permissions/${userId}`, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify({ menuPermissions }),
+    const response = await api.post(`/admin/menu-permissions/${userId}`, {
+        menuPermissions
     });
-    return handleResponse(res);
+    return response.data;
 };
 
 export const getThemeSettings = async () => {
-    const res = await fetch(`${BASE_URL}/admin/theme`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get('/admin/theme');
+    return response.data;
 };
 
 export const saveThemeSettings = async (theme) => {
-    const res = await fetch(`${BASE_URL}/admin/theme`, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify({ theme }),
-    });
-    return handleResponse(res);
+    const response = await api.post('/admin/theme', { theme });
+    return response.data;
 };
 
 export const getLogoPath = async () => {
-    const res = await fetch(`${BASE_URL}/admin/logo`);
-    return handleResponse(res);
+    const response = await api.get('/admin/logo');
+    return response.data;
 };
 
 export const uploadLogo = async (formData) => {
-    const res = await fetch(`${BASE_URL}/admin/logo`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('traders_token') || ''}` },
-        body: formData,
+    const response = await api.post('/admin/logo', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
     });
-    return handleResponse(res);
+    return response.data;
 };
 
 export const saveAdminPanelSettings = async (userId, theme, logoFile, profileImageFile) => {
@@ -588,133 +422,150 @@ export const saveAdminPanelSettings = async (userId, theme, logoFile, profileIma
     fd.append('theme', JSON.stringify(theme));
     if (logoFile) fd.append('logo', logoFile);
     if (profileImageFile) fd.append('profileImage', profileImageFile);
-    const res = await fetch(`${BASE_URL}/admin/panel-settings/${userId}`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('traders_token') || ''}` },
-        body: fd,
+
+    const response = await api.post(`/admin/panel-settings/${userId}`, fd, {
+        headers: { 'Content-Type': 'multipart/form-data' }
     });
-    return handleResponse(res);
+    return response.data;
 };
 
 export const getAdminPanelSettings = async (userId) => {
-    const res = await fetch(`${BASE_URL}/admin/panel-settings/${userId}`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get(`/admin/panel-settings/${userId}`);
+    return response.data;
 };
 
 // ─── NOTIFICATIONS ────────────────────────────────────
 export const getNotifications = async () => {
-    const res = await fetch(`${BASE_URL}/notifications`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get('/notifications');
+    return response.data;
 };
 
 export const markNotificationRead = async (id) => {
-    const res = await fetch(`${BASE_URL}/notifications/${id}/read`, { method: 'PUT', headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.put(`/notifications/${id}/read`);
+    return response.data;
 };
 
 export const markAllNotificationsRead = async () => {
-    const res = await fetch(`${BASE_URL}/notifications/read-all`, { method: 'PUT', headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.put('/notifications/read-all');
+    return response.data;
 };
 
 export const createNotification = async (data) => {
-    const res = await fetch(`${BASE_URL}/notifications`, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify(data),
-    });
-    return handleResponse(res);
+    const response = await api.post('/notifications', data);
+    return response.data;
 };
 
 export const deleteNotification = async (id) => {
-    const res = await fetch(`${BASE_URL}/notifications/${id}`, { method: 'DELETE', headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.delete(`/notifications/${id}`);
+    return response.data;
 };
 
 // ─── KITE API ─────────────────────────────────────────
 export const getKiteLoginURL = async () => {
-    const res = await fetch(`${BASE_URL}/kite/login`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get('/kite/login');
+    return response.data;
 };
 
 export const getKiteStatus = async () => {
-    const res = await fetch(`${BASE_URL}/kite/status`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get('/kite/status');
+    return response.data;
 };
 
 export const disconnectKite = async () => {
-    const res = await fetch(`${BASE_URL}/kite/disconnect`, { method: 'POST', headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.post('/kite/disconnect');
+    return response.data;
 };
 
 export const getKiteProfile = async () => {
-    const res = await fetch(`${BASE_URL}/kite/profile`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get('/kite/profile');
+    return response.data;
 };
 
 export const getKiteMargins = async () => {
-    const res = await fetch(`${BASE_URL}/kite/margins`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get('/kite/margins');
+    return response.data;
 };
 
 export const getKiteHoldings = async () => {
-    const res = await fetch(`${BASE_URL}/kite/holdings`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get('/kite/holdings');
+    return response.data;
 };
 
 export const getKitePositions = async () => {
-    const res = await fetch(`${BASE_URL}/kite/positions`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get('/kite/positions');
+    return response.data;
 };
 
 export const getKiteOrders = async () => {
-    const res = await fetch(`${BASE_URL}/kite/orders`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get('/kite/orders');
+    return response.data;
 };
 
 export const getKiteTrades = async () => {
-    const res = await fetch(`${BASE_URL}/kite/trades`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get('/kite/trades');
+    return response.data;
 };
 
 export const getKiteQuote = async (instruments) => {
-    const res = await fetch(`${BASE_URL}/kite/quote?i=${encodeURIComponent(instruments)}`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get('/kite/quote', {
+        params: { i: instruments }
+    });
+    return response.data;
 };
 
 export const getKiteLTP = async (instruments) => {
-    const res = await fetch(`${BASE_URL}/kite/quote/ltp?i=${encodeURIComponent(instruments)}`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get('/kite/quote/ltp', {
+        params: { i: instruments }
+    });
+    return response.data;
 };
 
 export const getKiteInstruments = async () => {
-    const res = await fetch(`${BASE_URL}/kite/instruments`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get('/kite/instruments');
+    return response.data;
 };
 
 export const getKiteTickerStatus = async () => {
-    const res = await fetch(`${BASE_URL}/kite/ticker/status`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get('/kite/ticker/status');
+    return response.data;
 };
 
 export const getKiteTickerPrices = async () => {
-    const res = await fetch(`${BASE_URL}/kite/ticker/prices`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get('/kite/ticker/prices');
+    return response.data;
 };
 
 export const subscribeKiteTicker = async (tokens, instrumentMap) => {
-    const res = await fetch(`${BASE_URL}/kite/ticker/subscribe`, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify({ tokens, instrumentMap }),
+    const response = await api.post('/kite/ticker/subscribe', {
+        tokens,
+        instrumentMap
     });
-    return handleResponse(res);
+    return response.data;
 };
 
 export const reconnectKiteTicker = async () => {
-    const res = await fetch(`${BASE_URL}/kite/ticker/reconnect`, {
-        method: 'POST',
-        headers: getHeaders(),
+    const response = await api.post('/kite/ticker/reconnect');
+    return response.data;
+};
+
+// ─── AI / VOICE COMMANDS ──────────────────────────────
+export const parseVoiceCommand = async (text) => {
+    const response = await api.post('/ai/ai-parse', { text });
+    return response.data;
+};
+
+export const executeCommand = async (commandData) => {
+    const response = await api.post('/ai/execute-command', commandData);
+    return response.data;
+};
+
+export const submitVoiceRecording = async (audioBlob, meta = {}) => {
+    const formData = new FormData();
+    formData.append('audio', audioBlob, `recording_${Date.now()}.webm`);
+    formData.append('meta', JSON.stringify(meta));
+
+    const response = await api.post('/voice/record', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
     });
-    return handleResponse(res);
+    return response.data;
 };

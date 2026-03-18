@@ -18,7 +18,6 @@ import TraderFundsPage from './pages/funds/TraderFundsPage';
 import ActiveTradesPage from './pages/trades/ActiveTradesPage';
 import ClosedTradesPage from './pages/trades/ClosedTradesPage';
 import MarketWatchPage from './pages/market/MarketWatchPage';
-import ActionLedgerPage from './pages/logs/ActionLedgerPage';
 import NotificationsPage from './pages/notifications/NotificationsPage';
 import ClosedPositionsPage from './pages/positions/ClosedPositionsPage';
 import TradingClientsPage from './pages/clients/TradingClientsPage';
@@ -39,8 +38,7 @@ import AddBrokerForm from './components/AddBrokerForm';
 import CreateTradeForm from './components/CreateTradeForm';
 import SimpleAddUserForm from './components/SimpleAddUserForm';
 import SimpleTraderForm from './components/SimpleTraderForm';
-import IpLoginsPage from './pages/logs/IpLoginsPage';
-import TradeIpTrackingPage from './pages/logs/TradeIpTrackingPage';
+import CreateClientPage from './pages/clients/CreateClientPage';
 import GlobalUpdationPage from './pages/settings/GlobalUpdationPage';
 import ThemeSettingsPage from './pages/settings/ThemeSettingsPage';
 import AccessDenied from './components/common/AccessDenied';
@@ -54,6 +52,7 @@ import Toast from './components/common/Toast';
 import EditBrokerPage from './pages/brokers/EditBrokerPage';
 import ViewBrokerPage from './pages/brokers/ViewBrokerPage';
 import EditAdminPage from './pages/users/EditAdminPage';
+import GlobalSettingsPage from './pages/settings/GlobalSettingsPage';
 
 import { useAuth, ROLES } from './context/AuthContext';
 import * as api from './services/api';
@@ -81,10 +80,11 @@ function App() {
             const response = await api.login(username, password);
 
             // Store token for API headers
-            localStorage.setItem('traders_token', response.token);
+            localStorage.setItem('token', response.token);
 
             // Proceed with AuthContext login
             authLogin(response.user.username, response.user.role, {
+                ...response.user,
                 userId: response.user.id,
                 fullName: response.user.fullName,
             });
@@ -226,18 +226,17 @@ function App() {
                 <Route path="/accounts" element={<ProtectedRoute viewId="accounts"><AccountsPage /></ProtectedRoute>} />
                 <Route path="/banned" element={<ProtectedRoute viewId="banned"><BannedLimitOrdersPage /></ProtectedRoute>} />
                 <Route path="/bank" element={<ProtectedRoute viewId="bank"><BankDetailsPage /></ProtectedRoute>} />
-                <Route path="/trades" element={<TradesPage trades={trades} onCreateClick={() => setView('create-trade')} />} />
+                <Route path="/trades" element={<ProtectedRoute viewId="trades"><TradesPage trades={trades} onCreateClick={() => setView('create-trade')} /></ProtectedRoute>} />
                 <Route path="/tickers" element={<ProtectedRoute viewId="tickers"><TickersPage /></ProtectedRoute>} />
-                <Route path="/broker-m2m" element={<BrokerM2MPage />} />
-                <Route path="/active-positions" element={<ActivePositionsPage onNavigate={setView} />} />
+                <Route path="/broker-m2m" element={<ProtectedRoute viewId="broker-m2m"><BrokerM2MPage /></ProtectedRoute>} />
+                <Route path="/active-positions" element={<ProtectedRoute viewId="active-positions"><ActivePositionsPage onNavigate={setView} /></ProtectedRoute>} />
                 <Route path="/funds" element={<TraderFundsPage onNavigate={setView} />} />
                 <Route path="/create-fund" element={<CreateFundForm onBack={() => setView('funds')} onSave={(data) => handleActionSuccess('Fund entry created successfully', 'funds')} />} />
-                <Route path="/active-trades" element={<ActiveTradesPage />} />
-                <Route path="/closed-trades" element={<ClosedTradesPage />} />
-                <Route path="/market-watch" element={<MarketWatchPage />} />
-                <Route path="/action-ledger" element={<ProtectedRoute viewId="action-ledger"><ActionLedgerPage /></ProtectedRoute>} />
+                <Route path="/active-trades" element={<ProtectedRoute viewId="active-trades"><ActiveTradesPage /></ProtectedRoute>} />
+                <Route path="/closed-trades" element={<ProtectedRoute viewId="closed-trades"><ClosedTradesPage /></ProtectedRoute>} />
+                <Route path="/market-watch" element={<ProtectedRoute viewId="market-watch"><MarketWatchPage /></ProtectedRoute>} />
                 <Route path="/notifications" element={<NotificationsPage />} />
-                <Route path="/closed-positions" element={<ClosedPositionsPage />} />
+                <Route path="/closed-positions" element={<ProtectedRoute viewId="closed-positions"><ClosedPositionsPage /></ProtectedRoute>} />
                 
                 <Route path="/trading-clients" element={<ProtectedRoute viewId="trading-clients"><TradingClientsPage
                     onLogout={handleLogout}
@@ -246,7 +245,7 @@ function App() {
                     onWithdrawClick={handleWithdraw}
                 /></ProtectedRoute>} />
 
-                <Route path="/create-client" element={<SimpleTraderForm onBack={() => setView('trading-clients')} onSave={() => handleActionSuccess('Client created successfully', 'trading-clients')} />} />
+                <Route path="/create-client" element={<CreateClientPage onClose={() => setView('trading-clients')} onSave={() => handleActionSuccess('Client created successfully', 'trading-clients')} onLogout={handleLogout} onNavigate={setView} />} />
                 <Route path="/create-admin" element={<SimpleAddUserForm role="Admin" onBack={() => setView('admins')} onSave={() => handleActionSuccess('Admin created successfully', 'admins')} />} />
                 <Route path="/create-broker" element={<AddBrokerForm onBack={() => setView('brokers')} onSave={() => handleActionSuccess('Broker created successfully', 'brokers')} />} />
                 <Route path="/edit-broker/:id" element={<EditBrokerPage onSave={() => handleActionSuccess('Broker updated successfully', 'brokers')} onBack={() => setView('brokers')} />} />
@@ -277,13 +276,12 @@ function App() {
                 <Route path="/deposit-requests" element={<ProtectedRoute viewId="deposit-requests"><DepositRequestsPage /></ProtectedRoute>} />
                 <Route path="/negative-balance" element={<ProtectedRoute viewId="negative-balance"><NegativeBalanceTxnsPage /></ProtectedRoute>} />
                 
-                <Route path="/pending-orders" element={<PendingOrdersPage />} />
-                <Route path="/scrip-data" element={<ScripDataPage />} />
+                <Route path="/pending-orders" element={<ProtectedRoute viewId="pending-orders"><PendingOrdersPage /></ProtectedRoute>} />
+                <Route path="/scrip-data" element={<ProtectedRoute viewId="scrip-data"><ScripDataPage /></ProtectedRoute>} />
                 <Route path="/group-trades" element={<ProtectedRoute viewId="group-trades"><GroupTradesPage /></ProtectedRoute>} />
-                <Route path="/ip-logins" element={<ProtectedRoute viewId="ip-logins"><IpLoginsPage /></ProtectedRoute>} />
-                <Route path="/trade-ip-tracking" element={<ProtectedRoute viewId="trade-ip-tracking"><TradeIpTrackingPage /></ProtectedRoute>} />
                 <Route path="/global-updation" element={<ProtectedRoute viewId="global-updation"><GlobalUpdationPage /></ProtectedRoute>} />
                 <Route path="/theme-settings" element={<ProtectedRoute viewId="theme-settings"><ThemeSettingsPage /></ProtectedRoute>} />
+                <Route path="/global-settings" element={<ProtectedRoute viewId="global-settings"><GlobalSettingsPage onBack={() => setView('live-m2m')} /></ProtectedRoute>} />
                 
                 <Route path="/learning" element={<LearningPage segment={user?.segment} />} />
                 <Route path="/support" element={<RaiseTicketPage user={user} />} />

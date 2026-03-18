@@ -3,6 +3,9 @@
  *
  * Full frontend voice recording + history page.
  * ─ MediaRecorder API via useVoiceRecorder hook
+ * ─ Web Speech API (webkitSpeechRecognition) for transcript capture
+ * ─ /ai-parse → confirmation dialog → /execute-command flow
+ * ─ SpeechSynthesis API for success voice feedback
  * ─ States: idle | recording | processing | completed | error
  * ─ History cards: always-visible transcript + AI response (inline, no expand needed)
  * ─ Processing disables play button + shows spinner
@@ -18,7 +21,7 @@ import {
     RefreshCcw, Radio, Headphones, X
 } from 'lucide-react';
 import useVoiceRecorder from '../../hooks/useVoiceRecorder';
-import { submitVoiceRecording } from '../../services/voiceService';
+import { parseVoiceCommand, executeCommand } from '../../services/voiceService';
 
 // ─── Status constants ─────────────────────────────────────────────────────────
 
@@ -307,6 +310,91 @@ const HistoryCard = ({ item, activePlayingId, onPlay, onPause, onEnded, onRemove
     );
 };
 
+// ─── Confirmation Dialog ──────────────────────────────────────────────────────
+
+const ConfirmationDialog = ({ data, onConfirm, onCancel, loading }) => {
+    if (!data) return null;
+
+    const getConfirmText = () => {
+        const action = (data.action || '').replace(/_/g, ' ');
+        if (data.action === 'ADD_FUND') {
+            return `Are you sure you want to ADD ₹${data.amount} to user ${data.userId}?`;
+        }
+        if (data.action === 'WITHDRAW_FUND') {
+            return `Are you sure you want to WITHDRAW ₹${data.amount} from user ${data.userId}?`;
+        }
+        if (data.amount && data.userId) {
+            return `Are you sure you want to ${action} ₹${data.amount} for user ${data.userId}?`;
+        }
+        return `Are you sure you want to execute: ${action}?`;
+    };
+
+    return (
+        <div className="fixed inset-0 z-[9998] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+            <div
+                className="bg-[#1f283e] border border-white/15 rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl"
+                style={{ animation: 'toastSlideIn 0.28s cubic-bezier(0.16,1,0.3,1) both' }}
+            >
+                {/* Header */}
+                <div className="flex items-center gap-3 mb-5">
+                    <div className="p-2 bg-amber-500/20 rounded-lg border border-amber-500/20">
+                        <Bot className="w-5 h-5 text-amber-400" />
+                    </div>
+                    <h3 className="text-white font-black uppercase tracking-widest text-sm">
+                        Confirm Command
+                    </h3>
+                </div>
+
+                {/* Command details */}
+                <div className="bg-white/5 rounded-xl border border-white/8 p-4 mb-6">
+                    <p className="text-slate-300 text-sm font-medium leading-relaxed">
+                        {getConfirmText()}
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                        {data.action && (
+                            <span className="px-2.5 py-1 bg-green-500/10 border border-green-500/20 rounded-lg text-[10px] font-black uppercase tracking-widest text-green-400">
+                                {data.action.replace(/_/g, ' ')}
+                            </span>
+                        )}
+                        {data.userId && (
+                            <span className="px-2.5 py-1 bg-blue-500/10 border border-blue-500/20 rounded-lg text-[10px] font-black uppercase tracking-widest text-blue-400">
+                                User #{data.userId}
+                            </span>
+                        )}
+                        {data.amount && (
+                            <span className="px-2.5 py-1 bg-purple-500/10 border border-purple-500/20 rounded-lg text-[10px] font-black uppercase tracking-widest text-purple-400">
+                                ₹{data.amount}
+                            </span>
+                        )}
+                    </div>
+                </div>
+
+                {/* Action buttons */}
+                <div className="flex gap-3">
+                    <button
+                        onClick={onCancel}
+                        disabled={loading}
+                        className="flex-1 px-4 py-2.5 rounded-xl border border-white/10 text-slate-400 hover:text-white hover:bg-white/5 text-[11px] font-black uppercase tracking-widest transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={onConfirm}
+                        disabled={loading}
+                        className="flex-1 px-4 py-2.5 rounded-xl bg-green-500/20 border border-green-500/40 text-green-400 hover:bg-green-500/30 text-[11px] font-black uppercase tracking-widest transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                        {loading ? (
+                            <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Executing…</>
+                        ) : (
+                            <><CheckCircle2 className="w-3.5 h-3.5" /> Confirm</>
+                        )}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 const VoiceModulationPage = () => {
@@ -316,6 +404,16 @@ const VoiceModulationPage = () => {
     const [activePlayingId, setActivePlayingId] = useState(null);
     const [toast, setToast] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // ── Voice command states ───────────────────────────────────────────────────
+    const [isListening, setIsListening] = useState(false);
+    const [transcript, setTranscript] = useState('');
+    const [confirmData, setConfirmData] = useState(null);   // { action, userId, amount, itemId }
+    const [confirmLoading, setConfirmLoading] = useState(false);
+
+    // ── Refs ──────────────────────────────────────────────────────────────────
+    const recognitionRef = useRef(null);
+    const finalTranscriptRef = useRef('');
 
     // ── Toast helpers ─────────────────────────────────────────────────────────
 
@@ -338,16 +436,142 @@ const VoiceModulationPage = () => {
         dispatch({ type: 'REMOVE', id });
     }, []);
 
-    // ── Submit recording to backend ───────────────────────────────────────────
+    // ── SpeechSynthesis helper ────────────────────────────────────────────────
+
+    const speakMessage = useCallback((text) => {
+        if (!window.speechSynthesis) return;
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 1;
+        utterance.pitch = 1;
+        utterance.volume = 1;
+        window.speechSynthesis.speak(utterance);
+    }, []);
+
+    // ── Speech Recognition ────────────────────────────────────────────────────
+
+    const startSpeechRecognition = useCallback(() => {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            showToast('Speech recognition not supported in this browser.', 'error');
+            return;
+        }
+
+        finalTranscriptRef.current = '';
+        setTranscript('');
+
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = false;
+        recognition.lang = 'en-IN';
+
+        recognition.onresult = (event) => {
+            let text = '';
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                if (event.results[i].isFinal) {
+                    text += event.results[i][0].transcript + ' ';
+                }
+            }
+            finalTranscriptRef.current += text;
+            setTranscript(finalTranscriptRef.current.trim());
+        };
+
+        recognition.onerror = (event) => {
+            if (event.error !== 'no-speech' && event.error !== 'aborted') {
+                showToast(`Speech recognition error: ${event.error}`, 'error');
+            }
+        };
+
+        recognition.onend = () => {
+            setIsListening(false);
+        };
+
+        try {
+            recognition.start();
+            recognitionRef.current = recognition;
+            setIsListening(true);
+        } catch {
+            showToast('Failed to start speech recognition.', 'error');
+        }
+    }, [showToast]);
+
+    const stopSpeechRecognition = useCallback(() => {
+        if (recognitionRef.current) {
+            try { recognitionRef.current.stop(); } catch { /* already stopped */ }
+            recognitionRef.current = null;
+        }
+        setIsListening(false);
+    }, []);
+
+    // ── Cleanup speech recognition on unmount ─────────────────────────────────
+
+    useEffect(() => {
+        return () => {
+            if (recognitionRef.current) {
+                try { recognitionRef.current.stop(); } catch {}
+                recognitionRef.current = null;
+            }
+            window.speechSynthesis?.cancel();
+        };
+    }, []);
+
+    // ── Execute command (after confirmation) ──────────────────────────────────
+
+    const handleConfirm = useCallback(async () => {
+        if (!confirmData) return;
+
+        const { itemId, ...commandData } = confirmData;
+        setConfirmLoading(true);
+
+        try {
+            await executeCommand(commandData);
+            dispatch({
+                type: 'UPDATE',
+                id: itemId,
+                patch: { status: STATUS.SUCCESS },
+            });
+            showToast('Command executed successfully!', 'success');
+            speakMessage('Command executed successfully');
+        } catch (err) {
+            dispatch({
+                type: 'UPDATE',
+                id: itemId,
+                patch: { status: STATUS.FAILED },
+            });
+            showToast(err?.message || 'Command execution failed.', 'error');
+        } finally {
+            setConfirmLoading(false);
+            setConfirmData(null);
+        }
+    }, [confirmData, showToast, speakMessage]);
+
+    const handleCancel = useCallback(() => {
+        if (confirmData?.itemId) {
+            dispatch({
+                type: 'UPDATE',
+                id: confirmData.itemId,
+                patch: { status: STATUS.FAILED },
+            });
+        }
+        setConfirmData(null);
+    }, [confirmData]);
+
+    // ── Submit recording → ai-parse → confirmation ────────────────────────────
 
     const submitRecording = useCallback(async (blob, audioURL) => {
         if (!blob) return;
+
+        const capturedTranscript = finalTranscriptRef.current.trim();
+
+        if (!capturedTranscript) {
+            showToast('No speech detected. Please speak clearly and try again.', 'error');
+            return;
+        }
 
         setIsSubmitting(true);
 
         const itemId = `vr-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
 
-        // Build timestamp: 02 Mar 2026 – 12:09 PM
         const now = new Date();
         const timestamp = now.toLocaleString('en-IN', {
             day: '2-digit',
@@ -364,7 +588,7 @@ const VoiceModulationPage = () => {
             item: {
                 id: itemId,
                 audioURL,
-                transcript: '',
+                transcript: capturedTranscript,
                 aiResponse: '',
                 status: STATUS.PROCESSING,
                 timestamp,
@@ -372,24 +596,27 @@ const VoiceModulationPage = () => {
         });
 
         try {
-            const result = await submitVoiceRecording(blob, { timestamp });
+            const parsed = await parseVoiceCommand(capturedTranscript);
+
+            const aiSummary = parsed.action
+                ? `${parsed.action}${parsed.amount ? ` · ₹${parsed.amount}` : ''}${parsed.userId ? ` · User #${parsed.userId}` : ''}`
+                : JSON.stringify(parsed);
+
             dispatch({
                 type: 'UPDATE',
                 id: itemId,
-                patch: {
-                    transcript: result?.transcript || '',
-                    aiResponse: result?.aiResponse || '',
-                    status: STATUS.SUCCESS,
-                },
+                patch: { aiResponse: aiSummary },
             });
-            showToast('Recording processed successfully!', 'success');
+
+            // Show confirmation dialog – keep status as PROCESSING until confirmed/cancelled
+            setConfirmData({ ...parsed, itemId });
         } catch (err) {
             dispatch({
                 type: 'UPDATE',
                 id: itemId,
                 patch: { status: STATUS.FAILED },
             });
-            showToast(err?.message || 'Submission failed. Recording saved locally.', 'error');
+            showToast(err?.message || 'AI parsing failed. Please try again.', 'error');
         } finally {
             setIsSubmitting(false);
         }
@@ -399,6 +626,7 @@ const VoiceModulationPage = () => {
 
     useEffect(() => {
         if (recorder.isCompleted && recorder.audioBlob && recorder.audioURL) {
+            stopSpeechRecognition();
             submitRecording(recorder.audioBlob, recorder.audioURL);
             recorder.reset();
         }
@@ -409,16 +637,19 @@ const VoiceModulationPage = () => {
     useEffect(() => {
         if (recorder.isError && recorder.errorMessage) {
             showToast(recorder.errorMessage, 'error');
+            stopSpeechRecognition();
         }
-    }, [recorder.isError, recorder.errorMessage, showToast]);
+    }, [recorder.isError, recorder.errorMessage, showToast]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // ── Mic button handler ────────────────────────────────────────────────────
 
     const handleMicClick = () => {
         if (recorder.isRecording) {
             recorder.stopRecording();
+            stopSpeechRecognition();
         } else if (!isSubmitting && !recorder.isProcessing) {
             recorder.startRecording();
+            startSpeechRecognition();
         }
     };
 
@@ -527,6 +758,21 @@ const VoiceModulationPage = () => {
                                     </p>
                                 )}
                             </div>
+
+                            {/* Live transcript preview while recording */}
+                            {recorder.isRecording && transcript && (
+                                <div className="w-full bg-white/5 rounded-xl border border-white/8 px-4 py-3">
+                                    <div className="flex items-center gap-1.5 mb-1.5">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse flex-shrink-0" />
+                                        <span className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-500">
+                                            Live Transcript
+                                        </span>
+                                    </div>
+                                    <p className="text-[11px] text-slate-300 leading-relaxed italic">
+                                        "{transcript}"
+                                    </p>
+                                </div>
+                            )}
 
                             {/* Progress bar */}
                             {recorder.isRecording && (
@@ -642,6 +888,14 @@ const VoiceModulationPage = () => {
                     </div>
                 </div>
             </div>
+
+            {/* ── Confirmation Dialog ── */}
+            <ConfirmationDialog
+                data={confirmData}
+                onConfirm={handleConfirm}
+                onCancel={handleCancel}
+                loading={confirmLoading}
+            />
 
             {/* ── Toast ── */}
             {toast && (

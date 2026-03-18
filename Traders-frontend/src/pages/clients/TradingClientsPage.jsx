@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { RotateCcw, SquarePen, ArrowUp, ArrowDown, Eye, Copy, Trash2 } from 'lucide-react';
+import { RotateCcw, SquarePen, ArrowUp, ArrowDown, Eye, Copy, Trash2, Settings, FileText } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import * as api from '../../services/api';
 import ClientDetailPage from './ClientDetailPage';
@@ -10,6 +10,8 @@ import RecalculateBrokeragePage from './RecalculateBrokeragePage';
 import ChangePasswordPage from './ChangePasswordPage';
 import DeleteClientPage from './DeleteClientPage';
 import Toast from '../../components/common/Toast';
+
+import GlobalSettingsPage from '../settings/GlobalSettingsPage';
 
 const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavigate }) => {
     const { isSuperAdmin, isAdmin } = useAuth();
@@ -28,6 +30,7 @@ const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavig
     const [showRecalculatePage, setShowRecalculatePage] = useState(false);
     const [showChangePasswordPage, setShowChangePasswordPage] = useState(false);
     const [showDeletePage, setShowDeletePage] = useState(false);
+    const [showClientSettings, setShowClientSettings] = useState(false);
     const [toast, setToast] = useState({ message: '', type: 'success' });
 
     const fetchClients = async () => {
@@ -101,7 +104,7 @@ const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavig
     };
 
     return (
-        <div className="flex flex-col h-full bg-[#1a2035] shadow-inner space-y-8 overflow-y-auto custom-scrollbar">
+        <div className="relative flex flex-col h-full bg-[#1a2035] shadow-inner space-y-8 overflow-y-auto custom-scrollbar">
 
             <div className="px-6 space-y-8 pb-10">
                 {/* Search Section */}
@@ -189,18 +192,28 @@ const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavig
                             <thead className="bg-[#1a2035]/50">
                                 <tr className="text-white/90 text-[13px] uppercase tracking-wider">
                                     <th className="px-4 py-5 font-bold w-16">#</th>
-                                    <th className="px-4 py-5 font-bold text-center w-40">Actions</th>
+                                    <th className="px-4 py-5 font-bold text-center w-40">ACTIONS</th>
                                     <th className="px-4 py-5 font-bold">ID ↑</th>
                                     <th className="px-4 py-5 font-bold">Full Name ↑</th>
                                     <th className="px-4 py-5 font-bold">Username</th>
                                     <th className="px-4 py-5 font-bold">Ledger Balance ↑</th>
-                                    <th className="px-4 py-5 font-bold">Gross P/L ↑</th>
-                                    <th className="px-4 py-5 font-bold">Brokerage ↑</th>
-                                    <th className="px-4 py-5 font-bold">Swap Charges ↑</th>
-                                    <th className="px-4 py-5 font-bold">Net P/L</th>
+                                    {isAdmin() && (
+                                        <>
+                                            <th className="px-4 py-5 font-bold">Gross P/L ↑</th>
+                                            <th className="px-4 py-5 font-bold">Brokerage ↑</th>
+                                            <th className="px-4 py-5 font-bold">Swap Charges ↑</th>
+                                            <th className="px-4 py-5 font-bold">Net P/L</th>
+                                        </>
+                                    )}
                                     <th className="px-4 py-5 font-bold">Admin</th>
                                     <th className="px-4 py-5 font-bold">Demo Account?</th>
                                     <th className="px-4 py-5 font-bold">Account Status</th>
+                                    {isAdmin() && (
+                                        <>
+                                            <th className="px-4 py-5 font-bold">Active Trades</th>
+                                            <th className="px-4 py-5 font-bold">Backup</th>
+                                        </>
+                                    )}
                                     <th className="px-4 py-5 font-bold">KYC Status</th>
                                 </tr>
                             </thead>
@@ -213,39 +226,45 @@ const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavig
                                     <tr key={client.id} className="border-t border-white/5 hover:bg-white/[0.02] transition-colors">
                                         <td className="px-4 py-6">{index + 1}</td>
                                         <td className="px-4 py-6">
-                                            <div className="flex flex-col items-start gap-3 pl-2">
-                                                <div className="action-icons">
-                                                    <button className="action-icon action-icon-view" onClick={() => handleView(client)} title="View">
-                                                        <Eye className="w-4 h-4" />
-                                                    </button>
-                                                    <button className="action-icon action-icon-edit" onClick={() => handleEdit(client)} title="Edit">
-                                                        <SquarePen className="w-4 h-4" />
-                                                    </button>
-                                                    <button className="action-icon action-icon-copy" onClick={() => handleCopy(client)} title="Copy">
-                                                        <Copy className="w-4 h-4" />
-                                                    </button>
-                                                    <button className="action-icon action-icon-delete" onClick={() => { setSelectedClient(client); setShowDeletePage(true); }} title="Delete">
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </button>
+                                            <div className="grid grid-cols-4 gap-x-1.5 gap-y-1.5 w-max mx-auto items-center justify-items-center">
+                                                <button className="text-white hover:text-blue-400 transition-colors flex justify-center items-center" onClick={() => handleView(client)} title="View">
+                                                    <i className="fa-solid fa-eye text-[15px]"></i>
+                                                </button>
+                                                <button className="text-white hover:text-blue-400 transition-colors flex justify-center items-center" onClick={() => handleEdit(client)} title="Edit">
+                                                    <i className="fa-solid fa-pencil text-[15px]"></i>
+                                                </button>
+                                                {isAdmin() && (
+                                                    <>
+                                                        <button className="text-white hover:text-blue-400 transition-colors flex justify-center items-center" onClick={() => handleCopy(client)} title="Copy">
+                                                            <i className="fa-solid fa-copy text-[15px]"></i>
+                                                        </button>
+                                                        <button className="text-white hover:text-blue-400 transition-colors flex justify-center items-center" onClick={() => { setSelectedClient(client); setShowClientSettings(true); }} title="Client Settings">
+                                                            <i className="fa-solid fa-gear text-[15px]"></i>
+                                                        </button>
+                                                    </>
+                                                )}
+
+                                                <div onClick={() => handleDeposit(client)} className="w-[18px] h-[18px] bg-[#5cb85c] hover:bg-[#4caf50] rounded-full flex items-center justify-center cursor-pointer transition-all shadow-sm">
+                                                    <i className="fa-solid fa-arrow-down text-white text-[11px] font-black"></i>
                                                 </div>
-                                                <div className="flex items-center gap-2">
-                                                    <div onClick={() => handleDeposit(client)} className="w-5 h-5 bg-[#5cb85c] hover:bg-[#4caf50] rounded-full flex items-center justify-center shadow-lg cursor-pointer transition-all">
-                                                        <ArrowDown className="w-3 h-3 text-white" />
-                                                    </div>
-                                                    <div onClick={() => handleWithdraw(client)} className="w-5 h-5 bg-[#d9534f] hover:bg-[#c9302c] rounded-full flex items-center justify-center shadow-lg cursor-pointer transition-all">
-                                                        <ArrowUp className="w-3 h-3 text-white" />
-                                                    </div>
+                                                <div onClick={() => handleWithdraw(client)} className="w-[18px] h-[18px] bg-[#f44336] hover:bg-[#d32f2f] rounded-full flex items-center justify-center cursor-pointer transition-all shadow-sm">
+                                                    <i className="fa-solid fa-arrow-up text-white text-[11px] font-black"></i>
                                                 </div>
+                                                <div className="col-span-2"></div>
                                             </div>
                                         </td>
                                         <td className="px-4 py-6">{client.id}</td>
                                         <td className="px-4 py-6 font-medium text-white">{client.full_name}</td>
                                         <td className="px-4 py-6 font-mono">{client.username}</td>
                                         <td className="px-4 py-6 font-mono text-white/80">{client.ledger_balance}</td>
-                                        <td className="px-4 py-6">{client.gross_pl || '0.00'}</td>
-                                        <td className="px-4 py-6">{client.brokerage || '0.00'}</td>
-                                        <td className="px-4 py-6">{client.swap_charges || '0.00'}</td>
-                                        <td className="px-4 py-6 font-bold text-white">{client.net_pl || '0.00'}</td>
+                                        {isAdmin() && (
+                                            <>
+                                                <td className="px-4 py-6">{client.gross_pl || '0.00'}</td>
+                                                <td className="px-4 py-6">{client.brokerage || '0.00'}</td>
+                                                <td className="px-4 py-6">{client.swap_charges || '0.00'}</td>
+                                                <td className="px-4 py-6 font-bold text-white">{client.net_pl || '0.00'}</td>
+                                            </>
+                                        )}
                                         <td className="px-4 py-6">{client.parent_username || 'SUPERADMIN'}</td>
                                         <td className="px-4 py-6">{client.is_demo ? 'Yes' : 'No'}</td>
                                         <td className="px-4 py-6">
@@ -258,6 +277,16 @@ const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavig
                                                 {client.status || 'Inactive'}
                                             </button>
                                         </td>
+                                        {isAdmin() && (
+                                            <>
+                                                <td className="px-4 py-6 font-bold text-blue-400">{client.active_trades_count || 0}</td>
+                                                <td className="px-4 py-6">
+                                                    <button className="text-white hover:text-green-400 p-1.5 rounded bg-white/5 transition-all" title="Export Backup (PDF)">
+                                                        <FileText className="w-4 h-4" />
+                                                    </button>
+                                                </td>
+                                            </>
+                                        )}
                                         <td className="px-4 py-6">
                                             <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border ${client.kycStatus === 'Approved' ? 'bg-green-500/10 border-green-500/20 text-green-400' :
                                                 client.kycStatus === 'Rejected' ? 'bg-red-500/10 border-red-500/20 text-red-400' :
@@ -419,7 +448,21 @@ const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavig
                 />
             )}
 
-            {/* Delete Client Modal */}
+            {/* Client Global Settings View */}
+            {showClientSettings && selectedClient && (
+                <div className="absolute inset-0 z-[50] overflow-y-auto bg-[#1a2035] -m-6 p-6">
+                    <GlobalSettingsPage 
+                        clientId={selectedClient.id} 
+                        clientName={selectedClient.username}
+                        onBack={() => {
+                            setShowClientSettings(false);
+                            setSelectedClient(null);
+                        }} 
+                    />
+                </div>
+            )}
+
+            {/* Delete Client Modal - Kept for reference or if still needed elsewhere, but hidden from main table now */}
             {showDeletePage && selectedClient && (
                 <DeleteClientPage
                     client={selectedClient}
