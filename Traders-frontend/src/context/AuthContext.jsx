@@ -158,7 +158,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('traders_view');
         localStorage.removeItem('traders_session_valid');
         localStorage.removeItem('traders_segment');
-        localStorage.removeItem('traders_token');
+        localStorage.removeItem('token');
         localStorage.removeItem('traders_menu_permissions');
         localStorage.removeItem('traders_theme');
         localStorage.removeItem('traders_logo');

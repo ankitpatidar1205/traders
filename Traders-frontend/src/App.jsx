@@ -83,7 +83,7 @@ function App() {
             const response = await api.login(username, password);
 
             // Store token for API headers
-            localStorage.setItem('traders_token', response.token);
+            localStorage.setItem('token', response.token);
 
             // Proceed with AuthContext login
             authLogin(response.user.username, response.user.role, {
