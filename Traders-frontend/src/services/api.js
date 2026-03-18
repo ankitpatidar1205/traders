@@ -85,7 +85,7 @@ export const verifyTransactionPassword = async (password) => {
 export const getClients = async (params = {}) => {
     const query = new URLSearchParams(params).toString();
     const res = await fetch(`${BASE_URL}/users?${query}`, { headers: getHeaders() });
-    return handleResponse(res);
+    return handleResponse(res);    
 };
 
 export const getClientById = async (id) => {
