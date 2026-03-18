@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { RotateCcw, SquarePen, ArrowUp, ArrowDown, Eye, Copy, Trash2 } from 'lucide-react';
+import { RotateCcw, SquarePen, ArrowUp, ArrowDown, Eye, Copy, Trash2, Settings } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import * as api from '../../services/api';
 import ClientDetailPage from './ClientDetailPage';
@@ -213,27 +213,27 @@ const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavig
                                     <tr key={client.id} className="border-t border-white/5 hover:bg-white/[0.02] transition-colors">
                                         <td className="px-4 py-6">{index + 1}</td>
                                         <td className="px-4 py-6">
-                                            <div className="flex flex-col items-start gap-3 pl-2">
-                                                <div className="action-icons">
-                                                    <button className="action-icon action-icon-view" onClick={() => handleView(client)} title="View">
-                                                        <Eye className="w-4 h-4" />
+                                            <div className="flex flex-col items-start gap-2 pl-2">
+                                                <div className="flex items-center gap-1.5">
+                                                    <button className="text-white hover:opacity-80 transition-opacity" onClick={() => handleView(client)} title="View">
+                                                        <Eye className="w-[18px] h-[18px] stroke-[2.5]" />
                                                     </button>
-                                                    <button className="action-icon action-icon-edit" onClick={() => handleEdit(client)} title="Edit">
-                                                        <SquarePen className="w-4 h-4" />
+                                                    <button className="text-white hover:opacity-80 transition-opacity" onClick={() => handleEdit(client)} title="Edit">
+                                                        <SquarePen className="w-[18px] h-[18px] stroke-[2.5]" />
                                                     </button>
-                                                    <button className="action-icon action-icon-copy" onClick={() => handleCopy(client)} title="Copy">
-                                                        <Copy className="w-4 h-4" />
+                                                    <button className="text-white hover:opacity-80 transition-opacity" onClick={() => handleCopy(client)} title="Copy">
+                                                        <Copy className="w-[18px] h-[18px] stroke-[2.5]" />
                                                     </button>
-                                                    <button className="action-icon action-icon-delete" onClick={() => { setSelectedClient(client); setShowDeletePage(true); }} title="Delete">
-                                                        <Trash2 className="w-4 h-4" />
+                                                    <button className="text-white hover:opacity-80 transition-opacity" onClick={() => { setSelectedClient(client); setShowChangePasswordPage(true); }} title="Settings">
+                                                        <Settings className="w-[18px] h-[18px] stroke-[2.5]" />
                                                     </button>
                                                 </div>
                                                 <div className="flex items-center gap-2">
-                                                    <div onClick={() => handleDeposit(client)} className="w-5 h-5 bg-[#5cb85c] hover:bg-[#4caf50] rounded-full flex items-center justify-center shadow-lg cursor-pointer transition-all">
-                                                        <ArrowDown className="w-3 h-3 text-white" />
+                                                    <div onClick={() => handleDeposit(client)} className="w-[22px] h-[22px] bg-[#5cb85c] hover:bg-[#4caf50] rounded-full flex items-center justify-center shadow-sm cursor-pointer transition-all">
+                                                        <ArrowDown className="w-[14px] h-[14px] text-white stroke-[3]" />
                                                     </div>
-                                                    <div onClick={() => handleWithdraw(client)} className="w-5 h-5 bg-[#d9534f] hover:bg-[#c9302c] rounded-full flex items-center justify-center shadow-lg cursor-pointer transition-all">
-                                                        <ArrowUp className="w-3 h-3 text-white" />
+                                                    <div onClick={() => handleWithdraw(client)} className="w-[22px] h-[22px] bg-[#ff4444] hover:bg-[#ff5555] rounded-full flex items-center justify-center shadow-sm cursor-pointer transition-all">
+                                                        <ArrowUp className="w-[14px] h-[14px] text-white stroke-[3]" />
                                                     </div>
                                                 </div>
                                             </div>

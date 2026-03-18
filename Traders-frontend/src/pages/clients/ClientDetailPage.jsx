@@ -124,7 +124,11 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
         maxScripEquityOptions: config.maxScripEquityOptions || '200',
         maxScripEquityIndexOptions: config.maxScripEquityIndexOptions || '200',
         mcxTrading: config.mcxTrading || 'Active',
+        mcxBrokerageType: config.mcxBrokerageType || 'Per Crore Basis',
         mcxBrokerage: config.mcxBrokerage || '0',
+        mcxExposureType: config.mcxExposureType || 'Per Turnover Basis',
+        intradayMarginMCX: config.mcxIntradayMargin || config.intradayMarginMCX || '0',
+        holdingMarginMCX: config.mcxHoldingMargin || config.holdingMarginMCX || '0',
         equityTrading: config.equityTrading || 'Active',
         equityBrokerage: config.equityBrokerage || '0',
         intradayMarginEquity: config.intradayMarginEquity || '0',
@@ -351,28 +355,6 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
                                 </div>
                             </div> */}
 
-                            {/* Export Section */}
-                            <div className="space-y-3 max-w-5xl">
-                                {[
-                                    { label: 'EXPORT TRADES' },
-                                    { label: 'DOWNLOAD TRADES PDF' },
-                                    { label: 'EXPORT FUNDS' }
-                                ].map((item) => (
-                                    <div key={item.label} className="flex gap-4 items-center">
-                                        <div className="flex bg-white border border-slate-300 rounded-sm overflow-hidden h-[42px] w-[440px] shadow-sm">
-                                            <div className="flex-1 border-r border-slate-300 relative flex items-center">
-                                                <input type="date" placeholder="From Date" className="w-full h-full bg-white text-slate-700 px-4 outline-none text-[14px] cursor-pointer placeholder:text-slate-500 font-normal [color-scheme:light]" />
-                                            </div>
-                                            <div className="flex-1 relative flex items-center">
-                                                <input type="date" placeholder="To Date" className="w-full h-full bg-white text-slate-700 px-4 outline-none text-[14px] cursor-pointer placeholder:text-slate-500 font-normal [color-scheme:light]" />
-                                            </div>
-                                        </div>
-                                        <button className="flex-3 h-[42px] min-w-[300px] text-white font-bold text-[12px] uppercase tracking-wider rounded-[3px] shadow-md transition-all hover:brightness-105 active:scale-[0.98] flex items-center justify-center" style={{ background: '#26c6da' }}>
-                                            {item.label}
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
 
                             {/* Actions Button */}
                             <div className="relative inline-block actions-dropdown-container">
@@ -556,7 +538,11 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
                                                     { label: 'Auto-Close active trades when losses reach % of Ledger balance', value: clientData.autoCloseLossPercent },
                                                     { label: 'Notify client when losses reach % of Ledger balance', value: clientData.notifyLossPercent },
                                                     { label: 'MCX Trading', value: clientData.mcxTrading },
-                                                    { label: 'MCX brokerage per lot', value: clientData.mcxBrokerage },
+                                                    { label: 'Mcx Brokerage Type', value: clientData.mcxBrokerageType },
+                                                    { label: 'MCX brokerage', value: clientData.mcxBrokerage },
+                                                    { label: 'Exposure Mcx Type', value: clientData.mcxExposureType },
+                                                    { label: 'Intraday Exposure/Margin MCX', value: clientData.intradayMarginMCX },
+                                                    { label: 'Holding Exposure/Margin MCX', value: clientData.holdingMarginMCX },
                                                     { label: 'Equity Trading', value: clientData.equityTrading },
                                                     { label: 'Equity brokerage', value: clientData.equityBrokerage },
                                                     { label: 'Intraday Exposure/Margin Equity', value: clientData.intradayMarginEquity },
@@ -634,7 +620,6 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
                                     <table className="w-full border-collapse" style={{ minWidth: '1500px' }}>
                                         <thead className="bg-[#202940]/50 border-b border-white/10 text-white text-[13px] font-medium tracking-tight">
                                             <tr>
-                                                <th className="px-3 py-4 text-left">X</th>
                                                 <th className="px-3 py-4 text-left">ID <span className="text-[10px]">↑↓</span></th>
                                                 <th className="px-3 py-4 text-left">Scrip</th>
                                                 <th className="px-3 py-4 text-left whitespace-nowrap">Buy Rate</th>
@@ -653,20 +638,29 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
                                         </thead>
                                         <tbody className="text-[13px] text-slate-300">
                                             {activeTrades.length === 0 ? (
-                                                <tr><td colSpan="15" className="px-4 py-8 text-slate-500 font-light">{loading ? 'Loading...' : 'No records found'}</td></tr>
+                                                <tr><td colSpan="14" className="px-4 py-8 text-slate-500 font-light">{loading ? 'Loading...' : 'No records found'}</td></tr>
                                             ) : activeTrades.map((trade) => (
                                                 <tr key={trade.id} className="hover:bg-white/[0.03] transition-colors border-b border-white/5">
-                                                    <td className="px-3 py-3 text-white font-bold uppercase cursor-pointer text-center" onClick={async () => {
-                                                        if (!window.confirm(`Close trade #${trade.id}?`)) return;
-                                                        try {
-                                                            await api.closeTrade(trade.id, { exit_price: trade.current_price || trade.entry_price });
-                                                            const res = await api.getTrades({ user_id: client.id, status: 'OPEN' });
-                                                            setActiveTrades(Array.isArray(res) ? res : res?.data || []);
-                                                            const res2 = await api.getClosedPositions({ user_id: client.id });
-                                                            setClosedTrades(Array.isArray(res2) ? res2 : res2?.data || []);
-                                                        } catch (err) { alert('Failed to close: ' + err.message); }
-                                                    }}>X</td>
-                                                    <td className="px-3 py-3 font-bold">{trade.id}</td>
+                                                    <td className="px-3 py-3 font-bold text-white flex items-center gap-1.5">
+                                                        <span 
+                                                            onClick={async (e) => {
+                                                                e.stopPropagation();
+                                                                if (!window.confirm(`Close trade #${trade.id}?`)) return;
+                                                                try {
+                                                                    await api.closeTrade(trade.id, { exit_price: trade.current_price || trade.entry_price });
+                                                                    const res = await api.getTrades({ user_id: client.id, status: 'OPEN' });
+                                                                    setActiveTrades(Array.isArray(res) ? res : res?.data || []);
+                                                                    const res2 = await api.getClosedPositions({ user_id: client.id });
+                                                                    setClosedTrades(Array.isArray(res2) ? res2 : res2?.data || []);
+                                                                } catch (err) { alert('Failed to close: ' + err.message); }
+                                                            }}
+                                                            className="text-red-400 hover:text-red-300 cursor-pointer font-bold px-1"
+                                                            title="Close Trade"
+                                                        >
+                                                            X
+                                                        </span>
+                                                        {trade.id}
+                                                    </td>
                                                     <td className="px-3 py-3 font-bold text-white uppercase">{trade.symbol}</td>
                                                     <td className="px-3 py-3 font-mono">{trade.type === 'BUY' ? trade.entry_price : '-'}</td>
                                                     <td className="px-3 py-3 font-mono">{trade.type === 'SELL' ? trade.entry_price : '-'}</td>
