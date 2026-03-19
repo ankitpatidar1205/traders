@@ -1,13 +1,4 @@
-/**
- * Axios API Instance with Automatic Token Handling
- *
- * Features:
- * - Automatically attaches JWT token to every request
- * - Handles 401 (unauthorized) responses
- * - Redirects to login if token is missing
- * - Logs out user on token expiration
- * - Request/Response logging for debugging
- */
+
 
 import axios from 'axios';
 

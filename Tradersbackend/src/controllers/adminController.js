@@ -40,6 +40,7 @@ const upload = multer({
 const uploadPanelFilesMiddleware = upload.fields([
     { name: 'logo',         maxCount: 1 },
     { name: 'profileImage', maxCount: 1 },
+    { name: 'bgImage',      maxCount: 1 },
 ]);
 
 // Keep old single-field middleware for legacy /logo route
@@ -115,6 +116,19 @@ const savePanelSettings = async (req, res) => {
             profileImagePath = `/uploads/profile/${newFilename}`;
         }
 
+        // Handle background image file
+        let bgImagePath = null;
+        const bgFile = req.files?.bgImage?.[0];
+        if (bgFile) {
+            const bgDir = path.join(__dirname, '../../uploads/bg');
+            if (!fs.existsSync(bgDir)) fs.mkdirSync(bgDir, { recursive: true });
+            const ext = path.extname(bgFile.originalname).toLowerCase();
+            const newFilename = `bg-${userId}${ext}`;
+            const newFilePath = path.join(bgDir, newFilename);
+            if (fs.existsSync(bgFile.path)) fs.renameSync(bgFile.path, newFilePath);
+            bgImagePath = `/uploads/bg/${newFilename}`;
+        }
+
         // Build upsert — only update columns that were provided
         const cols = [];
         const vals = [];
@@ -122,6 +136,7 @@ const savePanelSettings = async (req, res) => {
         if (themeJson !== null)        { cols.push('theme_json');         vals.push(themeJson); }
         if (logoPath !== null)         { cols.push('logo_path');           vals.push(logoPath); }
         if (profileImagePath !== null) { cols.push('profile_image_path'); vals.push(profileImagePath); }
+        if (bgImagePath !== null)      { cols.push('bg_image_path');      vals.push(bgImagePath); }
 
         if (cols.length > 0) {
             const colList    = cols.join(', ');
@@ -135,7 +150,7 @@ const savePanelSettings = async (req, res) => {
             );
         }
 
-        res.json({ message: 'Panel settings saved', logoPath, profileImagePath });
+        res.json({ message: 'Panel settings saved', logoPath, profileImagePath, bgImagePath });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server Error' });
@@ -147,20 +162,22 @@ const getPanelSettings = async (req, res) => {
     const { userId } = req.params;
     try {
         const [rows] = await db.execute(
-            'SELECT theme_json, logo_path, profile_image_path FROM admin_panel_settings WHERE user_id = ?',
+            'SELECT theme_json, logo_path, profile_image_path, bg_image_path FROM admin_panel_settings WHERE user_id = ?',
             [userId]
         );
         let theme = {};
         let logoPath = null;
         let profileImagePath = null;
+        let bgImagePath = null;
         if (rows[0]) {
             if (rows[0].theme_json) {
                 try { theme = JSON.parse(rows[0].theme_json); } catch (_) {}
             }
             logoPath = rows[0].logo_path || null;
             profileImagePath = rows[0].profile_image_path || null;
+            bgImagePath = rows[0].bg_image_path || null;
         }
-        res.json({ theme, logoPath, profileImagePath });
+        res.json({ theme, logoPath, profileImagePath, bgImagePath });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server Error' });
