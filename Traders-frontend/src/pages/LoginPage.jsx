@@ -95,7 +95,7 @@ const LoginPage = ({ onLogin }) => {
                             fontWeight: '700',
                             letterSpacing: '0.04em',
                         }}>
-                            Trader
+                            Sign In
                         </span>
                     </div>
 

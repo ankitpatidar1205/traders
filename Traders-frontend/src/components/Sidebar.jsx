@@ -51,17 +51,20 @@ const Sidebar = ({ onLogout, currentView, isOpen, onClose }) => {
     };
     const badge = roleBadge[userRole] || roleBadge['ADMIN'];
 
-    const getActiveView = (v) => {
-        if (!v) return v;
-        // Map sub-views to their parent modules for persistent highlighting
-        if (['create-client', 'client-details', 'create-fund-deposit', 'create-fund-withdraw', 'edit'].includes(v) || v.startsWith('kyc-verification')) return 'trading-clients';
-        if (v === 'create-broker' || v.startsWith('edit-broker') || v.startsWith('view-broker')) return 'brokers';
-        if (v === 'create-admin' || v.startsWith('edit-admin')) return 'admins';
-        if (v === 'create-trade') return 'trades';
-        if (v === 'live-m2m-detail' || v === 'client-active-positions') return 'live-m2m';
-        return v;
-    };
-    const activeView = getActiveView(currentView);
+    const activeView = (() => {
+        if (!currentView) return '';
+        // Use prefix matching for hierarchical routes
+        if (currentView.startsWith('trading-clients')) return 'trading-clients';
+        if (currentView.startsWith('brokers')) return 'brokers';
+        if (currentView.startsWith('admins')) return 'admins';
+        if (currentView.startsWith('trades')) return 'trades';
+        if (currentView.startsWith('funds')) return 'funds';
+        
+        // Legacy/Direct mappings
+        if (currentView === 'live-m2m-detail' || currentView === 'client-active-positions') return 'live-m2m';
+        
+        return currentView;
+    })();
 
     return (
         <aside className={`

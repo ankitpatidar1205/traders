@@ -134,16 +134,16 @@ const UsersPage = ({ onNavigate, roleFilter }) => {
     const actions = {
         onView: (row) => {
             if (roleFilter === 'BROKER') {
-                navigate(`/view-broker/${row.id}`);
+                navigate(`/brokers/view/${row.id}`);
             } else {
                 setViewModal({ open: true, user: row });
             }
         },
         onEdit: (row) => {
             if (roleFilter === 'BROKER') {
-                navigate(`/edit-broker/${row.id}`);
+                navigate(`/brokers/edit/${row.id}`);
             } else if (roleFilter === 'ADMIN') {
-                navigate(`/edit-admin/${row.id}`);
+                navigate(`/admins/edit/${row.id}`);
             } else {
                 openEditModal(row);
             }
@@ -209,7 +209,7 @@ const UsersPage = ({ onNavigate, roleFilter }) => {
             <div className="px-3 sm:px-4 md:px-6 flex flex-wrap gap-3 md:gap-4">
                 {roleFilter === 'ADMIN' && isSuperAdmin() && (
                     <button
-                        onClick={() => onNavigate('create-admin')}
+                        onClick={() => onNavigate('admins/create')}
                         className="text-white px-6 py-2.5 rounded font-bold text-xs uppercase tracking-widest transition-all shadow-[0_4px_10px_rgba(76,175,80,0.3)] hover:shadow-[0_4px_20px_rgba(76,175,80,0.5)] active:scale-95"
                         style={{ background: 'linear-gradient(60deg, #288c6c, #4ea752)' }}
                     >
@@ -218,8 +218,8 @@ const UsersPage = ({ onNavigate, roleFilter }) => {
                 )}
                 {roleFilter === 'BROKER' && isAdmin() && (
                     <button
-                        onClick={() => onNavigate('create-broker')}
-                        className="text-white px-6 py-2.5 rounded font-bold text-xs uppercase tracking-widest transition-all shadow-[0_4px_10px_rgba(76,175,80,0.3)] hover:shadow-[0_4px_20px_rgba(76,175,80,0.5)] active:scale-95"
+                        onClick={() => onNavigate('brokers/create')}
+                        className="text-white px-6 py-2.5 rounded font-bold text-xs uppercase tracking-widest transition-all shadow-[0_4px_10px_rgba(76,175,80,0.3)] hover:shadow-[0_4px_20_px_rgba(76,175,80,0.5)] active:scale-95"
                         style={{ background: 'linear-gradient(60deg, #288c6c, #4ea752)' }}
                     >
                         ADD BROKER
