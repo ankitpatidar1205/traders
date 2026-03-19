@@ -171,7 +171,7 @@ const KiteDashboard = () => {
 
     // CONNECTED — Show Dashboard
     return (
-        <div className="flex flex-col h-full bg-[#1a2035] p-6 space-y-6 overflow-y-auto custom-scrollbar">
+        <div className="flex flex-col h-full bg-[#1a2035] px-3 sm:px-4 md:px-6 py-3 sm:py-4 space-y-4 sm:space-y-6 overflow-y-auto custom-scrollbar">
             {/* Connection Status Bar */}
             <div className="flex items-center justify-between bg-[#1f283e] rounded-xl border border-white/5 px-6 py-3">
                 <div className="flex items-center gap-3">

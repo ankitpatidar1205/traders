@@ -66,7 +66,7 @@ const RaiseTicketPage = ({ user }) => {
                         <div className="p-2 bg-green-500/20 rounded-lg border border-green-500/20 shadow-lg">
                             <Headphones className="w-5 h-5 text-green-400" />
                         </div>
-                        <h1 className="text-3xl font-black text-white uppercase tracking-tighter">Support Center</h1>
+                        <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-white uppercase tracking-tighter">Support Center</h1>
                     </div>
                     <p className="text-slate-400 text-sm font-medium leading-relaxed max-w-xl">
                         Experiencing an issue? Our engineering and support team is here to help.
@@ -104,14 +104,14 @@ const RaiseTicketPage = ({ user }) => {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-10 items-start">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 md:gap-10 items-start">
 
                 {/* ─── Main Content ─── */}
                 <div className="xl:col-span-2">
                     {view === 'new' ? (
-                        <div className="bg-[#1f283e]/50 backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl overflow-hidden animate-in slide-in-from-left-4 duration-500">
+                        <div className="bg-[#1f283e]/50 backdrop-blur-xl rounded-2xl sm:rounded-3xl border border-white/10 shadow-2xl overflow-hidden animate-in slide-in-from-left-4 duration-500">
                             {/* Inner Header */}
-                            <div className="px-10 py-6 border-b border-white/5 bg-gradient-to-r from-white/[0.03] to-transparent">
+                            <div className="px-4 sm:px-6 md:px-10 py-4 sm:py-5 md:py-6 border-b border-white/5 bg-gradient-to-r from-white/[0.03] to-transparent">
                                 <h3 className="text-sm font-black text-white uppercase tracking-widest">Incident Report Form</h3>
                                 <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest mt-0.5">Step 1: Provide Details of your concern</p>
                             </div>
@@ -121,8 +121,8 @@ const RaiseTicketPage = ({ user }) => {
                                 e.preventDefault();
                                 if (!validate()) return;
                                 setShowOTP(true);
-                            }} className="p-10 space-y-8">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            }} className="p-4 sm:p-6 md:p-10 space-y-6 sm:space-y-8">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8">
                                     {/* Contact Name */}
                                     <div className="space-y-2 group">
                                         <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 transition-colors group-focus-within:text-green-400">Your Identity</label>

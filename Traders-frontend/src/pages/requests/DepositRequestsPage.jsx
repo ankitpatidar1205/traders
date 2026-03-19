@@ -56,7 +56,7 @@ const DepositRequestsPage = () => {
                 </div>
             )}
 
-            <div className="mb-6 flex justify-between items-center">
+            <div className="mb-4 md:mb-6 flex flex-wrap justify-between items-center gap-2">
                 <span className="text-sm font-medium">
                     Showing <span className="text-white font-bold">{depositRequests.length}</span> items.
                 </span>

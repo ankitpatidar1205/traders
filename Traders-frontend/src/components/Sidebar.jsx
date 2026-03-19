@@ -54,9 +54,9 @@ const Sidebar = ({ onLogout, currentView, isOpen, onClose }) => {
         <aside className={`
             h-full text-white transition-all duration-300 ease-in-out flex-shrink-0 z-50
             fixed inset-y-0 left-0 w-[260px]
-            md:relative md:translate-x-0
+            md:relative md:translate-x-0 md:top-0
             ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-            shadow-2xl
+            shadow-2xl safe-top
         `} style={{ backgroundColor: 'var(--sidebar-color, #1a2035)' }}>
             <div className="flex flex-col h-full border-r border-white/5 overflow-hidden">
 

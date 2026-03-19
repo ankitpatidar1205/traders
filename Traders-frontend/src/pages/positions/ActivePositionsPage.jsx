@@ -33,10 +33,10 @@ const ActivePositionsPage = () => {
     }, []);
 
     return (
-        <div className="flex flex-col h-full space-y-4 overflow-y-auto custom-scrollbar">
+        <div className="flex flex-col h-full space-y-4 overflow-y-auto custom-scrollbar px-3 sm:px-4 md:px-6 py-3 sm:py-4">
             {/* Table Section matching Screenshot */}
             <div className="bg-[#1f283e] rounded-lg border border-white/5 shadow-2xl overflow-hidden w-full">
-                <div className="p-4 border-b border-white/5">
+                <div className="p-3 sm:p-4 border-b border-white/5">
                     <button className="bg-[#ab47bc] hover:bg-[#9c27b0] text-white px-6 py-2.5 rounded-sm text-[11px] font-bold uppercase tracking-wider transition-all shadow-lg active:scale-95">
                         SHOW EQUITY POSITIONS
                     </button>

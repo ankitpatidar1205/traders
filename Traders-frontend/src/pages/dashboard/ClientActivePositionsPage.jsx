@@ -48,7 +48,7 @@ const ClientActivePositionsPage = ({ client, onBack, onNavigateToAccount }) => {
     }), { buy: 0, sell: 0, total: 0, net: 0 });
 
     return (
-        <div className="flex flex-col h-full bg-[#1a2035] p-6 space-y-8 overflow-y-auto custom-scrollbar">
+        <div className="flex flex-col h-full bg-[#1a2035] px-3 sm:px-4 md:px-6 py-3 sm:py-4 space-y-4 md:space-y-8 overflow-y-auto custom-scrollbar">
             {/* Header Section */}
             <div className="flex items-center justify-between">
                 <h1 className="text-3xl text-slate-300 font-normal">{clientName}'s Active Positions</h1>

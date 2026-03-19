@@ -1,11 +1,19 @@
 const ImageKit = require('imagekit');
 
-const credentialsPresent = 
-    process.env.IMAGEKIT_PUBLIC_KEY && 
-    process.env.IMAGEKIT_PRIVATE_KEY && 
+// ═══════════════════════════════════════════════════════════════════════════
+// CHECK IF IMAGEKIT CREDENTIALS ARE PRESENT
+// ═══════════════════════════════════════════════════════════════════════════
+
+const credentialsPresent =
+    process.env.IMAGEKIT_PUBLIC_KEY &&
+    process.env.IMAGEKIT_PRIVATE_KEY &&
     process.env.IMAGEKIT_URL_ENDPOINT;
 
 let imagekit = null;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// INITIALIZE IMAGEKIT IF CREDENTIALS EXIST
+// ═══════════════════════════════════════════════════════════════════════════
 
 if (credentialsPresent) {
     imagekit = new ImageKit({
@@ -15,7 +23,7 @@ if (credentialsPresent) {
     });
     console.log('✅ ImageKit initialized successfully');
 } else {
-    console.warn("⚠️ ImageKit environment variables are missing. Image uploads will not work.");
+    console.warn('⚠️ ImageKit credentials missing in .env. Image uploads will not work.');
     imagekit = {
         upload: async () => { throw new Error("ImageKit not configured"); },
         deleteFile: async () => { console.warn("ImageKit not configured, cannot delete file"); }

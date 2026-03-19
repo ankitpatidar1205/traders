@@ -9,6 +9,7 @@ import ResetAccountPage from './ResetAccountPage';
 import RecalculateBrokeragePage from './RecalculateBrokeragePage';
 import ChangePasswordPage from './ChangePasswordPage';
 import DeleteClientPage from './DeleteClientPage';
+import CopyTradingClientForm from './CopyTradingClientForm';
 import Toast from '../../components/common/Toast';
 
 import GlobalSettingsPage from '../settings/GlobalSettingsPage';
@@ -30,6 +31,7 @@ const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavig
     const [showRecalculatePage, setShowRecalculatePage] = useState(false);
     const [showChangePasswordPage, setShowChangePasswordPage] = useState(false);
     const [showDeletePage, setShowDeletePage] = useState(false);
+    const [showCopyPage, setShowCopyPage] = useState(false);
     const [showClientSettings, setShowClientSettings] = useState(false);
     const [toast, setToast] = useState({ message: '', type: 'success' });
 
@@ -92,7 +94,7 @@ const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavig
     const handleCopy = (client) => {
         setSelectedClient(client);
         setCreateFromDetail(false);
-        setShowCreatePage(true);
+        setShowCopyPage(true);
     };
 
     const handleDeposit = (client) => {
@@ -104,12 +106,12 @@ const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavig
     };
 
     return (
-        <div className="relative flex flex-col h-full bg-[#1a2035] shadow-inner space-y-8 overflow-y-auto custom-scrollbar">
+        <div className="relative flex flex-col h-full bg-[#1a2035] shadow-inner space-y-4 md:space-y-8 overflow-y-auto custom-scrollbar">
 
-            <div className="px-6 space-y-8 pb-10">
+            <div className="px-3 sm:px-4 md:px-6 space-y-4 md:space-y-8 pb-6 md:pb-10">
                 {/* Search Section */}
-                <div className="bg-[#1f283e] p-8 rounded shadow-2xl border border-white/5">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div className="bg-[#1f283e] p-4 sm:p-6 md:p-8 rounded shadow-2xl border border-white/5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-4 md:mb-8">
                         <div className="group">
                             <label className="block text-sm text-slate-400 mb-2 font-medium">Username</label>
                             <input
@@ -155,12 +157,12 @@ const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavig
                             </div>
                         </div>
                     </div>
-                    <div className="flex gap-4">
-                        <button 
+                    <div className="flex flex-wrap gap-3">
+                        <button
                             onClick={() => fetchClients && fetchClients()}
-                            className="text-white px-8 py-2.5 rounded font-bold text-xs tracking-widest transition-all shadow-[0_4px_10px_rgba(76,175,80,0.3)] hover:shadow-[0_4px_20px_rgba(76,175,80,0.5)] active:scale-95 uppercase"
+                            className="text-white px-6 py-2.5 rounded font-bold text-xs tracking-widest transition-all shadow-[0_4px_10px_rgba(76,175,80,0.3)] hover:shadow-[0_4px_20px_rgba(76,175,80,0.5)] active:scale-95 uppercase flex-1 sm:flex-none"
                             style={{ background: 'linear-gradient(60deg, #288c6c, #4ea752)' }}>SEARCH</button>
-                        <button onClick={() => { setSearchTerm(''); setStatusFilter(''); setFromDate(''); setToDate(''); fetchClients && fetchClients(); }} className="bg-[#808080] hover:bg-[#707070] text-white px-8 py-2.5 rounded font-bold text-xs tracking-widest flex items-center gap-2 shadow-lg transition-all uppercase"><RotateCcw className="w-4 h-4" /> RESET</button>
+                        <button onClick={() => { setSearchTerm(''); setStatusFilter(''); setFromDate(''); setToDate(''); fetchClients && fetchClients(); }} className="bg-[#808080] hover:bg-[#707070] text-white px-6 py-2.5 rounded font-bold text-xs tracking-widest flex items-center justify-center gap-2 shadow-lg transition-all uppercase flex-1 sm:flex-none"><RotateCcw className="w-4 h-4" /> RESET</button>
                     </div>
                 </div>
 
@@ -173,21 +175,21 @@ const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavig
                                 setCreateFromDetail(false);
                                 setShowCreatePage(true);
                             }}
-                            className="text-white py-3 px-8 rounded-md font-bold text-[11px] uppercase tracking-widest transition-all shadow-[0_4px_10px_rgba(76,175,80,0.3)] hover:shadow-[0_4px_20px_rgba(76,175,80,0.5)] active:scale-95"
+                            className="w-full sm:w-auto text-white py-3 px-6 sm:px-8 rounded-md font-bold text-[11px] uppercase tracking-widest transition-all shadow-[0_4px_10px_rgba(76,175,80,0.3)] hover:shadow-[0_4px_20px_rgba(76,175,80,0.5)] active:scale-95 text-center"
                             style={{ background: 'linear-gradient(60deg, #288c6c, #4ea752)' }}
                         >
-                            CREATE TRADING CLIENT
+                            + CREATE TRADING CLIENT
                         </button>
                     </div>
                 )}
 
                 {/* Table Container */}
                 <div className="bg-[#1f283e] overflow-hidden rounded-lg border border-white/5 shadow-2xl">
-                    <div className="px-6 py-4 bg-[#1a2035] border-b border-white/5">
-                        <span className="text-slate-400 text-sm font-medium">Showing <b className="text-white">{filteredClients.length}</b> of <b className="text-white">{clients.length}</b> items.</span>
+                    <div className="px-3 sm:px-6 py-3 sm:py-4 bg-[#1a2035] border-b border-white/5 flex items-center justify-between flex-wrap gap-2">
+                        <span className="text-slate-400 text-xs sm:text-sm font-medium">Showing <b className="text-white">{filteredClients.length}</b> of <b className="text-white">{clients.length}</b> items.</span>
                     </div>
 
-                    <div className="overflow-x-auto custom-scrollbar">
+                    <div className="overflow-x-auto custom-scrollbar -webkit-overflow-scrolling-touch">
                         <table className="w-full text-left border-collapse" style={{ minWidth: '1600px' }}>
                             <thead className="bg-[#1a2035]/50">
                                 <tr className="text-white/90 text-[13px] uppercase tracking-wider">
@@ -341,7 +343,7 @@ const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavig
                         setShowDetailPage(false);
                         setSelectedClient(client);
                         setCreateFromDetail(true);
-                        setShowCreatePage(true);
+                        setShowCopyPage(true);
                     }}
                     onChangePassword={(client) => {
                         setShowDetailPage(false);
@@ -406,7 +408,7 @@ const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavig
                 />
             )}
 
-            {/* Create/Copy Client Modal */}
+            {/* Create Client Modal (Remains Unchanged) */}
             {showCreatePage && (
                 <CreateClientPage
                     client={selectedClient}
@@ -421,13 +423,40 @@ const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavig
                         }
                     }}
                     onSave={(data) => {
-                        setToast({ message: selectedClient ? 'Client copied successfully!' : 'Client created successfully!', type: 'success' });
+                        setToast({ message: 'Client created successfully!', type: 'success' });
                         setShowCreatePage(false);
                         if (createFromDetail) {
                             setShowDetailPage(true);
                         } else {
                             setSelectedClient(null);
                         }
+                        fetchClients();
+                    }}
+                />
+            )}
+
+            {/* NEW Copy Client Modal (Isolated) */}
+            {showCopyPage && (
+                <CopyTradingClientForm
+                    client={selectedClient}
+                    onLogout={onLogout}
+                    onClose={() => {
+                        setShowCopyPage(false);
+                        if (createFromDetail) {
+                            setShowDetailPage(true);
+                        } else {
+                            setSelectedClient(null);
+                        }
+                    }}
+                    onSave={(data) => {
+                        setToast({ message: 'Client copied successfully!', type: 'success' });
+                        setShowCopyPage(false);
+                        if (createFromDetail) {
+                            setShowDetailPage(true);
+                        } else {
+                            setSelectedClient(null);
+                        }
+                        fetchClients();
                     }}
                 />
             )}

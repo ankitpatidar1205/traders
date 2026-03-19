@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Save, ArrowLeft, Info, Check, ChevronDown, Settings, User, Lock, Key, FileUp, ShieldCheck, Eye, FileText, Globe } from 'lucide-react';
 import * as api from '../../services/api';
+import EditMCXFutureSection from './EditMCXFutureSection';
 
 const InputField = ({ label, name, value, onChange, type = "text", placeholder, hint, className = "" }) => (
     <div className={`mb-10 group px-2 ${className}`}>
@@ -449,9 +450,9 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
             const hasNewFiles = Object.values(docs).some(v => v instanceof File);
             if (hasNewFiles) {
                 const docFormData = new FormData();
-                if (docs.panCard instanceof File)      docFormData.append('panScreenshot', docs.panCard);
-                if (docs.aadhaarFront instanceof File)  docFormData.append('aadharFront', docs.aadhaarFront);
-                if (docs.aadhaarBack instanceof File)   docFormData.append('aadharBack', docs.aadhaarBack);
+                if (docs.panCard instanceof File) docFormData.append('panScreenshot', docs.panCard);
+                if (docs.aadhaarFront instanceof File) docFormData.append('aadharFront', docs.aadhaarFront);
+                if (docs.aadhaarBack instanceof File) docFormData.append('aadharBack', docs.aadhaarBack);
                 if (docs.bankStatement instanceof File) docFormData.append('bankProof', docs.bankStatement);
                 await api.updateDocuments(userId, docFormData);
             }
@@ -591,7 +592,7 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                 </div>
 
                 {/* Form Wrapper */}
-                <div className="flex-1 overflow-y-auto custom-scrollbar px-6 py-2 bg-[#1a2035]">
+                <div className="flex-1 overflow-y-auto custom-scrollbar px-3 sm:px-4 md:px-6 py-2 bg-[#1a2035]">
                     <div className="max-w-6xl mx-auto mt-4 mb-6">
                         {/* Floating Card Header (3D Ribbon Style) */}
                         <div className="relative z-20 -mb-8 ml-4 flex flex-col items-start">
@@ -643,7 +644,7 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                             <CheckboxField label="Trade equity as units instead of lots." name="tradeEquityUnits" checked={formData.tradeEquityUnits} onChange={handleChange} />
                                             <CheckboxField label="Account Status" name="accountStatus" checked={formData.accountStatus} onChange={handleChange} />
                                             <CheckboxField label="Auto Close Trades if condition met" name="autoCloseTrades" checked={formData.autoCloseTrades} onChange={handleChange} />
-                                            <CheckboxField label="Ban All Segment Limit Order" name="banAllSegmentLimitOrder" checked={formData.banAllSegmentLimitOrder} onChange={handleChange} />
+
                                         </div>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 mt-4">
                                             <InputField label="auto-Close all active trades when the losses reach % of Ledger-balance" name="autoClosePercentage" value={formData.autoClosePercentage} onChange={handleChange} hint="Example: 95, will close when losses reach 95% of ledger balance" />
@@ -656,79 +657,11 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                     <hr className="border-white/5" />
 
                                     {/* MCX FUTURES */}
-                                    <fieldset className="border-none p-0 m-0">
-                                        <SectionHeader title="MCX Futures:" />
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12">
-                                            <CheckboxField label="MCX Trading" name="mcxTrading" checked={formData.mcxTrading} onChange={handleChange} />
-                                            <CheckboxField label="Ban All Segment Limit Order" name="banMcxLimitOrder" checked={formData.banMcxLimitOrder} onChange={handleChange} />
-                                            <InputField label="Min. Time to book profit (No. of Seconds)" name="mcxMinTimeToBookProfit" value={formData.mcxMinTimeToBookProfit} onChange={handleChange} hint="Example: 120, will hold the trade for 2 minutes before closing a trade in profit" />
-                                            <InputField label="Minimum lot size required per single trade of MCX" name="mcxMinLot" value={formData.mcxMinLot} onChange={handleChange} />
-                                            <InputField label="Maximum lot size allowed per single trade of MCX" name="mcxMaxLot" value={formData.mcxMaxLot} onChange={handleChange} />
-                                            <InputField label="Maximum lot size allowed per script of MCX to be actively open at a time" name="mcxMaxLotScrip" value={formData.mcxMaxLotScrip} onChange={handleChange} />
-                                            <InputField label="Max Size All Commodity" name="mcxMaxSizeAll" value={formData.mcxMaxSizeAll} onChange={handleChange} />
-                                            <SelectField label="Mcx Brokerage Type" name="mcxBrokerageType" value={formData.mcxBrokerageType} onChange={handleChange} options={[{ value: 'per_lot', label: 'Per Lot Basis' }, { value: 'per_crore', label: 'Per Crore Basis' }]} />
-                                            <InputField label="MCX brokerage" name="mcxBrokerage" value={formData.mcxBrokerage} onChange={handleChange} />
-                                            <SelectField label="Exposure Mcx Type" name="mcxExposureType" value={formData.mcxExposureType} onChange={handleChange} options={[{ value: 'per_lot', label: 'Per Lot Basis' }, { value: 'per_turnover', label: 'Per Turnover Basis' }]} />
-                                            {formData.mcxExposureType === 'per_turnover' && (
-                                                <>
-                                                    <InputField label="Intraday Exposure/Margin MCX" name="mcxIntradayMargin" value={formData.mcxIntradayMargin} onChange={handleChange} hint="Exposure auto calculates the margin money required..." />
-                                                    <InputField label="Holding Exposure/Margin MCX" name="mcxHoldingMargin" value={formData.mcxHoldingMargin} onChange={handleChange} hint="Holding Exposure auto calculates the margin money required..." />
-                                                </>
-                                            )}
-                                        </div>
-
-                                        {/* MCX Lot Wise Exposure */}
-                                        {formData.mcxExposureType === 'per_lot' && (
-                                            <div className="mt-8">
-                                                <h4 className="text-[17px] font-normal mb-10 px-4 border-l-2 border-[#4caf50] text-[#bcc0cf]" >MCX Exposure Lot wise:</h4>
-                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 px-2">
-                                                    {[
-                                                        'BULLDEX', 'GOLD', 'SILVER', 'CRUDEOIL', 'CRUDEOIL MINI', 'COPPER', 'NICKEL', 'ZINC',
-                                                        'ZINCMINI', 'LEAD', 'LEADMINI', 'ALUMINIUM', 'ALUMINI', 'NATURALGAS', 'NATURALGAS MINI',
-                                                        'MENTHAOIL', 'COTTON', 'GOLDM', 'SILVERM', 'SILVER MIC'
-                                                    ].map(scrip => (
-                                                        <React.Fragment key={scrip}>
-                                                            <ScripField label={`${scrip} INTRADAY`} value={formData.mcxLotMargins[scrip]?.INTRADAY || '0'} onChange={(e) => handleNestedChange('mcxLotMargins', scrip, e.target.value, 'INTRADAY')} />
-                                                            <ScripField label={`${scrip} HOLDING`} value={formData.mcxLotMargins[scrip]?.HOLDING || '0'} onChange={(e) => handleNestedChange('mcxLotMargins', scrip, e.target.value, 'HOLDING')} />
-                                                            <ScripField label={`${scrip} LOT`} value={formData.mcxLotMargins[scrip]?.LOT || '1'} onChange={(e) => handleNestedChange('mcxLotMargins', scrip, e.target.value, 'LOT')} />
-                                                        </React.Fragment>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {/* MCX Lot Wise Brokerage */}
-                                        {formData.mcxBrokerageType === 'per_lot' && (
-                                            <div className="mt-12 px-2">
-                                                <h4 className="text-[17px] font-normal mb-10 border-l-2 border-[#4caf50] pl-4 text-[#bcc0cf]">MCX Lot Wise Brokerage:</h4>
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 px-2">
-                                                    {[
-                                                        'GOLDM', 'SILVERM', 'BULLDEX', 'GOLD', 'SILVER', 'CRUDEOIL', 'COPPER', 'NICKEL', 'ZINC', 'LEAD',
-                                                        'NATURALGAS', 'NATURALGAS MINI', 'ALUMINIUM', 'MENTHAOIL', 'COTTON', 'SILVERMIC', 'ZINCMINI', 'ALUMINI',
-                                                        'LEADMINI', 'CRUDEOIL MINI'
-                                                    ].map(scrip => (
-                                                        <ScripField key={scrip} label={`${scrip === 'SILVERMIC' ? 'SILVER MIC' : scrip}:`} value={formData.mcxLotBrokerage[scrip === 'SILVERMIC' ? 'SILVER MIC' : scrip] || '0.0000'} onChange={(e) => handleNestedChange('mcxLotBrokerage', scrip === 'SILVERMIC' ? 'SILVER MIC' : scrip, e.target.value)} />
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {/* Bid Gaps */}
-                                        <div className="mt-12 px-2">
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12">
-                                                <div className="px-1 md:col-span-2">
-                                                    <h4 className="text-[17px] font-normal mb-10 border-l-2 border-[#4caf50] pl-4 text-[#bcc0cf]">Orders to be away by points in each scrip MCX:</h4>
-                                                </div>
-                                                {[
-                                                    'GOLDM', 'SILVERM', 'BULLDEX', 'GOLD', 'SILVER', 'CRUDEOIL', 'COPPER', 'NICKEL', 'ZINC', 'LEAD',
-                                                    'NATURALGAS', 'NATURALGAS MINI', 'ALUMINIUM', 'MENTHAOIL', 'COTTON', 'SILVERMIC', 'ZINCMINI', 'ALUMINI',
-                                                    'LEADMINI', 'CRUDEOIL MINI'
-                                                ].map(scrip => (
-                                                    <ScripField key={scrip} label={`${scrip === 'SILVERMIC' ? 'SILVER MIC' : scrip}:`} value={formData.bidGaps[scrip === 'SILVERMIC' ? 'SILVER MIC' : scrip] || '0.0000'} onChange={(e) => handleNestedChange('bidGaps', scrip === 'SILVERMIC' ? 'SILVER MIC' : scrip, e.target.value)} />
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </fieldset>
+                                    <EditMCXFutureSection
+                                        formData={formData}
+                                        handleChange={handleChange}
+                                        handleNestedChange={handleNestedChange}
+                                    />
 
                                     <hr className="border-white/5" />
 
@@ -737,7 +670,7 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                         <SectionHeader title="Equity Futures:" />
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12">
                                             <CheckboxField label="Equity Trading" name="equityTrading" checked={formData.equityTrading} onChange={handleChange} />
-                                            <CheckboxField label="Ban All Segment Limit Order" name="banEquityLimitOrder" checked={formData.banEquityLimitOrder} onChange={handleChange} />
+
                                             <InputField label="Min. Time to book profit (No. of Seconds)" name="equityMinTimeToBookProfit" value={formData.equityMinTimeToBookProfit} onChange={handleChange} hint="Example: 120, will hold the trade for 2 minutes before closing a trade in profit" />
                                             <InputField label="Equity brokerage Per Crore" name="equityBrokerage" value={formData.equityBrokerage} onChange={handleChange} />
                                             <InputField label="Minimum lot size required per single trade of Equity" name="equityMinLot" value={formData.equityMinLot} onChange={handleChange} />
@@ -770,13 +703,7 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                         </div>
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12">
-                                            <div className="mb-10 px-2">
-                                                <label className="block text-[15px] mb-2 font-normal leading-tight text-[#bcc0cf]">Ban All Segment Limit Order</label>
-                                                <label className="flex items-center gap-3 cursor-pointer py-1.5">
-                                                    <input type="checkbox" name="banOptionsLimitOrder" checked={formData.banOptionsLimitOrder} onChange={handleChange} className="w-5 h-5 rounded accent-[#3b82f6] cursor-pointer" />
-                                                    <span className="text-[15px] text-white">{formData.banOptionsLimitOrder ? 'Enabled' : 'Disabled'}</span>
-                                                </label>
-                                            </div>
+
                                             <InputField label="Min. Time to book profit (No. of Seconds)" name="optionsMinTimeToBookProfit" value={formData.optionsMinTimeToBookProfit} onChange={handleChange} hint="Example: 120, will hold the trade for 2 minutes before closing a trade in profit" />
                                             <SelectField label="Options Index Brokerage Type" name="optionsIndexBrokerageType" value={formData.optionsIndexBrokerageType} onChange={handleChange} options={[{ value: 'per_lot', label: 'Per Lot Basis' }, { value: 'per_crore', label: 'Per Crore Basis' }]} />
                                             <InputField label="Options Index brokerage" name="optionsIndexBrokerage" value={formData.optionsIndexBrokerage} onChange={handleChange} />

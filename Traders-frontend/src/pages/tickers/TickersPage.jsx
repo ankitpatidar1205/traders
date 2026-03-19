@@ -109,7 +109,7 @@ const TickersPage = () => {
 
     if (view === 'add') {
         return (
-            <div className="flex flex-col h-full bg-[#1a2035] text-[#a0aec0] overflow-y-auto custom-scrollbar p-6">
+            <div className="flex flex-col h-full bg-[#1a2035] text-[#a0aec0] overflow-y-auto custom-scrollbar px-3 sm:px-4 md:px-6 py-3 sm:py-4">
                 <style>{`
                     .custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
                     .custom-scrollbar::-webkit-scrollbar-track { background: #1a2035; }
@@ -263,7 +263,7 @@ const TickersPage = () => {
     }
 
     return (
-        <div className="flex flex-col h-full text-[#a0aec0] p-4 space-y-6">
+        <div className="flex flex-col h-full text-[#a0aec0] px-3 sm:px-4 py-3 sm:py-4 space-y-4 sm:space-y-6">
             {/* Toast Notification */}
             {toast.show && (
                 <div className={`fixed top-6 right-6 z-[110] flex items-center gap-3 px-6 py-4 rounded shadow-2xl transition-all border ${

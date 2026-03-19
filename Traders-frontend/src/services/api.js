@@ -233,8 +233,8 @@ export const updateUser = async (id, data) => {
 
 // ─── CLIENT SETTINGS ─────────────────────────────────
 export const getClientSettings = async (id) => {
-    const res = await fetch(`${BASE_URL}/users/${id}`, { headers: getHeaders() });
-    return handleResponse(res);
+    const response = await api.get(`/users/${id}`);
+    return response.data;
 };
 
 export const updateClientSettings = async (id, data) => {

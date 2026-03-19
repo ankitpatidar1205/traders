@@ -75,7 +75,7 @@ const NewClientBankDetailsPage = () => {
   ];
 
   return (
-    <div className="flex flex-col h-full bg-[#1a2035] space-y-8 overflow-y-auto">
+    <div className="flex flex-col h-full bg-[#1a2035] space-y-4 md:space-y-8 overflow-y-auto px-3 sm:px-4 md:px-6 py-3 sm:py-4">
 
       {/* Toast */}
       {toast.show && (

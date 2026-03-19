@@ -397,7 +397,7 @@ const BannedLimitOrdersPage = () => {
   );
 
   return (
-    <div className="p-4 bg-[#1a2035] min-h-screen overflow-y-auto relative">
+    <div className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 bg-[#1a2035] min-h-screen overflow-y-auto relative">
        {/* Toast */}
        {toast.show && (
             <div className={`fixed top-6 right-6 z-[100] flex items-center gap-3 px-6 py-4 rounded shadow-2xl transition-all border animate-in fade-in slide-in-from-top-4 ${

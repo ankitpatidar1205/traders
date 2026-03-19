@@ -32,7 +32,7 @@ export const login = async (email, password) => {
         console.log('[Auth] 🔐 Attempting login for:', email);
 
         // Call backend login endpoint
-        const response = await api.post('/api/auth/login', {
+        const response = await api.post('/auth/login', {
             email,
             password
         });
@@ -74,7 +74,7 @@ export const logout = async () => {
 
         // Optional: Call backend logout endpoint (for server-side cleanup)
         try {
-            await api.post('/api/auth/logout');
+            await api.post('/auth/logout');
             console.log('[Auth] ✅ Backend logout called');
         } catch (err) {
             console.warn('[Auth] ⚠️  Backend logout failed (continuing anyway):', err.message);
@@ -188,7 +188,7 @@ export const refreshUserData = async () => {
     try {
         console.log('[Auth] 🔄 Refreshing user data...');
 
-        const response = await api.get('/api/auth/me');
+        const response = await api.get('/auth/me');
         const user = response.data;
 
         // Update stored user data
@@ -222,7 +222,7 @@ export const updateProfile = async (updates) => {
     try {
         console.log('[Auth] 📝 Updating profile:', updates);
 
-        const response = await api.put('/api/auth/profile', updates);
+        const response = await api.put('/auth/profile', updates);
         const user = response.data;
 
         // Update stored user data
@@ -255,7 +255,7 @@ export const changePassword = async (oldPassword, newPassword) => {
     try {
         console.log('[Auth] 🔒 Changing password...');
 
-        const response = await api.post('/api/auth/change-password', {
+        const response = await api.post('/auth/change-password', {
             oldPassword,
             newPassword
         });
@@ -293,7 +293,7 @@ export const verifyToken = async () => {
         }
 
         // Call backend to verify token
-        const response = await api.get('/api/auth/verify');
+        await api.get('/auth/verify');
         console.log('[Auth] ✅ Token is valid');
         return true;
 
