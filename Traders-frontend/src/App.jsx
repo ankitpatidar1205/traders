@@ -19,6 +19,7 @@ import ActiveTradesPage from './pages/trades/ActiveTradesPage';
 import ClosedTradesPage from './pages/trades/ClosedTradesPage';
 import MarketWatchPage from './pages/market/MarketWatchPage';
 import NotificationsPage from './pages/notifications/NotificationsPage';
+import UserNotificationsPage from './pages/notifications/UserNotificationsPage';
 import ClosedPositionsPage from './pages/positions/ClosedPositionsPage';
 import TradingClientsPage from './pages/clients/TradingClientsPage';
 import ClientDetailPage from './pages/clients/ClientDetailPage';
@@ -54,10 +55,7 @@ import ViewBrokerPage from './pages/brokers/ViewBrokerPage';
 import EditAdminPage from './pages/users/EditAdminPage';
 import GlobalSettingsPage from './pages/settings/GlobalSettingsPage';
 import ActionLedgerPage from './pages/logs/ActionLedgerPage';
-<<<<<<< HEAD
-=======
 import IpLoginsPage from './pages/logs/IpLoginsPage';
->>>>>>> f8e5089e8b622411ab980cc787a848685429f784
 import TradeIpTrackingPage from './pages/logs/TradeIpTrackingPage';
 
 import { useAuth, ROLES } from './context/AuthContext';
@@ -242,6 +240,7 @@ function App() {
                 <Route path="/closed-trades" element={<ProtectedRoute viewId="closed-trades"><ClosedTradesPage /></ProtectedRoute>} />
                 <Route path="/market-watch" element={<ProtectedRoute viewId="market-watch"><MarketWatchPage /></ProtectedRoute>} />
                 <Route path="/notifications" element={<NotificationsPage />} />
+                <Route path="/user-notifications" element={<UserNotificationsPage />} />
                 <Route path="/closed-positions" element={<ProtectedRoute viewId="closed-positions"><ClosedPositionsPage /></ProtectedRoute>} />
                 
                 <Route path="/trading-clients" element={<ProtectedRoute viewId="trading-clients"><TradingClientsPage

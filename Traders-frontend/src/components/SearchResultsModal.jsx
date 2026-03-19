@@ -128,7 +128,16 @@ const SearchResultsModal = ({ results, query, message, isLoading, error, onClose
         URL.revokeObjectURL(url);
     };
 
-    const moduleLabel = query?.module ? query.module.charAt(0).toUpperCase() + query.module.slice(1) : 'Results';
+    const MODULE_LABELS = {
+        users: 'Trading Clients', trades: 'Trades', funds: 'Funds', brokers: 'Brokers',
+        admins: 'Admins', orders: 'Pending Orders', notifications: 'Notifications',
+        action_ledger: 'Action Ledger', active_positions: 'Active Positions',
+        closed_positions: 'Closed Positions', group_trades: 'Group Trades',
+        deleted_trades: 'Deleted Trades', ip_logins: 'IP Logins', tickers: 'Tickers',
+        bank_details: 'Bank Details', negative_balance: 'Negative Balance',
+        banned_orders: 'Banned Orders',
+    };
+    const moduleLabel = MODULE_LABELS[query?.module] || (query?.module ? query.module.charAt(0).toUpperCase() + query.module.slice(1) : 'Results');
 
     const modal = (
         <div

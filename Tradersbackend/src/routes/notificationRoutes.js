@@ -1,18 +1,20 @@
 const express = require('express');
 const router  = express.Router();
-const { authMiddleware: authenticate } = require('../middleware/auth');
+const { authMiddleware: authenticate, roleMiddleware } = require('../middleware/auth');
 const {
     getNotifications,
     markRead,
     markAllRead,
     createNotification,
     deleteNotification,
+    getUsersByRole,
 } = require('../controllers/notificationController');
 
-router.get ('/',          authenticate, getNotifications);
-router.put ('/read-all',  authenticate, markAllRead);
-router.put ('/:id/read',  authenticate, markRead);
-router.post('/',          authenticate, createNotification);
-router.delete('/:id',     authenticate, deleteNotification);
+router.get ('/',              authenticate, getNotifications);
+router.get ('/users/:role',   authenticate, getUsersByRole);
+router.put ('/read-all',      authenticate, markAllRead);
+router.put ('/:id/read',      authenticate, markRead);
+router.post('/',              authenticate, roleMiddleware(['SUPERADMIN', 'ADMIN']), createNotification);
+router.delete('/:id',         authenticate, roleMiddleware(['SUPERADMIN', 'ADMIN']), deleteNotification);
 
 module.exports = router;

@@ -3,7 +3,7 @@ import { io as socketIo } from 'socket.io-client';
 import { SOCKET_URL, getNotifications, markNotificationRead, markAllNotificationsRead } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
-const useNotifications = () => {
+const useNotifications = (source) => {
     const { user } = useAuth();
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -14,14 +14,14 @@ const useNotifications = () => {
         if (!user) return;
         try {
             setLoading(true);
-            const data = await getNotifications();
+            const data = await getNotifications(source);
             setNotifications(data || []);
         } catch (err) {
             console.error('fetchNotifications:', err);
         } finally {
             setLoading(false);
         }
-    }, [user]);
+    }, [user, source]);
 
     // ── Setup socket + fetch on mount ─────────────────────────────────────────
     useEffect(() => {

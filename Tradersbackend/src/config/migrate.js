@@ -410,6 +410,14 @@ const runMigrations = async () => {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     `);
 
+    // Add TRADER to target_role enum if not present
+    try {
+        await db.execute("ALTER TABLE notifications MODIFY COLUMN target_role ENUM('SUPERADMIN','ADMIN','BROKER','TRADER','ALL') DEFAULT 'ALL'");
+    } catch (_) {}
+
+    // Add target_user_ids column for multi-user targeting
+    await addColumn('notifications', 'target_user_ids', 'TEXT DEFAULT NULL');
+
     // ─── 11. SEED DATA ─────────────────────────────────────────────────────────
 
     // Insert default global_configs only if table is empty
