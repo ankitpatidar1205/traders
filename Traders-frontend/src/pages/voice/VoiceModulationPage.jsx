@@ -696,14 +696,14 @@ const VoiceModulationPage = () => {
             </div>
 
             {/* ── Two-column grid ── */}
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 items-start">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6 md:gap-8 items-start">
 
                 {/* ──────────── LEFT: Voice Recorder Panel ──────────── */}
                 <div className="xl:col-span-1">
                     <div className="bg-[#1f283e]/50 backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl overflow-hidden">
 
                         {/* Panel header */}
-                        <div className="px-8 py-5 border-b border-white/5 bg-gradient-to-r from-white/[0.03] to-transparent">
+                        <div className="px-4 sm:px-6 md:px-8 py-4 sm:py-5 border-b border-white/5 bg-gradient-to-r from-white/[0.03] to-transparent">
                             <h3 className="text-sm font-black text-white uppercase tracking-widest">
                                 Voice Recorder
                             </h3>
@@ -712,7 +712,7 @@ const VoiceModulationPage = () => {
                             </p>
                         </div>
 
-                        <div className="p-8 flex flex-col items-center gap-6">
+                        <div className="p-4 sm:p-6 md:p-8 flex flex-col items-center gap-4 sm:gap-6">
 
                             {/* Mic button */}
                             <div className="relative">

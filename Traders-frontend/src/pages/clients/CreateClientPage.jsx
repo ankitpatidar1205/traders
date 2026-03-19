@@ -576,13 +576,13 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                 </div>
 
                 {/* Form Wrapper */}
-                <div className="flex-1 overflow-y-auto custom-scrollbar px-6 py-2 bg-[#1a2035]">
+                <div className="flex-1 overflow-y-auto custom-scrollbar px-3 sm:px-4 md:px-6 py-2 bg-[#1a2035]">
                     <div className="max-w-6xl mx-auto mt-4 mb-6">
 
                         {/* Floating Card Header (3D Ribbon Style) */}
-                        <div className="relative z-20 -mb-8 ml-4 flex flex-col items-start">
+                        <div className="relative z-20 -mb-8 ml-2 sm:ml-4 flex flex-col items-start">
                             <div
-                                className="px-6 py-4 rounded-md shadow-xl relative z-10"
+                                className="px-4 sm:px-6 py-3 sm:py-4 rounded-md shadow-xl relative z-10"
                                 style={{ background: 'linear-gradient(60deg, rgb(40, 140, 108), rgb(78, 167, 82))' }}
                             >
                                 <h2 className="text-white text-base font-normal leading-none tracking-tight">
@@ -594,7 +594,7 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                         </div>
 
                         {/* Main Card */}
-                        <div className="bg-[#202940] rounded shadow-2xl p-8 pt-16 border border-white/5">
+                        <div className="bg-[#202940] rounded shadow-2xl p-4 sm:p-6 md:p-8 pt-14 sm:pt-16 border border-white/5">
                             <form onSubmit={handleSubmit}>
                                 <div className="space-y-12">
 

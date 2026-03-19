@@ -592,7 +592,7 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                 </div>
 
                 {/* Form Wrapper */}
-                <div className="flex-1 overflow-y-auto custom-scrollbar px-6 py-2 bg-[#1a2035]">
+                <div className="flex-1 overflow-y-auto custom-scrollbar px-3 sm:px-4 md:px-6 py-2 bg-[#1a2035]">
                     <div className="max-w-6xl mx-auto mt-4 mb-6">
                         {/* Floating Card Header (3D Ribbon Style) */}
                         <div className="relative z-20 -mb-8 ml-4 flex flex-col items-start">

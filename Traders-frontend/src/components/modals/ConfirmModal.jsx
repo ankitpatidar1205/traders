@@ -61,18 +61,18 @@ const ConfirmModal = ({
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-white/10">
+                <div className="flex items-center justify-end flex-wrap gap-3 px-4 sm:px-6 py-4 border-t border-white/10">
                     <button
                         onClick={onClose}
                         disabled={loading}
-                        className="min-w-[100px] h-[40px] px-5 rounded-md border border-white/20 text-slate-300 hover:text-white hover:border-white/40 text-[13px] font-medium transition-all"
+                        className="flex-1 sm:flex-none min-w-[90px] h-[42px] px-5 rounded-md border border-white/20 text-slate-300 hover:text-white hover:border-white/40 text-[13px] font-medium transition-all"
                     >
                         {cancelText}
                     </button>
                     <button
                         onClick={handleConfirm}
                         disabled={loading}
-                        className={`min-w-[120px] h-[40px] px-5 rounded-md text-white text-[13px] font-semibold transition-all ${confirmBg} ${loading ? 'opacity-60 cursor-not-allowed' : ''}`}
+                        className={`flex-1 sm:flex-none min-w-[110px] h-[42px] px-5 rounded-md text-white text-[13px] font-semibold transition-all ${confirmBg} ${loading ? 'opacity-60 cursor-not-allowed' : ''}`}
                     >
                         {loading ? 'Processing...' : confirmText}
                     </button>

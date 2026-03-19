@@ -38,7 +38,7 @@ const AccountsPage = () => {
   };
 
   return (
-    <div className="flex flex-col h-full overflow-hidden ">
+    <div className="flex flex-col h-full overflow-hidden px-3 sm:px-4 md:px-6 py-3 sm:py-4 space-y-4">
       {/* Date Filter Bar */}
       <div className="flex flex-col md:flex-row gap-4 items-center">
         <div className="grid grid-cols-2 bg-white rounded overflow-hidden shadow-lg w-full md:w-auto">

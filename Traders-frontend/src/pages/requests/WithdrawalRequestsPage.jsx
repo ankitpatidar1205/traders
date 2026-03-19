@@ -394,7 +394,7 @@ const WithdrawalRequestsPage = () => {
             `}</style>
 
             {/* ── Header ── */}
-            <div style={{ padding: '24px 24px 16px' }}>
+            <div className="px-3 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4">
                 {/* Green gradient header bar — same as Market Watch */}
                 <div style={{ position: 'relative', marginBottom: '16px' }}>
                     <div style={{
@@ -430,7 +430,7 @@ const WithdrawalRequestsPage = () => {
             </div>
 
             {/* ── Stats Cards ── */}
-            <div style={{ padding: '0 24px 20px', display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '16px' }}>
+            <div className="px-3 sm:px-6 pb-4 sm:pb-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
                 {STAT_CARDS.map((s) => (
                     <div key={s.label} style={{ background: '#1f283e', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '8px', padding: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
                         <div style={{ width: '32px', height: '32px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: s.color + '22', marginBottom: '8px' }}>
@@ -443,11 +443,11 @@ const WithdrawalRequestsPage = () => {
             </div>
 
             {/* ── Filters ── */}
-            <div style={{ padding: '0 24px 20px' }}>
-                <div style={{ background: '#1f283e', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '8px', padding: '20px', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+            <div className="px-3 sm:px-6 pb-4 sm:pb-5">
+                <div style={{ background: '#1f283e', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '8px', padding: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4">
                         {/* Search — spans 2 cols */}
-                        <div style={{ position: 'relative', gridColumn: 'span 2' }}>
+                        <div style={{ position: 'relative' }} className="sm:col-span-2">
                             <Search style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', width: '16px', height: '16px', color: '#64748b', pointerEvents: 'none' }} />
                             <input type="text" placeholder="Search by name, client ID, txn ID..."
                                 value={search} onChange={e => setSearch(e.target.value)}
@@ -488,7 +488,7 @@ const WithdrawalRequestsPage = () => {
             </div>
 
             {/* ── Table ── */}
-            <div style={{ padding: '0 24px 40px' }}>
+            <div className="px-3 sm:px-6 pb-8 sm:pb-10">
                 <div style={{ background: '#1f283e', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '8px', boxShadow: '0 8px 32px rgba(0,0,0,0.3)', overflow: 'hidden' }}>
                     <div style={{ padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <span style={{ color: '#94a3b8', fontSize: '14px' }}>Showing <b style={{ color: 'white' }}>{filtered.length}</b> of <b style={{ color: 'white' }}>{data.length}</b> requests</span>

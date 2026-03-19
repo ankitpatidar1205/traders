@@ -62,9 +62,9 @@ const ChangePasswordPage = () => {
                             <h4 className="text-white text-[15px] font-bold tracking-tight">Change Login Password</h4>
                         </div>
                     </div>
-                    <div className="px-8 pt-2">
+                    <div className="px-4 sm:px-6 md:px-8 pt-2">
                         <form onSubmit={handleSubmit} autoComplete="off">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 md:gap-x-12 gap-y-4 sm:gap-y-6">
                                 <div className="space-y-1">
                                     <label className="block text-slate-400 text-[13px] font-medium uppercase tracking-wide">New Password</label>
                                     <input type="password" name="newPassword" value={formData.newPassword} onChange={handleChange}

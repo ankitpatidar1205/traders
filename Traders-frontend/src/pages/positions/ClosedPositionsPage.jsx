@@ -30,7 +30,7 @@ const ClosedPositionsPage = () => {
     }, []);
 
     return (
-        <div className="flex flex-col h-full space-y-4 overflow-y-auto custom-scrollbar">
+        <div className="flex flex-col h-full space-y-4 overflow-y-auto custom-scrollbar px-3 sm:px-4 md:px-6 py-3 sm:py-4">
             {/* Table Section matching Screenshot */}
             <div className="bg-[#1f283e] rounded-lg border border-white/5 shadow-2xl overflow-hidden w-full">
                 <div className="overflow-x-auto">

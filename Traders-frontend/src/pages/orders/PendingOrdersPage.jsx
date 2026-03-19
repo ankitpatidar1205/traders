@@ -120,7 +120,7 @@ const PendingOrdersPage = () => {
 
     if (view === 'create') {
         return (
-            <div className="flex flex-col h-full bg-[#1a2035] p-6 text-[#a0aec0] overflow-y-auto custom-scrollbar">
+            <div className="flex flex-col h-full bg-[#1a2035] px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-[#a0aec0] overflow-y-auto custom-scrollbar">
                 <style>{`
                     .custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
                     .custom-scrollbar::-webkit-scrollbar-track { background: #1a2035; }
@@ -279,8 +279,8 @@ const PendingOrdersPage = () => {
     }
 
     return (
-        <div className="flex flex-col h-full bg-[#1a2035] p-4 space-y-8 text-[#a0aec0] overflow-y-auto">
-            <div className="flex justify-between items-center">
+        <div className="flex flex-col h-full bg-[#1a2035] px-3 sm:px-4 md:px-6 py-3 sm:py-4 space-y-4 md:space-y-8 text-[#a0aec0] overflow-y-auto">
+            <div className="flex flex-wrap justify-between items-center gap-3">
                 <button
                     onClick={handleCreateClick}
                     className="bg-[#4CAF50] hover:bg-green-600 text-white px-6 py-2.5 rounded text-xs font-bold uppercase tracking-widest transition-all shadow-lg shadow-green-900/10"

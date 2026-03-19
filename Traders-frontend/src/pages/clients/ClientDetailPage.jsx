@@ -308,7 +308,7 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
                 </div>
 
                 {/* Page Content */}
-                <div className="flex-1 overflow-y-auto custom-scrollbar px-6 py-2 bg-[#1a2035]">
+                <div className="flex-1 overflow-y-auto custom-scrollbar px-3 sm:px-4 md:px-6 py-2 bg-[#1a2035]">
                     <div className="max-w-7xl mx-auto mt-4 mb-6">
 
                         <div className="flex justify-end mb-4">

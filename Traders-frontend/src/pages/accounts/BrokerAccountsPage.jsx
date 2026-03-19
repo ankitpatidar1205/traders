@@ -29,7 +29,7 @@ const BrokerAccountsPage = () => {
     };
 
     return (
-        <div className="flex flex-col h-full bg-[#1a2035] space-y-6 overflow-y-auto">
+        <div className="flex flex-col h-full bg-[#1a2035] space-y-4 md:space-y-6 overflow-y-auto px-3 sm:px-4 md:px-6 py-3 sm:py-4">
 
             {/* Filter Section - Matches Screenshot Layout */}
             <div className="flex flex-col md:flex-row gap-4 items-center">

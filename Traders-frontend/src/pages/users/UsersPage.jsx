@@ -159,10 +159,14 @@ const UsersPage = ({ onNavigate, roleFilter }) => {
     });
 
     return (
+<<<<<<< HEAD
         <div className="flex flex-col h-full bg-[#1a2035] space-y-6 overflow-y-auto custom-scrollbar">
+=======
+        <div className="flex flex-col h-full bg-[#1a2035] space-y-4 md:space-y-6 overflow-y-auto">
+>>>>>>> 3df7851b616ebac0dc267de73fcb9757bd406a99
             {/* Filters */}
-            <div className="bg-[#1f283e] p-10 rounded shadow-2xl border border-white/5 mx-6">
-                <div className="flex flex-col md:flex-row gap-10 md:gap-24 mb-6">
+            <div className="bg-[#1f283e] p-4 sm:p-6 md:p-10 rounded shadow-2xl border border-white/5 mx-3 sm:mx-4 md:mx-6">
+                <div className="flex flex-col sm:flex-row gap-6 sm:gap-10 md:gap-24 mb-4 md:mb-6">
                     <div className="flex-1 max-w-sm">
                         <label className="block text-sm text-slate-300 mb-2">Username</label>
                         <input
@@ -206,7 +210,7 @@ const UsersPage = ({ onNavigate, roleFilter }) => {
             </div>
 
             {/* Add buttons */}
-            <div className="px-6 flex flex-wrap gap-4">
+            <div className="px-3 sm:px-4 md:px-6 flex flex-wrap gap-3 md:gap-4">
                 {roleFilter === 'ADMIN' && isSuperAdmin() && (
                     <button
                         onClick={() => onNavigate('create-admin')}
@@ -228,7 +232,7 @@ const UsersPage = ({ onNavigate, roleFilter }) => {
             </div>
 
             {/* Table */}
-            <div className="mx-6 bg-[#1f283e] rounded border border-white/5 p-8 text-slate-400 text-sm">
+            <div className="mx-3 sm:mx-4 md:mx-6 bg-[#1f283e] rounded border border-white/5 p-3 sm:p-5 md:p-8 text-slate-400 text-sm">
                 {loading ? (
                     <div className="text-left font-medium">Loading {roleLabel}s...</div>
                 ) : filteredUsers.length > 0 ? (

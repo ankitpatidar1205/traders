@@ -111,10 +111,14 @@ const TradesPage = ({ onCreateClick }) => {
     };
 
     return (
+<<<<<<< HEAD
         <div className="flex flex-col h-full bg-[#1a2035] space-y-8 overflow-y-auto custom-scrollbar">
+=======
+        <div className="flex flex-col h-full bg-[#1a2035] space-y-4 md:space-y-8 overflow-y-auto">
+>>>>>>> 3df7851b616ebac0dc267de73fcb9757bd406a99
 
             {/* Top Actions Bar */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 px-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 px-3 sm:px-4 md:px-6 pt-2 flex-wrap">
                 <button
                     onClick={onCreateClick || (() => alert('Create Trades functionality'))}
                     className="text-white font-bold py-3 px-6 rounded uppercase tracking-wide text-xs transition-all shadow-[0_4px_10px_rgba(76,175,80,0.3)] hover:shadow-[0_4px_20px_rgba(76,175,80,0.5)] active:scale-95"

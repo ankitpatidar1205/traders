@@ -27,11 +27,11 @@ const LiveM2MPage = ({ onNavigate, user }) => {
 
   if (isClient) {
     return (
-      <div className="p-8 pb-32">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+      <div className="p-3 sm:p-6 md:p-8 pb-8 md:pb-16">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 md:mb-8">
           <div>
-            <h1 className="text-3xl font-black text-white uppercase tracking-tighter">Live Market Dashboard</h1>
-            <p className="text-slate-400 text-sm font-bold uppercase tracking-widest mt-1">Hello, {user?.username} – Segment: {user?.segment}</p>
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-white uppercase tracking-tighter">Live Market Dashboard</h1>
+            <p className="text-slate-400 text-xs sm:text-sm font-bold uppercase tracking-widest mt-1">Hello, {user?.username} – Segment: {user?.segment}</p>
           </div>
         </div>
         <SegmentDashboard segment={user?.segment} userName={user?.username} />
@@ -72,14 +72,14 @@ const LiveM2MPage = ({ onNavigate, user }) => {
   );
 
   return (
-    <div className="flex flex-col h-full bg-[#1a2035] p-4 space-y-12 overflow-y-auto custom-scrollbar">
+    <div className="flex flex-col h-full bg-[#1a2035] px-2 sm:px-3 md:px-4 py-2 sm:py-3 md:py-4 space-y-6 sm:space-y-12 overflow-y-auto custom-scrollbar">
 
       {/* 1. Live M2M Table Section */}
       <div className="relative mt-4">
         <div className="bg-[#1f283e] rounded-md shadow-2xl relative pt-12">
           {/* Table Offset Header */}
           <div
-            className="absolute -top-6 left-4 rounded-md shadow-[0_4px_20px_0_rgba(0,0,0,0.14),0_7px_10px_-5px_rgba(76,175,80,0.4)] px-10 py-5 z-10 w-[calc(100%-32px)]"
+            className="absolute -top-6 left-4 rounded-md shadow-[0_4px_20px_0_rgba(0,0,0,0.14),0_7px_10px_-5px_rgba(76,175,80,0.4)] px-4 sm:px-6 md:px-10 py-3 sm:py-4 md:py-5 z-10 w-[calc(100%-32px)]"
             style={{ background: 'linear-gradient(60deg, #288c6c, #4ea752)' }}
           >
             <h2 className="text-white text-base font-bold uppercase tracking-tight">

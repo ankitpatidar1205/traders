@@ -15,7 +15,6 @@ import {
     getCurrentUser,
     isLoggedIn as isLoggedInFn,
     refreshUserData,
-    getUserRole,
     updateProfile,
     changePassword
 } from '../services/authService';
@@ -51,14 +50,14 @@ export const useAuth = () => {
     useEffect(() => {
         console.log('[useAuth] Initializing...');
 
-        const user = getCurrentUser();
+        const currentUser = getCurrentUser();
         const loggedIn = isLoggedInFn();
 
-        if (loggedIn && user) {
-            setUser(user);
+        if (loggedIn && currentUser) {
+            setUser(currentUser);
             setTokenState(localStorage.getItem('token'));
             setIsLoggedIn(true);
-            console.log('[useAuth] ✅ User already logged in:', user.username);
+            console.log('[useAuth] ✅ User already logged in:', currentUser.username);
         } else {
             console.log('[useAuth] ⚠️  No active session');
         }
@@ -74,15 +73,15 @@ export const useAuth = () => {
             setError(null);
 
             console.log('[useAuth] 🔐 Logging in:', email);
-            const { token, user } = await loginFn(email, password);
+            const { token: newToken, user: newUser } = await loginFn(email, password);
 
-            setUser(user);
-            setTokenState(token);
+            setUser(newUser);
+            setTokenState(newToken);
             setIsLoggedIn(true);
             setError(null);
 
             console.log('[useAuth] ✅ Login successful!');
-            return { token, user };
+            return { token: newToken, user: newUser };
 
         } catch (err) {
             const errorMessage = err.message || 'Login failed';

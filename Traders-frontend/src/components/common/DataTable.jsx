@@ -8,6 +8,7 @@ import { Eye, SquarePen, Copy, Trash2, ChevronLeft, ChevronRight, Search } from 
  * - Search bar
  * - Sticky header
  * - Full width layout
+ * - Mobile card view on small screens
  */
 const DataTable = ({
     columns = [],
@@ -43,12 +44,14 @@ const DataTable = ({
         if (page >= 1 && page <= totalPages) setCurrentPage(page);
     };
 
+    const hasActions = showActions && (actions.onView || actions.onEdit || actions.onCopy || actions.onDelete);
+
     return (
         <div className="w-full">
             {/* Search Bar */}
             {searchable && (
-                <div className="mb-4 flex justify-end">
-                    <div className="relative w-full max-w-[300px]">
+                <div className="mb-3 md:mb-4 flex justify-end">
+                    <div className="relative w-full search-bar-responsive">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                         <input
                             type="text"
@@ -61,12 +64,12 @@ const DataTable = ({
                 </div>
             )}
 
-            {/* Table */}
-            <div className="overflow-x-auto rounded-lg border border-white/6">
+            {/* ── Desktop Table (hidden on xs screens) ── */}
+            <div className="hidden sm:block table-wrapper">
                 <table className="table-standard">
                     <thead>
                         <tr>
-                            {showActions && <th style={{ width: '140px' }}>Actions</th>}
+                            {hasActions && <th style={{ width: '130px' }}>Actions</th>}
                             {columns.map((col, i) => (
                                 <th key={i} style={col.width ? { width: col.width } : {}}>
                                     {col.label}
@@ -77,49 +80,33 @@ const DataTable = ({
                     <tbody>
                         {paginatedData.length === 0 ? (
                             <tr>
-                                <td colSpan={columns.length + (showActions ? 1 : 0)} className="text-center py-8 text-slate-500">
+                                <td colSpan={columns.length + (hasActions ? 1 : 0)} className="text-center py-8 text-slate-500">
                                     {emptyMessage}
                                 </td>
                             </tr>
                         ) : (
                             paginatedData.map((row, rowIdx) => (
                                 <tr key={row.id || rowIdx}>
-                                    {showActions && (
+                                    {hasActions && (
                                         <td>
                                             <div className="action-icons">
                                                 {actions.onView && (
-                                                    <button
-                                                        className="action-icon action-icon-view"
-                                                        onClick={() => actions.onView(row)}
-                                                        title="View"
-                                                    >
+                                                    <button className="action-icon action-icon-view" onClick={() => actions.onView(row)} title="View">
                                                         <Eye className="w-4 h-4" />
                                                     </button>
                                                 )}
                                                 {actions.onEdit && (
-                                                    <button
-                                                        className="action-icon action-icon-edit"
-                                                        onClick={() => actions.onEdit(row)}
-                                                        title="Edit"
-                                                    >
+                                                    <button className="action-icon action-icon-edit" onClick={() => actions.onEdit(row)} title="Edit">
                                                         <SquarePen className="w-4 h-4" />
                                                     </button>
                                                 )}
                                                 {actions.onCopy && (
-                                                    <button
-                                                        className="action-icon action-icon-copy"
-                                                        onClick={() => actions.onCopy(row)}
-                                                        title="Copy"
-                                                    >
+                                                    <button className="action-icon action-icon-copy" onClick={() => actions.onCopy(row)} title="Copy">
                                                         <Copy className="w-4 h-4" />
                                                     </button>
                                                 )}
                                                 {actions.onDelete && (
-                                                    <button
-                                                        className="action-icon action-icon-delete"
-                                                        onClick={() => actions.onDelete(row)}
-                                                        title="Delete"
-                                                    >
+                                                    <button className="action-icon action-icon-delete" onClick={() => actions.onDelete(row)} title="Delete">
                                                         <Trash2 className="w-4 h-4" />
                                                     </button>
                                                 )}
@@ -142,11 +129,64 @@ const DataTable = ({
                 </table>
             </div>
 
-            {/* Pagination - Bottom Right */}
+            {/* ── Mobile Card View (visible only on xs) ── */}
+            <div className="sm:hidden space-y-3">
+                {paginatedData.length === 0 ? (
+                    <div className="text-center py-8 text-slate-500 text-sm">{emptyMessage}</div>
+                ) : (
+                    paginatedData.map((row, rowIdx) => (
+                        <div
+                            key={row.id || rowIdx}
+                            className="rounded-lg border border-white/8 bg-[#1f283e] p-3"
+                        >
+                            {/* Card rows */}
+                            <div className="space-y-2">
+                                {columns.map((col, colIdx) => (
+                                    <div key={colIdx} className="flex items-start justify-between gap-2 text-sm">
+                                        <span className="text-slate-500 text-[11px] uppercase tracking-wide font-semibold flex-shrink-0 w-28">
+                                            {col.label}
+                                        </span>
+                                        <span className="text-slate-200 text-right break-all">
+                                            {col.render ? col.render(row[col.key], row) : (row[col.key] ?? '—')}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                            {/* Actions */}
+                            {hasActions && (
+                                <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/8">
+                                    {actions.onView && (
+                                        <button className="action-icon action-icon-view" onClick={() => actions.onView(row)} title="View">
+                                            <Eye className="w-4 h-4" />
+                                        </button>
+                                    )}
+                                    {actions.onEdit && (
+                                        <button className="action-icon action-icon-edit" onClick={() => actions.onEdit(row)} title="Edit">
+                                            <SquarePen className="w-4 h-4" />
+                                        </button>
+                                    )}
+                                    {actions.onCopy && (
+                                        <button className="action-icon action-icon-copy" onClick={() => actions.onCopy(row)} title="Copy">
+                                            <Copy className="w-4 h-4" />
+                                        </button>
+                                    )}
+                                    {actions.onDelete && (
+                                        <button className="action-icon action-icon-delete" onClick={() => actions.onDelete(row)} title="Delete">
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    ))
+                )}
+            </div>
+
+            {/* Pagination */}
             {totalPages > 1 && (
-                <div className="flex items-center justify-between mt-4 px-1">
-                    <span className="text-slate-500 text-sm">
-                        Showing {startIdx + 1}–{Math.min(startIdx + pageSize, filteredData.length)} of {filteredData.length}
+                <div className="flex items-center justify-between mt-4 px-1 flex-wrap gap-2 pagination-row">
+                    <span className="text-slate-500 text-xs sm:text-sm">
+                        {startIdx + 1}–{Math.min(startIdx + pageSize, filteredData.length)} of {filteredData.length}
                     </span>
                     <div className="flex items-center gap-1">
                         <button
