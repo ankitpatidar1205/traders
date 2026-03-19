@@ -4,7 +4,7 @@ import {
     CheckCircle2, Search, Activity, RotateCcw, ShieldAlert, Cpu, Lock, UserCheck,
     Database, MapPin, X, Info, Layers
 } from 'lucide-react';
-import { globalBatchUpdate } from '../../services/api';
+import { globalBatchUpdate, getClients } from '../../services/api';
 
 const GlobalUpdationPage = () => {
     const [step, setStep] = useState(1);
@@ -12,8 +12,16 @@ const GlobalUpdationPage = () => {
     const [isExecuting, setIsExecuting] = useState(false);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [execResult, setExecResult] = useState(null);
+    
+    // User/Broker Data
+    const [usersList, setUsersList] = useState([]);
+    const [brokersList, setBrokersList] = useState([]);
+    const [searchQuery, setSearchQuery] = useState('');
+
     const [selection, setSelection] = useState({
         target: 'All Users',
+        selectedUsers: [], // IDs for single/multiple
+        selectedBrokerId: '', // For broker-wise
         segment: 'MCX',
         subSegment: 'Futures',
         parameter: 'Brokerage',
@@ -21,46 +29,62 @@ const GlobalUpdationPage = () => {
         newValue: '',
         intradayExposure: '',
         holdingExposure: '',
-        lotConfigs: {
-            'GOLD': '',
-            'SILVER': '',
-            'CRUDEOIL': '',
-            'COPPER': '',
-            'NICKEL': '',
-            'ZINC': '',
-            'LEAD': '',
-            'ALUMINIUM': '',
-            'NATURALGAS': ''
-        }
+        lotConfigs: {} // Will be populated dynamically
     });
+
+    // Scrips for Lot-wise matching Create User
+    const mcxScrips = [
+        'BULLDEX', 'GOLD', 'SILVER', 'CRUDEOIL', 'CRUDEOIL MINI', 'COPPER', 'NICKEL', 'ZINC',
+        'ZINCMINI', 'LEADMINI', 'ALUMINIUM', 'ALUMINI', 'NATURALGAS', 'NATURALGAS MINI',
+        'MENTHAOIL', 'COTTON', 'GOLDM', 'SILVER MIC'
+    ];
+
+    React.useEffect(() => {
+        const loadInitialData = async () => {
+            try {
+                const allClients = await getClients();
+                setUsersList(allClients.filter(u => u.role === 'USER'));
+                setBrokersList(allClients.filter(u => u.role === 'BROKER'));
+                
+                // Initialize lot configs
+                const initialLots = {};
+                mcxScrips.forEach(s => {
+                    initialLots[s] = { INTRADAY: '', HOLDING: '' };
+                });
+                setSelection(prev => ({ ...prev, lotConfigs: initialLots }));
+            } catch (err) {
+                console.error('Failed to load batch data:', err);
+            }
+        };
+        loadInitialData();
+    }, []);
 
     const executeInjection = async () => {
         setIsExecuting(true);
         try {
             const data = {
                 target: selection.target,
+                targetIds: selection.target === 'Single user' || selection.target === 'Multiple users' ? selection.selectedUsers : [],
+                brokerId: selection.target === 'Broker-wise users' ? selection.selectedBrokerId : null,
                 segment: selection.segment,
                 subSegment: selection.subSegment,
                 parameter: selection.parameter,
                 marginType: selection.marginType,
-                value: selection.parameter === 'Margin' && selection.marginType === 'Exposure' 
+                value: (selection.parameter === 'Margin' || selection.parameter === 'Leverage') && selection.marginType === 'Exposure' 
                     ? { intraday: selection.intradayExposure, holding: selection.holdingExposure }
-                    : selection.parameter === 'Margin' && selection.marginType === 'Lot'
+                    : (selection.parameter === 'Margin' || selection.parameter === 'Leverage') && selection.marginType === 'Lot'
                     ? selection.lotConfigs
                     : selection.newValue,
             };
             const result = await globalBatchUpdate(data);
             setExecResult({ success: true, message: result?.message || 'Batch update applied successfully' });
             setShowConfirmModal(false);
-            setStep(1);
-            setSelection({ 
-                target: 'All Users', segment: 'MCX', subSegment: 'Futures', parameter: 'Brokerage', 
-                marginType: 'Exposure', newValue: '', intradayExposure: '', holdingExposure: '',
-                lotConfigs: { 'GOLD': '', 'SILVER': '', 'CRUDEOIL': '', 'COPPER': '', 'NICKEL': '', 'ZINC': '', 'LEAD': '', 'ALUMINIUM': '', 'NATURALGAS': '' }
-            });
+            setTimeout(() => {
+                setStep(1);
+                setExecResult(null);
+            }, 3000);
         } catch (err) {
             setExecResult({ success: false, message: err.message || 'Execution failed' });
-            setShowConfirmModal(false);
         } finally {
             setIsExecuting(false);
         }
@@ -73,17 +97,21 @@ const GlobalUpdationPage = () => {
         { id: 4, title: 'Simulate', icon: Activity, desc: 'Impact Audit' }
     ];
 
-    const targets = ['All Users', 'Selected Group', 'Active Users Only', 'Dealer Specific'];
+    const targets = ['All Users', 'Single user', 'Multiple users', 'Broker-wise users'];
     const segments = ['MCX', 'Equity', 'Options', 'Comex', 'Forex', 'Crypto'];
     const parameters = ['Brokerage', 'Leverage', 'Max Lot', 'Margin', 'Exposure Multiplier'];
 
     // Simulation Data Logic
     const startSimulation = () => {
+        if (selection.target === 'Single user' && selection.selectedUsers.length === 0) return alert('Select a user');
+        if (selection.target === 'Multiple users' && selection.selectedUsers.length === 0) return alert('Select users');
+        if (selection.target === 'Broker-wise users' && !selection.selectedBrokerId) return alert('Select a broker');
+
         setIsSimulating(true);
         setTimeout(() => {
             setIsSimulating(false);
             setStep(4);
-        }, 2000);
+        }, 1500);
     };
 
     return (
@@ -154,19 +182,80 @@ const GlobalUpdationPage = () => {
                                     {targets.map(t => (
                                         <button
                                             key={t}
-                                            onClick={() => { setSelection({ ...selection, target: t }); setStep(2); }}
-                                            className={`p-8 rounded-2xl text-left border transition-all flex flex-col gap-3 group relative overflow-hidden ${selection.target === t ? 'bg-[#01B4EA]/10 border-[#01B4EA] shadow-xl' : 'bg-[#151c2c] border-white/5 hover:border-white/20 hover:bg-[#1a2333]'}`}
+                                            onClick={() => { setSelection({ ...selection, target: t, selectedUsers: [], selectedBrokerId: '' }); }}
+                                            className={`p-6 rounded-2xl text-left border transition-all flex flex-col gap-3 group relative overflow-hidden ${selection.target === t ? 'bg-[#01B4EA]/10 border-[#01B4EA] shadow-xl' : 'bg-[#151c2c] border-white/5 hover:border-white/20 hover:bg-[#1a2333]'}`}
                                         >
-                                            <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-125 transition-transform duration-700">
-                                                <Users className="w-24 h-24 text-white" />
-                                            </div>
                                             <div className="flex justify-between items-center w-full relative z-10">
                                                 <span className="text-white font-black text-lg tracking-tight">{t}</span>
-                                                <ArrowRight className={`w-5 h-5 transition-all ${selection.target === t ? 'translate-x-0 text-[#01B4EA] scale-125' : 'opacity-0 translate-x-4'}`} />
+                                                <div className={`w-3 h-3 rounded-full ${selection.target === t ? 'bg-[#01B4EA] animate-pulse' : 'bg-white/5'}`}></div>
                                             </div>
-                                            <p className="text-slate-500 text-xs font-bold italic opacity-70 relative z-10">Batch injection focused on {t.toLowerCase()} cluster.</p>
+                                            <p className="text-slate-500 text-[10px] font-bold italic opacity-70 relative z-10">Batch injection focused on {t.toLowerCase()} cluster.</p>
                                         </button>
                                     ))}
+                                </div>
+
+                                {selection.target === 'Single user' && (
+                                    <div className="p-6 bg-[#151c2c] rounded-2xl border border-white/5 space-y-4 animate-in fade-in slide-in-from-top-4">
+                                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Select User</label>
+                                        <select 
+                                            className="w-full bg-[#202940] border border-white/10 rounded-xl p-3 text-white font-bold outline-none"
+                                            value={selection.selectedUsers[0] || ''}
+                                            onChange={(e) => setSelection({ ...selection, selectedUsers: [e.target.value] })}
+                                        >
+                                            <option value="">Choose a user...</option>
+                                            {usersList.map(u => <option key={u.id} value={u.id}>{u.username} - {u.full_name}</option>)}
+                                        </select>
+                                    </div>
+                                )}
+
+                                {selection.target === 'Multiple users' && (
+                                    <div className="p-6 bg-[#151c2c] rounded-2xl border border-white/5 space-y-4 animate-in fade-in slide-in-from-top-4">
+                                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Select Multiple Users</label>
+                                        <div className="max-h-60 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+                                            {usersList.map(u => (
+                                                <label key={u.id} className="flex items-center gap-3 p-3 bg-[#202940] rounded-xl cursor-pointer hover:bg-[#2d3748] transition-colors border border-white/5">
+                                                    <input 
+                                                        type="checkbox" 
+                                                        checked={selection.selectedUsers.includes(u.id)}
+                                                        onChange={(e) => {
+                                                            const newId = u.id;
+                                                            setSelection(prev => ({
+                                                                ...prev,
+                                                                selectedUsers: e.target.checked 
+                                                                    ? [...prev.selectedUsers, newId]
+                                                                    : prev.selectedUsers.filter(id => id !== newId)
+                                                            }));
+                                                        }}
+                                                        className="w-4 h-4 rounded border-white/20 bg-transparent text-[#01B4EA] focus:ring-[#01B4EA]"
+                                                    />
+                                                    <span className="text-white text-sm font-bold">{u.username} <span className="text-slate-500 font-normal">({u.full_name})</span></span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {selection.target === 'Broker-wise users' && (
+                                    <div className="p-6 bg-[#151c2c] rounded-2xl border border-white/5 space-y-4 animate-in fade-in slide-in-from-top-4">
+                                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Select Broker</label>
+                                        <select 
+                                            className="w-full bg-[#202940] border border-white/10 rounded-xl p-3 text-white font-bold outline-none"
+                                            value={selection.selectedBrokerId}
+                                            onChange={(e) => setSelection({ ...selection, selectedBrokerId: e.target.value })}
+                                        >
+                                            <option value="">Choose a broker...</option>
+                                            {brokersList.map(b => <option key={b.id} value={b.id}>{b.username} - {b.full_name}</option>)}
+                                        </select>
+                                    </div>
+                                )}
+
+                                <div className="flex justify-end pt-4">
+                                    <button 
+                                        onClick={() => setStep(2)}
+                                        className="bg-[#01B4EA] text-white px-10 py-4 rounded-xl font-black uppercase tracking-widest text-xs shadow-xl shadow-[#01B4EA]/20 hover:scale-[1.02] transition-all"
+                                    >
+                                        Next Component
+                                    </button>
                                 </div>
                             </div>
                         )}
@@ -183,7 +272,7 @@ const GlobalUpdationPage = () => {
                                     {segments.map(s => (
                                         <button
                                             key={s}
-                                            onClick={() => { setSelection({ ...selection, segment: s }); setStep(s === 'MCX' || s === 'Equity' ? 2 : 3); }}
+                                            onClick={() => { setSelection({ ...selection, segment: s }); }}
                                             className={`p-10 rounded-2xl border transition-all flex flex-col items-center gap-6 group hover:scale-[1.05] relative overflow-hidden ${selection.segment === s ? 'bg-[#4CAF50]/10 border-[#4CAF50] shadow-2xl shadow-[#4CAF50]/10' : 'bg-[#151c2c] border-white/5 hover:border-white/10'}`}
                                         >
                                             <div className={`p-6 rounded-2xl transition-all duration-500 ${selection.segment === s ? 'bg-[#4CAF50] text-white shadow-xl shadow-[#4CAF50]/30' : 'bg-[#202940] text-slate-600 group-hover:text-slate-300 shadow-inner'}`}>
@@ -193,11 +282,11 @@ const GlobalUpdationPage = () => {
                                         </button>
                                     ))}
                                 </div>
-                                {(selection.segment === 'MCX' || selection.segment === 'Equity') && (
-                                    <div className="pt-10 border-t border-white/5 space-y-6">
+                                {selection.segment && (
+                                    <div className="pt-10 border-t border-white/5 space-y-6 animate-in slide-in-from-top-4 duration-500">
                                         <div className="flex items-center justify-between">
                                             <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2">
-                                                <Layers className="w-4 h-4 text-[#4CAF50]" /> Segment Derivative Path
+                                                <Layers className="w-4 h-4 text-[#4CAF50]" /> Segment Derivative Path ({selection.segment})
                                             </label>
                                         </div>
                                         <div className="grid grid-cols-2 gap-4">
@@ -217,7 +306,7 @@ const GlobalUpdationPage = () => {
                         )}
 
                         {step === 3 && (
-                            <div className="space-y-10 animate-fade-in">
+                            <div className="space-y-10 animate-fade-in text-slate-300">
                                 <div className="space-y-2">
                                     <h3 className="text-2xl font-black text-white tracking-tight flex items-center gap-3">
                                         <Settings2 className="w-6 h-6 text-[#01B4EA]" /> Injection Logic
@@ -236,7 +325,7 @@ const GlobalUpdationPage = () => {
                                             </button>
                                         ))}
                                     </div>
-                                    {selection.parameter === 'Margin' ? (
+                                    {(selection.parameter === 'Margin' || selection.parameter === 'Leverage') ? (
                                         <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
                                             <div className="flex justify-center gap-4">
                                                 {['Exposure', 'Lot'].map(mType => (
@@ -274,22 +363,49 @@ const GlobalUpdationPage = () => {
                                                     </div>
                                                 </div>
                                             ) : (
-                                                <div className="grid grid-cols-2 md:grid-cols-3 gap-6 p-8 bg-[#151c2c] rounded-2xl border border-white/5 animate-in fade-in zoom-in duration-300">
-                                                    {Object.keys(selection.lotConfigs).map(scrip => (
-                                                        <div key={scrip} className="space-y-2">
-                                                            <label className="text-[9px] font-black text-[#01B4EA] uppercase tracking-widest">{scrip}</label>
-                                                            <input 
-                                                                type="text" 
-                                                                className="w-full bg-[#202940] border border-white/5 rounded-lg p-2.5 text-white text-sm font-bold focus:outline-none focus:border-[#4CAF50]" 
-                                                                placeholder="Value" 
-                                                                value={selection.lotConfigs[scrip]}
-                                                                onChange={(e) => setSelection({
-                                                                    ...selection, 
-                                                                    lotConfigs: { ...selection.lotConfigs, [scrip]: e.target.value }
-                                                                })}
-                                                            />
-                                                        </div>
-                                                    ))}
+                                                <div className="p-8 bg-[#151c2c] rounded-2xl border border-white/5 animate-in fade-in zoom-in duration-300">
+                                                    <h4 className="text-[15px] font-black text-white uppercase tracking-widest mb-6 border-l-4 border-[#01B4EA] pl-4">Lot-wise Configuration for {selection.subSegment}</h4>
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+                                                        {mcxScrips.map(scrip => (
+                                                            <div key={scrip} className="bg-[#202940]/30 p-4 rounded-xl border border-white/5 group hover:border-[#01B4EA]/30 transition-all">
+                                                                <label className="text-[11px] font-black text-[#01B4EA] uppercase tracking-widest block mb-4 border-b border-white/10 pb-2">{scrip}</label>
+                                                                <div className="grid grid-cols-2 gap-4">
+                                                                    <div className="space-y-1">
+                                                                        <span className="text-[8px] font-black text-slate-500 uppercase">Intraday</span>
+                                                                        <input 
+                                                                            type="text" 
+                                                                            className="w-full bg-[#151c2c] border border-white/5 rounded-lg p-2 text-white text-sm font-bold focus:outline-none focus:border-[#4CAF50]" 
+                                                                            placeholder="0" 
+                                                                            value={selection.lotConfigs[scrip]?.INTRADAY || ''}
+                                                                            onChange={(e) => setSelection({
+                                                                                ...selection, 
+                                                                                lotConfigs: { 
+                                                                                    ...selection.lotConfigs, 
+                                                                                    [scrip]: { ...selection.lotConfigs[scrip], INTRADAY: e.target.value } 
+                                                                                }
+                                                                            })}
+                                                                        />
+                                                                    </div>
+                                                                    <div className="space-y-1">
+                                                                        <span className="text-[8px] font-black text-slate-500 uppercase">Holding</span>
+                                                                        <input 
+                                                                            type="text" 
+                                                                            className="w-full bg-[#151c2c] border border-white/5 rounded-lg p-2 text-white text-sm font-bold focus:outline-none focus:border-[#4CAF50]" 
+                                                                            placeholder="0" 
+                                                                            value={selection.lotConfigs[scrip]?.HOLDING || ''}
+                                                                            onChange={(e) => setSelection({
+                                                                                ...selection, 
+                                                                                lotConfigs: { 
+                                                                                    ...selection.lotConfigs, 
+                                                                                    [scrip]: { ...selection.lotConfigs[scrip], HOLDING: e.target.value } 
+                                                                                }
+                                                                            })}
+                                                                        />
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
                                                 </div>
                                             )}
 
@@ -367,39 +483,58 @@ const GlobalUpdationPage = () => {
                                                         <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Delta Value</th>
                                                     </tr>
                                                 </thead>
-                                                <tbody className="divide-y-2 divide-[#01B4EA]/20">
-                                                    {selection.parameter === 'Margin' && selection.marginType === 'Lot' ? (
+                                                <tbody className="divide-y-8 divide-[#1a2035]">
+                                                    {(selection.parameter === 'Margin' || selection.parameter === 'Leverage') && selection.marginType === 'Lot' ? (
                                                         Object.entries(selection.lotConfigs)
-                                                            .filter(([_, value]) => value !== '')
-                                                            .map(([scrip, value]) => (
-                                                                <tr key={scrip}>
-                                                                    <td className="px-6 py-5 text-sm font-bold text-white uppercase tracking-tight">{scrip} <span className="text-[#01B4EA] text-[10px] ml-1">{selection.subSegment}</span></td>
-                                                                    <td className="px-6 py-5 text-[11px] font-black text-slate-400 uppercase tracking-widest">Margin [Lot-wise]</td>
-                                                                    <td className="px-6 py-5 text-[#4CAF50] font-black text-[13px]">{value}</td>
+                                                            .filter(([_, val]) => val.INTRADAY !== '' || val.HOLDING !== '')
+                                                            .map(([scrip, val]) => (
+                                                                <tr key={scrip} className="bg-white/[0.03] border-t-2 border-[#01B4EA]/30">
+                                                                    <td className="px-6 py-6 text-sm font-bold text-white uppercase tracking-tight">{scrip} <span className="text-[#01B4EA] text-[10px] ml-1">{selection.subSegment}</span></td>
+                                                                    <td className="px-6 py-6 text-[11px] font-black text-slate-400 uppercase tracking-widest">{selection.parameter} [Lot-wise]</td>
+                                                                    <td className="px-6 py-6 text-[#4CAF50] font-black text-[15px]">
+                                                                        <div className="flex gap-4">
+                                                                            <span className="text-white/40 text-[9px] mr-1">ID:</span> {val.INTRADAY || '0'}
+                                                                            <span className="text-white/40 text-[9px] mr-1">HLD:</span> {val.HOLDING || '0'}
+                                                                        </div>
+                                                                    </td>
                                                                 </tr>
                                                             ))
                                                     ) : (
-                                                        <tr>
-                                                            <td className="px-6 py-5 text-sm font-bold text-white uppercase tracking-tight">{selection.segment} <span className="text-[#01B4EA] text-[10px] ml-1">{selection.subSegment}</span></td>
-                                                            <td className="px-6 py-5 text-[11px] font-black text-slate-400 uppercase tracking-widest">{selection.parameter} {selection.parameter === 'Margin' && `[${selection.marginType}]`}</td>
-                                                            <td className="px-6 py-5">
-                                                                {selection.parameter === 'Margin' ? (
-                                                                    <div className="flex gap-2 text-[10px] font-black uppercase">
-                                                                        <span className="text-[#4CAF50]">ID: {selection.intradayExposure}</span>
-                                                                        <span className="text-yellow-500">HLD: {selection.holdingExposure}</span>
+                                                        <tr className="bg-white/[0.03] border-t-2 border-[#01B4EA]/30">
+                                                            <td className="px-6 py-8 text-sm font-bold text-white uppercase tracking-tight">{selection.segment} <span className="text-[#01B4EA] text-[10px] ml-1">{selection.subSegment}</span></td>
+                                                            <td className="px-6 py-8 text-[11px] font-black text-slate-400 uppercase tracking-widest">{selection.parameter} {(selection.parameter === 'Margin' || selection.parameter === 'Leverage') && `[${selection.marginType}]`}</td>
+                                                            <td className="px-6 py-8 text-white">
+                                                                {(selection.parameter === 'Margin' || selection.parameter === 'Leverage') ? (
+                                                                    <div className="flex gap-4 text-[11px] font-black uppercase">
+                                                                        <div className="flex flex-col">
+                                                                            <span className="text-slate-500 text-[9px]">Intraday</span>
+                                                                            <span className="text-[#4CAF50] text-lg">{selection.intradayExposure || '0'}</span>
+                                                                        </div>
+                                                                        <div className="flex flex-col">
+                                                                            <span className="text-slate-500 text-[9px]">Holding</span>
+                                                                            <span className="text-yellow-500 text-lg">{selection.holdingExposure || '0'}</span>
+                                                                        </div>
                                                                     </div>
                                                                 ) : (
-                                                                    <span className="text-[#4CAF50] font-black text-[13px]">{selection.newValue}</span>
+                                                                    <span className="text-[#4CAF50] font-black text-2xl tracking-tighter">{selection.newValue}</span>
                                                                 )}
                                                             </td>
                                                         </tr>
                                                     )}
-                                                    <tr className="bg-white/[0.02]">
-                                                        <td className="px-6 py-5 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Global Reach</td>
-                                                        <td className="px-6 py-5 text-xs text-slate-300 font-bold" colSpan={2}>
-                                                            <div className="flex items-center gap-2">
-                                                                <span>8,421 Users Injected</span>
-                                                                <div className="w-16 h-1 bg-[#4CAF50] rounded-full"></div>
+                                                    <tr className="bg-white/[0.01]">
+                                                        <td className="px-6 py-5 text-[10px] font-bold text-slate-600 uppercase tracking-widest">Target Scope</td>
+                                                        <td className="px-6 py-5 text-sm text-slate-400 font-black uppercase" colSpan={2}>
+                                                            <div className="flex items-center gap-3">
+                                                                <span className="text-white">{selection.target}</span>
+                                                                <div className="h-4 w-[1px] bg-white/10"></div>
+                                                                <span className="text-[#01B4EA] text-[10px]">
+                                                                    {selection.target === 'Single user' || selection.target === 'Multiple users' 
+                                                                        ? `${selection.selectedUsers.length} Users Selected`
+                                                                        : selection.target === 'Broker-wise users'
+                                                                        ? `Broker ID: ${selection.selectedBrokerId || 'None'}`
+                                                                        : 'Global Cluster Affected'
+                                                                    }
+                                                                </span>
                                                             </div>
                                                         </td>
                                                     </tr>
