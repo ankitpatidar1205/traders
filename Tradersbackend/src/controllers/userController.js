@@ -377,8 +377,34 @@ const updateUserSegments = async (req, res) => {
     }
 };
 
+const getBrokerClients = async (req, res) => {
+    try {
+        const brokerId = req.params.id;
+        const brokerIdStr = String(brokerId);
+
+        const [rows] = await db.execute(
+            `SELECT u.id, u.username, u.full_name, u.email, u.mobile, u.status, u.role,
+                    u.balance as ledger_balance, u.created_at, u.is_demo,
+                    p.username as parent_username
+             FROM users u
+             LEFT JOIN client_settings cs ON cs.user_id = u.id
+             LEFT JOIN users p ON u.parent_id = p.id
+             WHERE u.role = 'TRADER' AND (
+                u.parent_id = ?
+                OR cs.config_json LIKE CONCAT('%"broker":"', ?, ' :%')
+             )
+             ORDER BY u.id ASC`,
+            [brokerId, brokerIdStr]
+        );
+        res.json(rows);
+    } catch (err) {
+        console.error('getBrokerClients error:', err);
+        res.status(500).json({ message: 'Server Error', error: err.message });
+    }
+};
+
 module.exports = {
     getUsers, getUserProfile, updateStatus, resetPassword, deleteUser, updatePasswords,
     updateUser, updateClientSettings, getBrokerShares, updateBrokerShares,
-    getDocuments, updateDocuments, getUserSegments, updateUserSegments
+    getDocuments, updateDocuments, getUserSegments, updateUserSegments, getBrokerClients
 };

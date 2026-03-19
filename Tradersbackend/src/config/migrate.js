@@ -152,6 +152,7 @@ const runMigrations = async () => {
     `);
 
     await addColumn('admin_panel_settings', 'profile_image_path', 'VARCHAR(500) DEFAULT NULL');
+    await addColumn('admin_panel_settings', 'bg_image_path', 'VARCHAR(500) DEFAULT NULL');
 
     // ─── 7. TRADES ─────────────────────────────────────────────────────────────
 

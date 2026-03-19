@@ -123,6 +123,9 @@ const SimpleAddUserForm = ({ role, onBack, onSave, editMode = false, initialData
             ? (initialLogoPath.startsWith('http') ? initialLogoPath : `http://https://trader-production-e063.up.railway.app${initialLogoPath}`)
             : null
     );
+    const [bgImageFile, setBgImageFile] = useState(null);
+    const [bgImagePreview, setBgImagePreview] = useState(null);
+    const bgImageInputRef = useRef(null);
     const [profileImageFile, setProfileImageFile] = useState(null);
     const [profileImagePreview, setProfileImagePreview] = useState(
         initialProfileImagePath
@@ -170,6 +173,13 @@ const SimpleAddUserForm = ({ role, onBack, onSave, editMode = false, initialData
         setProfileImagePreview(URL.createObjectURL(file));
     };
 
+    const handleBgImageChange = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setBgImageFile(file);
+        setBgImagePreview(URL.createObjectURL(file));
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -202,7 +212,7 @@ const SimpleAddUserForm = ({ role, onBack, onSave, editMode = false, initialData
 
             // Save per-admin panel settings (theme + logo + profile image)
             if (isAdmin && adminId) {
-                try { await api.saveAdminPanelSettings(adminId, colors, logoFile || null, profileImageFile || null); } catch (_) { }
+                try { await api.saveAdminPanelSettings(adminId, colors, logoFile || null, profileImageFile || null, bgImageFile || null); } catch (_) { }
             }
 
             if (onSave) onSave();
@@ -352,39 +362,64 @@ const SimpleAddUserForm = ({ role, onBack, onSave, editMode = false, initialData
                                 </div>
                             </div>
 
-                            {/* ── Theme Color Settings ── */}
+                            {/* ── Upload Theme ── */}
                             <div className="space-y-4">
                                 <div className="border-b border-white/10 pb-3">
-                                    <h3 className="text-white font-bold uppercase tracking-[2px] text-sm">Panel Color Theme</h3>
-                                    <p className="text-slate-500 text-xs mt-1">Set dashboard colors for this admin's panel</p>
+                                    <h3 className="text-white font-bold uppercase tracking-[2px] text-sm">Upload Theme</h3>
+                                    <p className="text-slate-500 text-xs mt-1">Upload a background image or set a custom background color</p>
                                 </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    {COLOR_FIELDS.map(({ key, label }) => (
-                                        <div key={key} className="flex items-center gap-4 bg-white/5 rounded-lg p-3 border border-white/5">
-                                            <div className="relative flex-shrink-0">
+                                    {/* Background Image Upload */}
+                                    <div className="bg-white/5 rounded-lg p-4 border border-white/5">
+                                        <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-3">Background Image</p>
+                                        <div className="w-full h-28 rounded-lg border border-white/10 bg-[#151c2c] flex items-center justify-center overflow-hidden mb-3">
+                                            {bgImagePreview
+                                                ? <img src={bgImagePreview} alt="bg preview" className="w-full h-full object-cover" />
+                                                : <span className="text-slate-600 text-xs">No image selected</span>}
+                                        </div>
+                                        <input ref={bgImageInputRef} type="file" accept="image/*" onChange={handleBgImageChange} className="hidden" />
+                                        <div className="flex gap-2">
+                                            <button type="button" onClick={() => bgImageInputRef.current?.click()}
+                                                className="text-xs px-4 py-2 rounded border border-[#4caf50]/40 text-[#4caf50] hover:bg-[#4caf50]/10 transition-all font-semibold">
+                                                Choose Image
+                                            </button>
+                                            {bgImagePreview && (
+                                                <button type="button" onClick={() => { setBgImageFile(null); setBgImagePreview(null); }}
+                                                    className="text-xs px-4 py-2 rounded border border-red-500/40 text-red-400 hover:bg-red-500/10 transition-all font-semibold">
+                                                    Remove
+                                                </button>
+                                            )}
+                                        </div>
+                                        {bgImageFile && <p className="text-slate-500 text-xs mt-2">{bgImageFile.name}</p>}
+                                    </div>
+
+                                    {/* Custom Background Color */}
+                                    <div className="bg-white/5 rounded-lg p-4 border border-white/5">
+                                        <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-3">Custom Background Color</p>
+                                        <div className="flex items-center gap-3">
+                                            <div className="relative">
                                                 <div
-                                                    className="w-10 h-10 rounded-lg border-2 border-white/20 cursor-pointer shadow"
-                                                    style={{ backgroundColor: colors[key] }}
-                                                    onClick={() => document.getElementById(`clr-${key}`).click()}
+                                                    className="w-12 h-12 rounded-lg border-2 border-white/20 cursor-pointer shadow"
+                                                    style={{ backgroundColor: colors.backgroundColor }}
+                                                    onClick={() => document.getElementById('clr-bg-custom').click()}
                                                 />
-                                                <input id={`clr-${key}`} type="color" value={colors[key]}
-                                                    onChange={(e) => handleColorChange(key, e.target.value)}
-                                                    className="absolute inset-0 opacity-0 cursor-pointer w-10 h-10" />
+                                                <input id="clr-bg-custom" type="color" value={colors.backgroundColor}
+                                                    onChange={(e) => handleColorChange('backgroundColor', e.target.value)}
+                                                    className="absolute inset-0 opacity-0 cursor-pointer w-12 h-12" />
                                             </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-slate-300 text-xs font-semibold">{label}</p>
-                                                <input type="text" value={colors[key]}
-                                                    onChange={(e) => handleColorChange(key, e.target.value)}
-                                                    className="mt-1 bg-transparent border-b border-slate-600 text-slate-400 text-xs w-full focus:outline-none focus:border-[#4caf50] font-mono"
-                                                    placeholder="#000000" />
+                                            <div className="flex-1">
+                                                <input type="text" value={colors.backgroundColor}
+                                                    onChange={(e) => handleColorChange('backgroundColor', e.target.value)}
+                                                    className="w-full bg-[#151c2c] border border-white/10 rounded-md py-2.5 px-3 text-white focus:outline-none focus:border-[#4caf50] text-xs font-mono"
+                                                    placeholder="#1a2035" />
                                             </div>
                                         </div>
-                                    ))}
+                                        <button type="button" onClick={() => handleColorChange('backgroundColor', '#1a2035')}
+                                            className="text-xs px-4 py-1.5 mt-3 rounded border border-slate-600 text-slate-400 hover:bg-white/5 transition-all">
+                                            Reset to default
+                                        </button>
+                                    </div>
                                 </div>
-                                <button type="button" onClick={() => setColors({ ...DEFAULT_COLORS })}
-                                    className="text-xs px-4 py-1.5 rounded border border-slate-600 text-slate-400 hover:bg-white/5 transition-all">
-                                    Reset to defaults
-                                </button>
                             </div>
 
                             {/* ── Logo Upload ── */}

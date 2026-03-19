@@ -130,6 +130,13 @@ runMigrations()
     .then(async () => {
         server.listen(PORT, () => {
             console.log(`🚀 Server running on port ${PORT}`);
+        }).on('error', (err) => {
+            if (err.code === 'EADDRINUSE') {
+                console.log(`⚠️  Port ${PORT} is already in use. Server may already be running.`);
+                process.exit(0);
+            } else {
+                throw err;
+            }
         });
 
         // Try to start Kite Ticker for live data

@@ -53,6 +53,8 @@ import EditBrokerPage from './pages/brokers/EditBrokerPage';
 import ViewBrokerPage from './pages/brokers/ViewBrokerPage';
 import EditAdminPage from './pages/users/EditAdminPage';
 import GlobalSettingsPage from './pages/settings/GlobalSettingsPage';
+import ActionLedgerPage from './pages/logs/ActionLedgerPage';
+import TradeIpTrackingPage from './pages/logs/TradeIpTrackingPage';
 
 import { useAuth, ROLES } from './context/AuthContext';
 import * as api from './services/api';
@@ -111,7 +113,7 @@ function App() {
 
     const handleLogout = () => {
         authLogout();
-        setView('live-m2m');
+        navigate('/');
     };
 
     const fetchInitialData = async () => {
@@ -288,6 +290,10 @@ function App() {
                 <Route path="/voice-modulation" element={<VoiceModulationPage />} />
                 <Route path="/signal-admin" element={<SignalAdminPage />} />
                 <Route path="/signals" element={<SignalsPage />} />
+
+                {/* Logs */}
+                <Route path="/action-ledger" element={<ProtectedRoute viewId="action-ledger"><ActionLedgerPage /></ProtectedRoute>} />
+                <Route path="/trade-ip-tracking" element={<ProtectedRoute viewId="trade-ip-tracking"><TradeIpTrackingPage /></ProtectedRoute>} />
 
                 {/* Catch-all */}
                 <Route path="*" element={<Navigate to="/live-m2m" replace />} />
