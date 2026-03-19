@@ -45,7 +45,24 @@ const SelectField = ({ label, name, options, value, onChange }) => (
     </div>
 );
 
-const ForexForm = ({ config, onChange }) => {
+const CheckboxField = ({ label, name, checked, onChange, disabled }) => (
+    <label className={`flex items-center gap-3 cursor-pointer group px-2 mb-6 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
+        <div className="relative flex items-center justify-center">
+            <input
+                id={name}
+                type="checkbox"
+                name={name}
+                checked={checked}
+                onChange={onChange}
+                disabled={disabled}
+                className="appearance-none w-5 h-5 border border-slate-600 rounded-sm checked:bg-[#4caf50] checked:border-[#4caf50] transition-all cursor-pointer disabled:cursor-not-allowed"
+            />
+        </div>
+        <span className="text-sm text-[#bcc0cf] group-hover:text-white transition-colors uppercase font-bold tracking-wider">{label}</span>
+    </label>
+);
+
+const ForexForm = ({ config, onChange, globalBanAll }) => {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12">
             <div>
@@ -111,6 +128,15 @@ const ForexForm = ({ config, onChange }) => {
                     value={config.ordersAway} 
                     onChange={(e) => onChange(e.target.name, e.target.value)} 
                 />
+                <div className="mt-4">
+                    <InputField 
+                        label="Forex Segment Limit" 
+                        name="segmentLimit" 
+                        value={config.segmentLimit} 
+                        onChange={(e) => onChange('segmentLimit', e.target.value)} 
+                        placeholder="10" 
+                    />
+                </div>
             </div>
         </div>
     );

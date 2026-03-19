@@ -15,23 +15,49 @@ const GlobalUpdationPage = () => {
     const [selection, setSelection] = useState({
         target: 'All Users',
         segment: 'MCX',
+        subSegment: 'Futures',
         parameter: 'Brokerage',
-        newValue: ''
+        marginType: 'Exposure', // 'Exposure' or 'Lot'
+        newValue: '',
+        intradayExposure: '',
+        holdingExposure: '',
+        lotConfigs: {
+            'GOLD': '',
+            'SILVER': '',
+            'CRUDEOIL': '',
+            'COPPER': '',
+            'NICKEL': '',
+            'ZINC': '',
+            'LEAD': '',
+            'ALUMINIUM': '',
+            'NATURALGAS': ''
+        }
     });
 
     const executeInjection = async () => {
         setIsExecuting(true);
         try {
-            const result = await globalBatchUpdate({
+            const data = {
                 target: selection.target,
                 segment: selection.segment,
+                subSegment: selection.subSegment,
                 parameter: selection.parameter,
-                value: selection.newValue,
-            });
+                marginType: selection.marginType,
+                value: selection.parameter === 'Margin' && selection.marginType === 'Exposure' 
+                    ? { intraday: selection.intradayExposure, holding: selection.holdingExposure }
+                    : selection.parameter === 'Margin' && selection.marginType === 'Lot'
+                    ? selection.lotConfigs
+                    : selection.newValue,
+            };
+            const result = await globalBatchUpdate(data);
             setExecResult({ success: true, message: result?.message || 'Batch update applied successfully' });
             setShowConfirmModal(false);
             setStep(1);
-            setSelection({ target: 'All Users', segment: 'MCX', parameter: 'Brokerage', newValue: '' });
+            setSelection({ 
+                target: 'All Users', segment: 'MCX', subSegment: 'Futures', parameter: 'Brokerage', 
+                marginType: 'Exposure', newValue: '', intradayExposure: '', holdingExposure: '',
+                lotConfigs: { 'GOLD': '', 'SILVER': '', 'CRUDEOIL': '', 'COPPER': '', 'NICKEL': '', 'ZINC': '', 'LEAD': '', 'ALUMINIUM': '', 'NATURALGAS': '' }
+            });
         } catch (err) {
             setExecResult({ success: false, message: err.message || 'Execution failed' });
             setShowConfirmModal(false);
@@ -157,7 +183,7 @@ const GlobalUpdationPage = () => {
                                     {segments.map(s => (
                                         <button
                                             key={s}
-                                            onClick={() => { setSelection({ ...selection, segment: s }); setStep(3); }}
+                                            onClick={() => { setSelection({ ...selection, segment: s }); setStep(s === 'MCX' || s === 'Equity' ? 2 : 3); }}
                                             className={`p-10 rounded-2xl border transition-all flex flex-col items-center gap-6 group hover:scale-[1.05] relative overflow-hidden ${selection.segment === s ? 'bg-[#4CAF50]/10 border-[#4CAF50] shadow-2xl shadow-[#4CAF50]/10' : 'bg-[#151c2c] border-white/5 hover:border-white/10'}`}
                                         >
                                             <div className={`p-6 rounded-2xl transition-all duration-500 ${selection.segment === s ? 'bg-[#4CAF50] text-white shadow-xl shadow-[#4CAF50]/30' : 'bg-[#202940] text-slate-600 group-hover:text-slate-300 shadow-inner'}`}>
@@ -167,6 +193,26 @@ const GlobalUpdationPage = () => {
                                         </button>
                                     ))}
                                 </div>
+                                {(selection.segment === 'MCX' || selection.segment === 'Equity') && (
+                                    <div className="pt-10 border-t border-white/5 space-y-6">
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2">
+                                                <Layers className="w-4 h-4 text-[#4CAF50]" /> Segment Derivative Path
+                                            </label>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            {['Futures', 'Options'].map(type => (
+                                                <button
+                                                    key={type}
+                                                    onClick={() => { setSelection({ ...selection, subSegment: type }); setStep(3); }}
+                                                    className={`p-6 rounded-2xl text-center border transition-all text-xs font-black uppercase tracking-[0.2em] ${selection.subSegment === type ? 'bg-[#4CAF50]/10 border-[#4CAF50] text-[#4CAF50] shadow-xl shadow-[#4CAF50]/10' : 'bg-[#151c2c] border-white/5 text-slate-500 hover:border-white/20'}`}
+                                                >
+                                                    {type}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -190,33 +236,100 @@ const GlobalUpdationPage = () => {
                                             </button>
                                         ))}
                                     </div>
-                                    <div className="pt-10 border-t border-white/5 space-y-6">
-                                        <div className="flex items-center justify-between">
-                                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2">
-                                                <Activity className="w-4 h-4 text-[#4CAF50]" /> Injected Field Value
-                                            </label>
-                                            <span className="text-red-500 text-[10px] font-bold uppercase italic">* Surveillance Rule: 50% limit change max</span>
-                                        </div>
-                                        <input
-                                            type="text"
-                                            autoFocus
-                                            placeholder="NODE VALUE: [0.00]"
-                                            className="w-full bg-[#151c2c] border-2 border-white/5 text-white rounded-2xl p-8 text-4xl font-black tracking-tighter focus:outline-none focus:border-[#4CAF50] transition-all placeholder:text-slate-900 shadow-inner text-center"
-                                            value={selection.newValue}
-                                            onChange={(e) => setSelection({ ...selection, newValue: e.target.value })}
-                                        />
-                                        <button
-                                            disabled={!selection.newValue || isSimulating}
-                                            onClick={startSimulation}
-                                            className="w-full bg-[#4CAF50] hover:bg-green-600 disabled:opacity-30 disabled:cursor-wait text-white font-black py-6 rounded-2xl uppercase tracking-[0.2em] text-sm shadow-2xl shadow-[#4CAF50]/20 transition-all flex items-center justify-center gap-4 active:scale-[0.98]"
-                                        >
-                                            {isSimulating ? (
-                                                <> <Activity className="w-5 h-5 animate-spin" /> Analyzing Impact Nodes...</>
+                                    {selection.parameter === 'Margin' ? (
+                                        <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
+                                            <div className="flex justify-center gap-4">
+                                                {['Exposure', 'Lot'].map(mType => (
+                                                    <button
+                                                        key={mType}
+                                                        onClick={() => setSelection({ ...selection, marginType: mType })}
+                                                        className={`px-8 py-4 rounded-xl border text-[11px] font-black uppercase tracking-widest transition-all ${selection.marginType === mType ? 'bg-[#01B4EA] border-[#01B4EA] text-white' : 'bg-[#1a2333] border-white/5 text-slate-500 hover:text-white'}`}
+                                                    >
+                                                        {mType === 'Exposure' ? '[Exposure-wise]' : '[Lot-wise]'}
+                                                    </button>
+                                                ))}
+                                            </div>
+
+                                            {selection.marginType === 'Exposure' ? (
+                                                <div className="grid grid-cols-2 gap-6 p-10 bg-[#151c2c] rounded-2xl border border-white/5 animate-in fade-in zoom-in duration-300">
+                                                    <div className="space-y-3">
+                                                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Intraday Exposure</label>
+                                                        <input 
+                                                            type="text" 
+                                                            className="w-full bg-[#202940] border border-white/5 rounded-xl p-4 text-white text-xl font-bold focus:outline-none focus:border-[#4CAF50]" 
+                                                            placeholder="e.g. 500" 
+                                                            value={selection.intradayExposure}
+                                                            onChange={(e) => setSelection({...selection, intradayExposure: e.target.value})}
+                                                        />
+                                                    </div>
+                                                    <div className="space-y-3">
+                                                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Holding Exposure</label>
+                                                        <input 
+                                                            type="text" 
+                                                            className="w-full bg-[#202940] border border-white/5 rounded-xl p-4 text-white text-xl font-bold focus:outline-none focus:border-[#4CAF50]" 
+                                                            placeholder="e.g. 100" 
+                                                            value={selection.holdingExposure}
+                                                            onChange={(e) => setSelection({...selection, holdingExposure: e.target.value})}
+                                                        />
+                                                    </div>
+                                                </div>
                                             ) : (
-                                                <> <ShieldCheck className="w-6 h-6" /> Run Enterprise Simulation</>
+                                                <div className="grid grid-cols-2 md:grid-cols-3 gap-6 p-8 bg-[#151c2c] rounded-2xl border border-white/5 animate-in fade-in zoom-in duration-300">
+                                                    {Object.keys(selection.lotConfigs).map(scrip => (
+                                                        <div key={scrip} className="space-y-2">
+                                                            <label className="text-[9px] font-black text-[#01B4EA] uppercase tracking-widest">{scrip}</label>
+                                                            <input 
+                                                                type="text" 
+                                                                className="w-full bg-[#202940] border border-white/5 rounded-lg p-2.5 text-white text-sm font-bold focus:outline-none focus:border-[#4CAF50]" 
+                                                                placeholder="Value" 
+                                                                value={selection.lotConfigs[scrip]}
+                                                                onChange={(e) => setSelection({
+                                                                    ...selection, 
+                                                                    lotConfigs: { ...selection.lotConfigs, [scrip]: e.target.value }
+                                                                })}
+                                                            />
+                                                        </div>
+                                                    ))}
+                                                </div>
                                             )}
-                                        </button>
-                                    </div>
+
+                                            <button
+                                                disabled={isSimulating}
+                                                onClick={startSimulation}
+                                                className="w-full bg-[#4CAF50] hover:bg-green-600 disabled:opacity-30 text-white font-black py-6 rounded-2xl uppercase tracking-[0.2em] text-sm shadow-2xl transition-all flex items-center justify-center gap-4"
+                                            >
+                                                {isSimulating ? <><Activity className="w-5 h-5 animate-spin" /> Analyzing...</> : <><ShieldCheck className="w-6 h-6" /> Run Enterprise Simulation</>}
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="pt-10 border-t border-white/5 space-y-6">
+                                            <div className="flex items-center justify-between">
+                                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2">
+                                                    <Activity className="w-4 h-4 text-[#4CAF50]" /> Injected Field Value
+                                                </label>
+                                                <span className="text-red-500 text-[10px] font-bold uppercase italic">* Surveillance Rule: 50% limit change max</span>
+                                            </div>
+                                            <input
+                                                type="text"
+                                                autoFocus
+                                                placeholder="NODE VALUE: [0.00]"
+                                                className="w-full bg-[#151c2c] border-2 border-white/5 text-white rounded-2xl p-8 text-4xl font-black tracking-tighter focus:outline-none focus:border-[#4CAF50] transition-all placeholder:text-slate-900 shadow-inner text-center"
+                                                value={selection.newValue}
+                                                onChange={(e) => setSelection({ ...selection, newValue: e.target.value })}
+                                            />
+                                            <button
+                                                disabled={!selection.newValue || isSimulating}
+                                                onClick={startSimulation}
+                                                className="w-full bg-[#4CAF50] hover:bg-green-600 disabled:opacity-30 disabled:cursor-wait text-white font-black py-6 rounded-2xl uppercase tracking-[0.2em] text-sm shadow-2xl shadow-[#4CAF50]/20 transition-all flex items-center justify-center gap-4 active:scale-[0.98]"
+                                            >
+                                                {isSimulating ? (
+                                                    <> <Activity className="w-5 h-5 animate-spin" /> Analyzing Impact Nodes...</>
+                                                ) : (
+                                                    <> <ShieldCheck className="w-6 h-6" /> Run Enterprise Simulation</>
+                                                )}
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         )}
@@ -236,24 +349,63 @@ const GlobalUpdationPage = () => {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-10 py-8 border-y border-white/5">
-                                    <div className="space-y-6">
-                                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                                            <Info className="w-4 h-4" /> Cluster Metadata
-                                        </p>
-                                        <div className="space-y-4">
-                                            <div className="flex justify-between items-center text-sm py-4 border-b border-white/5 mx-2"><span className="text-slate-400 font-bold uppercase text-[10px]">Total Node Reach:</span> <span className="text-white font-black">8,421 Users</span></div>
-                                            <div className="flex justify-between items-center text-sm py-4 border-b border-white/5 mx-2"><span className="text-slate-400 font-bold uppercase text-[10px]">Leverage Increase:</span> <span className="text-red-500 font-black">+42.0%</span></div>
-                                            <div className="flex justify-between items-center text-sm py-4 mx-2"><span className="text-slate-400 font-bold uppercase text-[10px]">Exposure Impact:</span> <span className="text-yellow-500 font-black">~12.8Cr Est.</span></div>
-                                        </div>
+                                <div className="space-y-6 py-8 border-y border-white/5">
+                                    <div className="flex items-center justify-between px-2">
+                                        <h4 className="text-[11px] font-black text-white uppercase tracking-widest flex items-center gap-2">
+                                            <Settings2 className="w-4 text-[#01B4EA]" /> Execution Summary Table
+                                        </h4>
+                                        <p className="text-[9px] text-[#4CAF50] font-black italic">Bypass Mode: Active</p>
                                     </div>
-                                    <div className="bg-[#151c2c] p-10 rounded-2xl flex flex-col items-center justify-center text-center shadow-inner group relative">
-                                        <div className="absolute top-4 left-4">
-                                            <Activity className="w-6 h-6 text-[#4CAF50]/30 group-hover:text-[#4CAF50] transition-colors" />
+                                    
+                                    <div className="bg-[#151c2c] rounded-2xl border border-white/5 overflow-hidden shadow-inner">
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-left">
+                                                <thead className="bg-white/5 border-b border-white/10">
+                                                    <tr>
+                                                        <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Mapping Node</th>
+                                                        <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Injection Path</th>
+                                                        <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Delta Value</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y-2 divide-[#01B4EA]/20">
+                                                    {selection.parameter === 'Margin' && selection.marginType === 'Lot' ? (
+                                                        Object.entries(selection.lotConfigs)
+                                                            .filter(([_, value]) => value !== '')
+                                                            .map(([scrip, value]) => (
+                                                                <tr key={scrip}>
+                                                                    <td className="px-6 py-5 text-sm font-bold text-white uppercase tracking-tight">{scrip} <span className="text-[#01B4EA] text-[10px] ml-1">{selection.subSegment}</span></td>
+                                                                    <td className="px-6 py-5 text-[11px] font-black text-slate-400 uppercase tracking-widest">Margin [Lot-wise]</td>
+                                                                    <td className="px-6 py-5 text-[#4CAF50] font-black text-[13px]">{value}</td>
+                                                                </tr>
+                                                            ))
+                                                    ) : (
+                                                        <tr>
+                                                            <td className="px-6 py-5 text-sm font-bold text-white uppercase tracking-tight">{selection.segment} <span className="text-[#01B4EA] text-[10px] ml-1">{selection.subSegment}</span></td>
+                                                            <td className="px-6 py-5 text-[11px] font-black text-slate-400 uppercase tracking-widest">{selection.parameter} {selection.parameter === 'Margin' && `[${selection.marginType}]`}</td>
+                                                            <td className="px-6 py-5">
+                                                                {selection.parameter === 'Margin' ? (
+                                                                    <div className="flex gap-2 text-[10px] font-black uppercase">
+                                                                        <span className="text-[#4CAF50]">ID: {selection.intradayExposure}</span>
+                                                                        <span className="text-yellow-500">HLD: {selection.holdingExposure}</span>
+                                                                    </div>
+                                                                ) : (
+                                                                    <span className="text-[#4CAF50] font-black text-[13px]">{selection.newValue}</span>
+                                                                )}
+                                                            </td>
+                                                        </tr>
+                                                    )}
+                                                    <tr className="bg-white/[0.02]">
+                                                        <td className="px-6 py-5 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Global Reach</td>
+                                                        <td className="px-6 py-5 text-xs text-slate-300 font-bold" colSpan={2}>
+                                                            <div className="flex items-center gap-2">
+                                                                <span>8,421 Users Injected</span>
+                                                                <div className="w-16 h-1 bg-[#4CAF50] rounded-full"></div>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
                                         </div>
-                                        <p className="text-[10px] text-slate-600 font-black uppercase tracking-[0.3em] mb-4">Injected Target Value</p>
-                                        <span className="text-6xl font-black text-[#4CAF50] tracking-tighter drop-shadow-lg scale-110">{selection.newValue}</span>
-                                        <p className="text-[9px] text-slate-700 font-bold mt-6 uppercase tracking-widest border-t border-white/5 pt-4 w-full">Final Surveillance Override Value</p>
                                     </div>
                                 </div>
 
@@ -283,18 +435,21 @@ const GlobalUpdationPage = () => {
                             {[
                                 { user: 'Ad-Master', date: 'T-1h:20m', change: 'NSE Leverage -> 20.0', type: 'High', ip: '192.168.1.1' },
                                 { user: 'Ad-Master', date: 'T-8h:45m', change: 'MCX Brokerage -> 50.0', type: 'Norm', ip: '192.168.1.1' }
-                            ].map((job, i) => (
-                                <div key={i} className="p-5 bg-[#151c2c] rounded-xl border border-white/5 group hover:border-[#01B4EA]/30 transition-all relative overflow-hidden">
-                                    <div className={`absolute top-0 right-0 w-1 h-full ${job.type === 'High' ? 'bg-red-500' : 'bg-[#4CAF50]'}`}></div>
-                                    <div className="flex justify-between text-[9px] font-black mb-2 px-1">
-                                        <span className="text-slate-500 uppercase">{job.date}</span>
-                                        <span className="text-[#01B4EA]">{job.user} [{job.ip}]</span>
+                            ].map((job, i, arr) => (
+                                <div key={i}>
+                                    <div className="p-5 bg-[#151c2c] rounded-xl border border-white/5 group hover:border-[#01B4EA]/30 transition-all relative overflow-hidden">
+                                        <div className={`absolute top-0 right-0 w-1 h-full ${job.type === 'High' ? 'bg-red-500' : 'bg-[#4CAF50]'}`}></div>
+                                        <div className="flex justify-between text-[9px] font-black mb-2 px-1">
+                                            <span className="text-slate-500 uppercase">{job.date}</span>
+                                            <span className="text-[#01B4EA]">{job.user} [{job.ip}]</span>
+                                        </div>
+                                        <p className="text-slate-200 text-xs font-black tracking-tight">{job.change}</p>
+                                        <div className="flex gap-2 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button className="text-[8px] font-black uppercase text-[#4CAF50] hover:underline">Revert Node</button>
+                                            <button className="text-[8px] font-black uppercase text-[#01B4EA] hover:underline">View Proof</button>
+                                        </div>
                                     </div>
-                                    <p className="text-slate-200 text-xs font-black tracking-tight">{job.change}</p>
-                                    <div className="flex gap-2 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button className="text-[8px] font-black uppercase text-[#4CAF50] hover:underline">Revert Node</button>
-                                        <button className="text-[8px] font-black uppercase text-[#01B4EA] hover:underline">View Proof</button>
-                                    </div>
+                                    {i < arr.length - 1 && <hr className="my-6 border-white/10 shadow-[0_4px_12px_rgba(0,0,0,0.5)] border-t-2" />}
                                 </div>
                             ))}
                         </div>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, ChevronDown } from 'lucide-react';
+import { Check, ChevronDown, Info } from 'lucide-react';
 
 const InputField = ({ label, name, value, onChange, type = "text", placeholder, hint, className = "" }) => (
     <div className={`mb-10 group px-2 ${className}`}>
@@ -48,8 +48,8 @@ const SelectField = ({ label, name, value, onChange, options, hint, className = 
     </div>
 );
 
-const CheckboxField = ({ label, name, checked, onChange, className = "" }) => (
-    <label htmlFor={name} className={`flex items-center gap-4 cursor-pointer group mb-10 px-2 ${className}`}>
+const CheckboxField = ({ label, name, checked, onChange, disabled, className = "", tooltip }) => (
+    <label htmlFor={name} className={`flex items-center gap-4 cursor-pointer group mb-10 px-2 ${className} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
         <div className="relative flex items-center justify-center">
             <input
                 id={name}
@@ -57,11 +57,19 @@ const CheckboxField = ({ label, name, checked, onChange, className = "" }) => (
                 name={name}
                 checked={checked}
                 onChange={onChange}
-                className="appearance-none w-[19px] h-[19px] border border-white/30 rounded-[3px] checked:bg-[#4caf50] checked:border-[#4caf50] transition-all cursor-pointer"
+                disabled={disabled}
+                className="appearance-none w-[19px] h-[19px] border border-white/30 rounded-[3px] checked:bg-[#4caf50] checked:border-[#4caf50] transition-all cursor-pointer disabled:cursor-not-allowed"
             />
             {checked && <Check className="w-3.5 h-3.5 text-white absolute pointer-events-none stroke-[3]" />}
         </div>
-        <span className="text-[15px] group-hover:text-white transition-colors text-[#bcc0cf] font-normal" style={{ letterSpacing: '0.2px' }}>{label}</span>
+        <div className="flex items-center gap-2">
+            <span className="text-[15px] group-hover:text-white transition-colors text-[#bcc0cf] font-normal" style={{ letterSpacing: '0.2px' }}>{label}</span>
+            {tooltip && (
+                <div title={tooltip} className="cursor-help">
+                    <Info className="w-4 h-4 text-slate-500 hover:text-cyan-400 transition-colors" />
+                </div>
+            )}
+        </div>
     </label>
 );
 
@@ -78,7 +86,7 @@ const ScripField = ({ label, value, onChange, className = "" }) => (
     </div>
 );
 
-const EditMCXFutureSection = ({ formData, handleChange, handleNestedChange }) => {
+const EditMCXFutureSection = ({ formData, handleChange, handleNestedChange, globalBanAll }) => {
     // Exposure Scrips list as per images 1-4
     const exposureScrips = [
         'BULLDEX', 'GOLD', 'SILVER', 'CRUDEOIL', 'CRUDEOIL MINI', 'COPPER', 'NICKEL', 'ZINC',
@@ -111,10 +119,33 @@ const EditMCXFutureSection = ({ formData, handleChange, handleNestedChange }) =>
 
     return (
         <fieldset className="border-none p-0 m-0">
-            <h3 className="text-[26px] font-normal mb-10 px-2 text-white" style={{ letterSpacing: '0.2px' }}>MCX Futures:</h3>
+            <div className="flex items-center justify-between mb-10 px-2">
+                <h3 className="text-[26px] font-normal text-white" style={{ letterSpacing: '0.2px' }}>MCX Future:</h3>
+            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12">
-                <CheckboxField label="MCX Trading" name="mcxTrading" checked={formData.mcxTrading} onChange={handleChange} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 px-2">
+                <div className="space-y-0">
+                    <div className="mb-0">
+                        <CheckboxField 
+                            label=" MCX Trading" 
+                            name="mcxTrading" 
+                            checked={formData.mcxTrading} 
+                            onChange={handleChange} 
+                        />
+                    </div>
+                    <div className="mb-0">
+                        <CheckboxField 
+                            label="Ban MCX Limit Order" 
+                            name="banMcxLimitOrder" 
+                            checked={formData.banMcxLimitOrder} 
+                            onChange={handleChange} 
+                            disabled={globalBanAll}
+                            tooltip="If enabled, client cannot place limit orders in MCX segment."
+                        />
+                    </div>
+                </div>
+                <div className="hidden md:block"></div> { /* spacer */ }
+
                 <InputField label="Minimum lot size required per single trade of MCX" name="mcxMinLot" value={formData.mcxMinLot} onChange={handleChange} />
 
                 <InputField label="Maximum lot size allowed per single trade of MCX" name="mcxMaxLot" value={formData.mcxMaxLot} onChange={handleChange} />
@@ -125,6 +156,35 @@ const EditMCXFutureSection = ({ formData, handleChange, handleNestedChange }) =>
 
                 <InputField label="MCX brokerage" name="mcxBrokerage" value={formData.mcxBrokerage} onChange={handleChange} />
                 <SelectField label="Exposure Mcx Type" name="mcxExposureType" value={formData.mcxExposureType} onChange={handleChange} options={[{ value: 'per_lot', label: 'Per Lot Basis' }, { value: 'per_turnover', label: 'Per Turnover Basis' }]} />
+
+                <InputField
+                    label="Min. Time to book profit (No. of Seconds)"
+                    name="mcxMinTimeToBookProfit"
+                    value={formData.mcxMinTimeToBookProfit}
+                    onChange={handleChange}
+                    placeholder="120"
+                    hint="Example: 120, will hold the trade for 2 minutes before closing a trade in profit."
+                />
+                <SelectField
+                    label="Scalping Stop Loss"
+                    name="mcxScalpingStopLoss"
+                    value={formData.mcxScalpingStopLoss}
+                    onChange={handleChange}
+                    options={[
+                        { value: 'Disabled', label: 'Disabled' },
+                        { value: 'Enabled', label: 'Enabled' }
+                    ]}
+                    hint="If Disabled, Stop Loss or Booking Loss can be done after Min. time of profit booking."
+                />
+
+                <div className="md:col-span-2 pt-6 border-t border-white/5 mt-4 grid grid-cols-1 md:grid-cols-2 gap-x-12">
+                    <InputField 
+                        label="MCX Segment Limit" 
+                        name="mcxSegmentLimit" 
+                        value={formData.mcxSegmentLimit} 
+                        onChange={handleChange} 
+                    />
+                </div>
             </div>
 
             {formData.mcxExposureType === 'per_lot' && (

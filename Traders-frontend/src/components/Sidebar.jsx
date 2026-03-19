@@ -32,6 +32,7 @@ const ALL_MENU_ITEMS = [
     { id: 'negative-balance', label: 'Negative Balance Txns', icon: 'fa-bell' },
     { id: 'support', label: 'Raise Ticket', icon: 'fa-ticket' },
     { id: 'voice-modulation', label: 'Voice Modulation', icon: 'fa-microphone' },
+    { id: 'expiry-rules', label: 'Expiry Rules', icon: 'fa-calendar-xmark' },
     { id: 'change-password', label: 'Change Login Password', icon: 'fa-user' },
     { id: 'change-transaction-password', label: 'Change Transaction Pwd', icon: 'fa-gear' },
 ];
@@ -49,6 +50,18 @@ const Sidebar = ({ onLogout, currentView, isOpen, onClose }) => {
         TRADER:     { label: 'CLIENT',      color: '#8b5cf6' },
     };
     const badge = roleBadge[userRole] || roleBadge['ADMIN'];
+
+    const getActiveView = (v) => {
+        if (!v) return v;
+        // Map sub-views to their parent modules for persistent highlighting
+        if (['create-client', 'client-details', 'create-fund-deposit', 'create-fund-withdraw', 'edit'].includes(v) || v.startsWith('kyc-verification')) return 'trading-clients';
+        if (v === 'create-broker' || v.startsWith('edit-broker') || v.startsWith('view-broker')) return 'brokers';
+        if (v === 'create-admin' || v.startsWith('edit-admin')) return 'admins';
+        if (v === 'create-trade') return 'trades';
+        if (v === 'live-m2m-detail' || v === 'client-active-positions') return 'live-m2m';
+        return v;
+    };
+    const activeView = getActiveView(currentView);
 
     return (
         <aside className={`
@@ -92,17 +105,17 @@ const Sidebar = ({ onLogout, currentView, isOpen, onClose }) => {
                                 }}
                                 className={`
                                     w-full flex items-center px-3 py-2.5 rounded-md transition-all duration-200 group
-                                    ${currentView === item.id
+                                    ${activeView === item.id
                                         ? 'text-white shadow-lg'
                                         : 'text-[#bcc0cf] hover:bg-white/10 hover:text-white'}
                                 `}
-                                style={currentView === item.id ? {
+                                style={activeView === item.id ? {
                                     background: 'linear-gradient(60deg, var(--navbar-color, #288c6c), var(--primary-color, #4ea752))',
                                     boxShadow: '0 4px 20px 0 rgba(0,0,0,0.14), 0 7px 10px -5px rgba(76,175,80,0.4)',
                                     fontWeight: '500',
                                 } : {}}
                             >
-                                <div className={`w-7 flex justify-center mr-2.5 transition-colors ${currentView === item.id ? 'text-white' : 'text-slate-400 group-hover:text-white'}`}>
+                                <div className={`w-7 flex justify-center mr-2.5 transition-colors ${activeView === item.id ? 'text-white' : 'text-slate-400 group-hover:text-white'}`}>
                                     <i className={`fa-solid ${item.icon} text-[14px]`}></i>
                                 </div>
                                 <span className="text-[12px] font-normal truncate uppercase tracking-wide">{item.label}</span>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Contact } from 'lucide-react';
+import { User } from 'lucide-react';
 import mountainBg from '../assets/wallpapers/mountain-peak.jpg';
 
 const LoginPage = ({ onLogin }) => {
@@ -10,8 +10,8 @@ const LoginPage = ({ onLogin }) => {
 
     const QUICK_LOGIN = [
         { label: 'Super Admin', user: 'superadmin', pass: 'superadmin123', color: '#f59e0b' },
-        { label: 'Admin',       user: 'admin',      pass: 'admin123',      color: '#4caf50' },
-        { label: 'Broker',      user: 'broker',     pass: 'broker123',     color: '#3b82f6' },
+        { label: 'Admin', user: 'admin', pass: 'admin123', color: '#4caf50' },
+        { label: 'Broker', user: 'broker', pass: 'broker123', color: '#3b82f6' },
     ];
 
     const fillCredentials = (item) => {
@@ -72,10 +72,10 @@ const LoginPage = ({ onLogin }) => {
             }}>
                 <form onSubmit={handleSubmit} autoComplete="off">
 
-                    {/* ── Floating green header — centered ON the card top border ── */}
+                    {/* ── Floating green header — left-aligned with User icon ── */}
                     <div style={{
                         position: 'absolute',
-                        top: 0,         /* wrapper paddingTop=36 means this is centered on card border */
+                        top: 0,
                         left: '16px',
                         right: '16px',
                         zIndex: 3,
@@ -84,18 +84,18 @@ const LoginPage = ({ onLogin }) => {
                         padding: '18px 22px',
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'center',
+                        justifyContent: 'flex-start',
                         gap: '12px',
                         boxShadow: '0 6px 24px rgba(30,140,92,0.55), 0 2px 10px rgba(0,0,0,0.30)',
                     }}>
-                        <Contact style={{ width: 26, height: 26, color: '#fff', flexShrink: 0 }} />
+                        <User style={{ width: 26, height: 26, color: '#fff', flexShrink: 0 }} />
                         <span style={{
                             color: '#fff',
-                            fontSize: '15px',
+                            fontSize: '16px',
                             fontWeight: '700',
-                            letterSpacing: '0.03em',
+                            letterSpacing: '0.04em',
                         }}>
-                            Traders — Sign In
+                            Trader
                         </span>
                     </div>
 
