@@ -57,7 +57,7 @@ const CheckboxField = ({ label, name, checked, onChange, className = "" }) => (
                 name={name}
                 checked={checked}
                 onChange={onChange}
-                className="appearance-none w-[19px] h-[19px] border border-white/30 rounded-[3px] checked:bg-[#3b82f6] checked:border-[#3b82f6] transition-all cursor-pointer"
+                className="appearance-none w-[19px] h-[19px] border border-white/30 rounded-[3px] checked:bg-[#4caf50] checked:border-[#4caf50] transition-all cursor-pointer"
             />
             {checked && <Check className="w-3.5 h-3.5 text-white absolute pointer-events-none stroke-[3]" />}
         </div>

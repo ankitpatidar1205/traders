@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import logo from '../assets/shrishreenathjitraders.in.png';
 
 const Layout = ({ children, onLogout, onNavigate, currentView }) => {
-    const { user, logoPath, theme } = useAuth();
+    const { user, logoPath, theme, isSuperAdmin } = useAuth();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [showMobileSearch, setShowMobileSearch] = useState(false);
     const [mobileSearchQuery, setMobileSearchQuery] = useState('');
@@ -35,7 +35,7 @@ const Layout = ({ children, onLogout, onNavigate, currentView }) => {
     return (
         <div className="flex flex-col h-screen overflow-hidden" style={{ backgroundColor: 'var(--bg-color, #1a2035)', color: 'var(--text-color, #ffffff)' }}>
             {/* Popup Notification - Disabled for SUPERADMIN */}
-            {user && user.role !== 'SUPERADMIN' && <NotificationPopup user={user} />}
+            {user && !isSuperAdmin() && <NotificationPopup user={user} />}
 
             {/* TopBar Area */}
             <header className="w-full z-40 flex-shrink-0">

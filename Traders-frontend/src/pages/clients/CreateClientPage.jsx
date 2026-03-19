@@ -657,8 +657,8 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                             {/* Column 1 */}
                                             <div className="space-y-0">
                                                 <div className="mb-8"><CheckboxField label="demo account?" name="isDemoAccount" checked={formData.isDemoAccount} onChange={handleChange} /></div>
-                                                <div className="mb-8"><CheckboxField label="Allow Orders between High - Low?" name="allowOrdersBetweenHL" checked={formData.allowOrdersBetweenHL} onChange={handleChange} /></div>
-                                                <div className="mb-8"><CheckboxField label="Account Status" name="accountStatus" checked={formData.accountStatus === 'Active'} onChange={(e) => setFormData(prev => ({ ...prev, accountStatus: e.target.checked ? 'Active' : 'Inactive' }))} /></div>
+                                                <div className="mb-8"><CheckboxField label="Ban All Segment Limit Order" name="banAllSegmentLimitOrder" checked={formData.banAllSegmentLimitOrder} onChange={handleChange} /></div>
+                                                <div className="mb-8"><CheckboxField label="Account Status" name="accountStatus" checked={formData.accountStatus} onChange={handleChange} /></div>
                                                 <InputField label="auto-Close all active trades when the losses reach % of Ledger-balance" name="autoClosePercentage" value={formData.autoClosePercentage} onChange={handleChange} placeholder="90" hint="Example: 95, will close when losses reach 95% of ledger balance" />
                                                 <InputField label="Min. Time to book profit (No. of Seconds)" name="minTimeToBookProfit" value={formData.minTimeToBookProfit} onChange={handleChange} placeholder="120" hint="Example: 120, will hold the trade for 2 minutes before closing a trade in profit" />
                                             </div>

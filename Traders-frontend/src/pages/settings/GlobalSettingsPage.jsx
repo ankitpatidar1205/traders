@@ -199,11 +199,7 @@ const GlobalSettingsPage = ({ onBack, clientId = null, clientName = '' }) => {
     };
 
     return (
-<<<<<<< HEAD
-        <div className="min-h-full bg-[#1a2035] p-6 lg:p-10 pb-32 overflow-y-auto custom-scrollbar">
-=======
         <div className="min-h-full bg-[#1a2035] px-3 sm:px-6 md:px-10 py-4 sm:py-6 md:py-10 pb-16 sm:pb-24 md:pb-32 overflow-y-auto">
->>>>>>> 3df7851b616ebac0dc267de73fcb9757bd406a99
             <div className="max-w-7xl mx-auto">
                 <div className="relative pt-6">
                     <div className="absolute -top-6 left-8">

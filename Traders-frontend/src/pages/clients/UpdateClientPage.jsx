@@ -640,7 +640,7 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12">
                                             <CheckboxField label="demo account?" name="isDemoAccount" checked={formData.isDemoAccount} onChange={handleChange} />
                                             <CheckboxField label="Allow Fresh Entry Order above high & below low?" name="allowFreshEntry" checked={formData.allowFreshEntry} onChange={handleChange} />
-                                            <CheckboxField label="Allow Orders between High - Low?" name="allowOrdersBetweenHL" checked={formData.allowOrdersBetweenHL} onChange={handleChange} />
+                                            <CheckboxField label="Ban All Segment Limit Order" name="banAllSegmentLimitOrder" checked={formData.banAllSegmentLimitOrder} onChange={handleChange} />
                                             <CheckboxField label="Trade equity as units instead of lots." name="tradeEquityUnits" checked={formData.tradeEquityUnits} onChange={handleChange} />
                                             <CheckboxField label="Account Status" name="accountStatus" checked={formData.accountStatus} onChange={handleChange} />
                                             <CheckboxField label="Auto Close Trades if condition met" name="autoCloseTrades" checked={formData.autoCloseTrades} onChange={handleChange} />

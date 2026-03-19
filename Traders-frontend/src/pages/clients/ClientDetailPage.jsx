@@ -536,25 +536,25 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
                             )}
 
                             {/* Fund - Withdrawal & Deposits Section */}
-                            <div className="w-1/2 mb-10">
-                                <div className="bg-[#1a2235] rounded-lg shadow-2xl border border-white/10 overflow-hidden">
-                                    <div className="p-6">
-                                        <h3 className="text-white text-[28px] font-medium mb-1 tracking-tight">Fund - Withdrawal & Deposits</h3>
-                                        <p className="text-[#a0aec0] text-[15px] mb-4">
+                            <div className="w-full lg:w-1/2 mb-10">
+                                <div className="bg-[#1a2235] rounded shadow-xl border border-white/10 overflow-hidden">
+                                    <div className="p-4">
+                                        <h3 className="text-white text-[19px] font-medium mb-1 tracking-tight">Fund - Withdrawal & Deposits</h3>
+                                        <p className="text-slate-400 text-[13px] mb-2 opacity-70">
                                             {loading ? 'Loading...' : `Showing ${fundsData.length} of ${fundsData.length} items.`}
                                         </p>
-                                        <div className="w-full h-[1px] bg-white/10 mb-6"></div>
+                                        <div className="w-full h-[1px] bg-white/10 mb-4"></div>
                                         
                                         <div className="overflow-x-auto">
                                             <table className="w-full text-left">
                                                 <thead>
-                                                    <tr className="text-white text-[18px] font-bold">
-                                                        <th className="pb-6 pr-4">Amount</th>
-                                                        <th className="pb-6 px-4 text-center">Created At</th>
-                                                        <th className="pb-6 pl-4 text-right">Notes</th>
+                                                    <tr className="text-white text-[14px] font-bold">
+                                                        <th className="pb-4 pr-4">Amount</th>
+                                                        <th className="pb-4 px-4 text-center">Created At</th>
+                                                        <th className="pb-4 pl-4 text-right">Notes</th>
                                                     </tr>
                                                 </thead>
-                                                <tbody className="text-[17px] text-white/90 border-t border-white/10">
+                                                <tbody className="text-[13px] text-white/90 border-t border-white/10">
                                                     {fundsData.length === 0 ? (
                                                         <tr><td colSpan="3" className="py-8 text-center text-[#a0aec0]">{loading ? 'Loading...' : 'No records found'}</td></tr>
                                                     ) : fundsData.map((fund, idx) => (
@@ -562,10 +562,10 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
                                                             <td className="py-4 pr-4 font-medium">
                                                                 {fund.amount}
                                                             </td>
-                                                            <td className="py-4 px-4 text-center text-[#a0aec0]">
+                                                            <td className="py-4 px-4 text-center text-slate-400">
                                                                 {fund.created_at || fund.createdAt || '-'}
                                                             </td>
-                                                            <td className="py-4 pl-4 text-right text-[#a0aec0]">
+                                                            <td className="py-4 pl-4 text-right text-slate-400">
                                                                 {fund.remarks || fund.notes || 'Opening Balance'}
                                                             </td>
                                                         </tr>
