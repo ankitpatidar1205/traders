@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Save, ArrowLeft, Info, Check, Lock, Key, Settings, User, ChevronDown, FileUp, ShieldCheck, FileText, Globe } from 'lucide-react';
 import * as api from '../../services/api';
+import ComexForm from './ComexForm';
+import ForexForm from './ForexForm';
+import CryptoForm from './CryptoForm';
 
 const ScripField = ({ label, value, onChange, hint, name }) => (
     <div className="mb-4">
@@ -224,8 +227,41 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
 
         // 7. International Segments
         comexTrading: false,
+        comexConfig: {
+            brokerage: '0',
+            brokerageType: 'per_crore',
+            minLot: '0',
+            maxLot: '0',
+            maxLotScrip: '0',
+            maxSizeAll: '0',
+            intradayMargin: '0',
+            holdingMargin: '0',
+            ordersAway: '0'
+        },
         forexTrading: false,
+        forexConfig: {
+            brokerage: '0',
+            brokerageType: 'per_crore',
+            minLot: '0',
+            maxLot: '0',
+            maxLotScrip: '0',
+            maxSizeAll: '0',
+            intradayMargin: '0',
+            holdingMargin: '0',
+            ordersAway: '0'
+        },
         cryptoTrading: false,
+        cryptoConfig: {
+            brokerage: '0',
+            brokerageType: 'per_crore',
+            minLot: '0',
+            maxLot: '0',
+            maxLotScrip: '0',
+            maxSizeAll: '0',
+            intradayMargin: '0',
+            holdingMargin: '0',
+            ordersAway: '0'
+        },
 
         // 8. Other
         notes: '',
@@ -247,6 +283,11 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
     const [saveError, setSaveError] = useState('');
     const [showProfileDropdown, setShowProfileDropdown] = useState(false);
     const [brokers, setBrokers] = useState([]);
+    const [segments, setSegments] = useState({
+        comex: false,
+        forex: false,
+        crypto: false
+    });
     const profileRef = useRef(null);
 
     // Fetch brokers for dropdown
@@ -279,6 +320,21 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
             ...prev,
             [name]: type === 'checkbox' ? checked : value
         }));
+    };
+
+    const handleSegmentConfigChange = (segment, field, value) => {
+        setFormData(prev => ({
+            ...prev,
+            [`${segment}Config`]: {
+                ...prev[`${segment}Config`],
+                [field]: value
+            }
+        }));
+    };
+
+    const handleSegmentToggle = (segment, isEnabled) => {
+        setSegments(prev => ({ ...prev, [segment]: isEnabled }));
+        setFormData(prev => ({ ...prev, [`${segment}Trading`]: isEnabled }));
     };
 
     const handleNestedChange = (parent, field, value, subField = null) => {
@@ -331,6 +387,11 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
             // Remove files from config (they go to documents endpoint)
             delete configToSave.documents;
             delete configToSave.password;
+
+            // Remove disabled international segments from configToSave
+            if (!configToSave.comexTrading) delete configToSave.comexConfig;
+            if (!configToSave.forexTrading) delete configToSave.forexConfig;
+            if (!configToSave.cryptoTrading) delete configToSave.cryptoConfig;
 
             await api.updateClientSettings(userId, {
                 allowFreshEntry: formData.allowFreshEntry,
@@ -683,7 +744,7 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                         {formData.mcxExposureType === 'per_lot' && (
                                             <div className="mt-8">
                                                 <h4 className="text-sm font-normal mb-8 px-2 border-l-2 border-[#4caf50]" style={{ color: '#bcc0cf' }}>MCX Exposure Lot wise:</h4>
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 px-2">
+                                                <div className="grid grid-cols-1 gap-y-2 px-2">
                                                     {Object.keys(formData.mcxLotMargins).map((scrip) => (
                                                         <div key={scrip} className="mb-6 grid grid-cols-3 gap-4 items-end">
                                                             <ScripField
@@ -760,7 +821,7 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
 
                                         {formData.equityTrading && (
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 animate-in fade-in slide-in-from-top-2 duration-500">
-                                                <CheckboxField label="Ban All Segment Limit Order" name="banEquityLimitOrder" checked={formData.banEquityLimitOrder} onChange={handleChange} />
+
                                                 <InputField label="Min. Time to book profit (No. of Seconds)" name="equityMinTimeToBookProfit" value={formData.equityMinTimeToBookProfit} onChange={handleChange} placeholder="120" hint="Example: 120, will hold the trade for 2 minutes before closing a trade in profit" />
                                                 <InputField label="Equity Brokerage Per Crore" name="equityBrokerage" value={formData.equityBrokerage} onChange={handleChange} placeholder="800" />
                                                 <InputField label="Minimum lot size required per single trade of Equity" name="equityMinLot" value={formData.equityMinLot} onChange={handleChange} placeholder="0" />
@@ -840,7 +901,7 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
 
                                         <div className="space-y-6 px-2">
                                             {/* COMEX */}
-                                            <div className="bg-[#1a2035]/50 rounded-xl p-6 border border-white/5">
+                                            <div className="bg-[#1a2035]/50 rounded-xl p-6 border border-white/5 overflow-hidden transition-all duration-500">
                                                 <div className="flex justify-between items-center mb-4">
                                                     <div>
                                                         <h4 className="text-[16px] font-black text-cyan-400 uppercase tracking-wider border-l-2 border-cyan-400 pl-3">Comex Commodities</h4>
@@ -848,15 +909,29 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                                     </div>
                                                     <div className="flex items-center gap-3 bg-[#202940] px-4 py-2 rounded-lg border border-white/5">
                                                         <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Status</span>
-                                                        <input type="checkbox" name="comexTrading" checked={formData.comexTrading} onChange={handleChange} className="w-5 h-5 rounded accent-[#4caf50] cursor-pointer" />
-                                                        <span className={`text-[11px] font-black uppercase tracking-wider ${formData.comexTrading ? 'text-green-400' : 'text-slate-500'}`}>{formData.comexTrading ? 'ENABLED' : 'DISABLED'}</span>
+                                                        <input 
+                                                            type="checkbox" 
+                                                            name="comexTrading" 
+                                                            checked={segments.comex} 
+                                                            onChange={(e) => handleSegmentToggle('comex', e.target.checked)} 
+                                                            className="w-5 h-5 rounded accent-[#4caf50] cursor-pointer" 
+                                                        />
+                                                        <span className={`text-[11px] font-black uppercase tracking-wider ${segments.comex ? 'text-green-400' : 'text-slate-500'}`}>{segments.comex ? 'ENABLED' : 'DISABLED'}</span>
                                                     </div>
                                                 </div>
-                                                <hr className="border-white/5" />
+                                                
+                                                {segments.comex && (
+                                                    <div className="mt-6 pt-6 border-t border-white/5 animate-in fade-in slide-in-from-top-4 duration-500">
+                                                        <ComexForm 
+                                                            config={formData.comexConfig}
+                                                            onChange={(field, val) => handleSegmentConfigChange('comex', field, val)}
+                                                        />
+                                                    </div>
+                                                )}
                                             </div>
 
                                             {/* FOREX */}
-                                            <div className="bg-[#1a2035]/50 rounded-xl p-6 border border-white/5">
+                                            <div className="bg-[#1a2035]/50 rounded-xl p-6 border border-white/5 overflow-hidden transition-all duration-500">
                                                 <div className="flex justify-between items-center mb-4">
                                                     <div>
                                                         <h4 className="text-[16px] font-black text-green-400 uppercase tracking-wider border-l-2 border-green-400 pl-3">Forex / Currency</h4>
@@ -864,15 +939,29 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                                     </div>
                                                     <div className="flex items-center gap-3 bg-[#202940] px-4 py-2 rounded-lg border border-white/5">
                                                         <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Status</span>
-                                                        <input type="checkbox" name="forexTrading" checked={formData.forexTrading} onChange={handleChange} className="w-5 h-5 rounded accent-[#4caf50] cursor-pointer" />
-                                                        <span className={`text-[11px] font-black uppercase tracking-wider ${formData.forexTrading ? 'text-green-400' : 'text-slate-500'}`}>{formData.forexTrading ? 'ENABLED' : 'DISABLED'}</span>
+                                                        <input 
+                                                            type="checkbox" 
+                                                            name="forexTrading" 
+                                                            checked={segments.forex} 
+                                                            onChange={(e) => handleSegmentToggle('forex', e.target.checked)} 
+                                                            className="w-5 h-5 rounded accent-[#4caf50] cursor-pointer" 
+                                                        />
+                                                        <span className={`text-[11px] font-black uppercase tracking-wider ${segments.forex ? 'text-green-400' : 'text-slate-500'}`}>{segments.forex ? 'ENABLED' : 'DISABLED'}</span>
                                                     </div>
                                                 </div>
-                                                <hr className="border-white/5" />
+
+                                                {segments.forex && (
+                                                    <div className="mt-6 pt-6 border-t border-white/5 animate-in fade-in slide-in-from-top-4 duration-500">
+                                                        <ForexForm 
+                                                            config={formData.forexConfig}
+                                                            onChange={(field, val) => handleSegmentConfigChange('forex', field, val)}
+                                                        />
+                                                    </div>
+                                                )}
                                             </div>
 
                                             {/* CRYPTO */}
-                                            <div className="bg-[#1a2035]/50 rounded-xl p-6 border border-white/5">
+                                            <div className="bg-[#1a2035]/50 rounded-xl p-6 border border-white/5 overflow-hidden transition-all duration-500">
                                                 <div className="flex justify-between items-center mb-4">
                                                     <div>
                                                         <h4 className="text-[16px] font-black text-orange-400 uppercase tracking-wider border-l-2 border-orange-400 pl-3">Crypto (Bitcoin/ETH)</h4>
@@ -880,11 +969,25 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                                     </div>
                                                     <div className="flex items-center gap-3 bg-[#202940] px-4 py-2 rounded-lg border border-white/5">
                                                         <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Status</span>
-                                                        <input type="checkbox" name="cryptoTrading" checked={formData.cryptoTrading} onChange={handleChange} className="w-5 h-5 rounded accent-[#4caf50] cursor-pointer" />
-                                                        <span className={`text-[11px] font-black uppercase tracking-wider ${formData.cryptoTrading ? 'text-green-400' : 'text-slate-500'}`}>{formData.cryptoTrading ? 'ENABLED' : 'DISABLED'}</span>
+                                                        <input 
+                                                            type="checkbox" 
+                                                            name="cryptoTrading" 
+                                                            checked={segments.crypto} 
+                                                            onChange={(e) => handleSegmentToggle('crypto', e.target.checked)} 
+                                                            className="w-5 h-5 rounded accent-[#4caf50] cursor-pointer" 
+                                                        />
+                                                        <span className={`text-[11px] font-black uppercase tracking-wider ${segments.crypto ? 'text-green-400' : 'text-slate-500'}`}>{segments.crypto ? 'ENABLED' : 'DISABLED'}</span>
                                                     </div>
                                                 </div>
-                                                <hr className="border-white/5" />
+
+                                                {segments.crypto && (
+                                                    <div className="mt-6 pt-6 border-t border-white/5 animate-in fade-in slide-in-from-top-4 duration-500">
+                                                        <CryptoForm 
+                                                            config={formData.cryptoConfig}
+                                                            onChange={(field, val) => handleSegmentConfigChange('crypto', field, val)}
+                                                        />
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     </fieldset>

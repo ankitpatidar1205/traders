@@ -2,19 +2,31 @@ import React from 'react';
 
 const DashboardFilters = () => {
   return (
-    <div className="space-y-4 mb-6">
+    <div className="space-y-[1px] bg-[#0b111e] border border-white/10 rounded-sm shadow-2xl overflow-hidden mb-6">
       {/* Row 1: Export Trades */}
-      <div className="grid grid-cols-12 gap-4">
-        <div className="col-span-12 md:col-span-3 bg-white">
-             <input type="text" placeholder="From Date" className="w-full h-10 px-3 text-slate-800 text-sm border border-slate-300 placeholder:text-slate-500" />
+      <div className="grid grid-cols-12 bg-white">
+        <div className="col-span-12 md:col-span-3 border-r border-slate-300">
+             <input 
+                type="text" 
+                placeholder="From Date" 
+                onFocus={(e) => e.target.type = 'date'}
+                onBlur={(e) => !e.target.value && (e.target.type = 'text')}
+                className="w-full h-12 px-4 text-[#333] text-[14px] focus:outline-none placeholder:text-slate-500 font-bold" 
+             />
         </div>
-        <div className="col-span-12 md:col-span-3 bg-white">
-             <input type="text" placeholder="To Date" className="w-full h-10 px-3 text-slate-800 text-sm border border-slate-300 placeholder:text-slate-500" />
+        <div className="col-span-12 md:col-span-3 border-r border-slate-300">
+             <input 
+                type="text" 
+                placeholder="To Date" 
+                onFocus={(e) => e.target.type = 'date'}
+                onBlur={(e) => !e.target.value && (e.target.type = 'text')}
+                className="w-full h-12 px-4 text-[#333] text-[14px] focus:outline-none placeholder:text-slate-500 font-bold" 
+             />
         </div>
-        <div className="col-span-12 md:col-span-6">
+        <div className="col-span-12 md:col-span-6 bg-[#0b111e] p-[2px]">
             <button 
-                onClick={() => alert("Export Trades functionality would happen here")}
-                className="w-full h-10 bg-[#17a2b8] hover:bg-[#138496] text-white text-xs font-bold uppercase tracking-wide transition-colors shadow-sm rounded-sm"
+                onClick={() => alert("Export Trades functionality")}
+                className="w-full h-11 bg-[#1eb9d8] hover:bg-[#17a2b8] text-white text-[13px] font-bold uppercase tracking-widest transition-all rounded-sm shadow-inner"
             >
             EXPORT TRADES
             </button>
@@ -22,17 +34,29 @@ const DashboardFilters = () => {
       </div>
 
        {/* Row 2: Download PDF */}
-       <div className="grid grid-cols-12 gap-4">
-        <div className="col-span-12 md:col-span-3 bg-white">
-             <input type="text" placeholder="From Date" className="w-full h-10 px-3 text-slate-800 text-sm border border-slate-300 placeholder:text-slate-500" />
+       <div className="grid grid-cols-12 bg-white border-t border-slate-300">
+        <div className="col-span-12 md:col-span-3 border-r border-slate-300">
+             <input 
+                type="text" 
+                placeholder="From Date" 
+                onFocus={(e) => e.target.type = 'date'}
+                onBlur={(e) => !e.target.value && (e.target.type = 'text')}
+                className="w-full h-12 px-4 text-[#333] text-[14px] focus:outline-none placeholder:text-slate-500 font-bold" 
+             />
         </div>
-        <div className="col-span-12 md:col-span-3 bg-white">
-             <input type="text" placeholder="To Date" className="w-full h-10 px-3 text-slate-800 text-sm border border-slate-300 placeholder:text-slate-500" />
+        <div className="col-span-12 md:col-span-3 border-r border-slate-300">
+             <input 
+                type="text" 
+                placeholder="To Date" 
+                onFocus={(e) => e.target.type = 'date'}
+                onBlur={(e) => !e.target.value && (e.target.type = 'text')}
+                className="w-full h-12 px-4 text-[#333] text-[14px] focus:outline-none placeholder:text-slate-500 font-bold" 
+             />
         </div>
-        <div className="col-span-12 md:col-span-6">
+        <div className="col-span-12 md:col-span-6 bg-[#0b111e] p-[2px]">
             <button 
-                onClick={() => alert("Download Trades PDF functionality would happen here")}
-                className="w-full h-10 bg-[#17a2b8] hover:bg-[#138496] text-white text-xs font-bold uppercase tracking-wide transition-colors shadow-sm rounded-sm"
+                onClick={() => alert("Download PDF functionality")}
+                className="w-full h-11 bg-[#1eb9d8] hover:bg-[#17a2b8] text-white text-[13px] font-bold uppercase tracking-widest transition-all rounded-sm shadow-inner"
             >
             DOWNLOAD TRADES PDF
             </button>
@@ -40,17 +64,29 @@ const DashboardFilters = () => {
       </div>
 
        {/* Row 3: Export Funds */}
-       <div className="grid grid-cols-12 gap-4">
-        <div className="col-span-12 md:col-span-3 bg-white">
-             <input type="text" placeholder="From Date" className="w-full h-10 px-3 text-slate-800 text-sm border border-slate-300 placeholder:text-slate-500" />
+       <div className="grid grid-cols-12 bg-white border-t border-slate-300">
+        <div className="col-span-12 md:col-span-3 border-r border-slate-300">
+             <input 
+                type="text" 
+                placeholder="From Date" 
+                onFocus={(e) => e.target.type = 'date'}
+                onBlur={(e) => !e.target.value && (e.target.type = 'text')}
+                className="w-full h-12 px-4 text-[#333] text-[14px] focus:outline-none placeholder:text-slate-500 font-bold" 
+             />
         </div>
-        <div className="col-span-12 md:col-span-3 bg-white">
-             <input type="text" placeholder="To Date" className="w-full h-10 px-3 text-slate-800 text-sm border border-slate-300 placeholder:text-slate-500" />
+        <div className="col-span-12 md:col-span-3 border-r border-slate-300">
+             <input 
+                type="text" 
+                placeholder="To Date" 
+                onFocus={(e) => e.target.type = 'date'}
+                onBlur={(e) => !e.target.value && (e.target.type = 'text')}
+                className="w-full h-12 px-4 text-[#333] text-[14px] focus:outline-none placeholder:text-slate-500 font-bold" 
+             />
         </div>
-        <div className="col-span-12 md:col-span-6">
+        <div className="col-span-12 md:col-span-6 bg-[#0b111e] p-[2px]">
             <button 
-                onClick={() => alert("Export Funds functionality would happen here")}
-                className="w-full h-10 bg-[#17a2b8] hover:bg-[#138496] text-white text-xs font-bold uppercase tracking-wide transition-colors shadow-sm rounded-sm"
+                onClick={() => alert("Export Funds functionality")}
+                className="w-full h-11 bg-[#1eb9d8] hover:bg-[#17a2b8] text-white text-[13px] font-bold uppercase tracking-widest transition-all rounded-sm shadow-inner"
             >
             EXPORT FUNDS
             </button>

@@ -22,8 +22,8 @@ const Layout = ({ children, onLogout, onNavigate, currentView }) => {
 
     return (
         <div className="flex flex-col h-screen overflow-hidden" style={{ backgroundColor: 'var(--bg-color, #1a2035)', color: 'var(--text-color, #ffffff)' }}>
-            {/* Popup Notification */}
-            {user && <NotificationPopup user={user} />}
+            {/* Popup Notification - Disabled for SUPERADMIN */}
+            {user && user.role !== 'SUPERADMIN' && <NotificationPopup user={user} />}
 
             {/* TopBar Area */}
             <header className="w-full z-40">

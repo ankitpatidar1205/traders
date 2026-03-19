@@ -111,7 +111,7 @@ const TradesPage = ({ onCreateClick }) => {
     };
 
     return (
-        <div className="flex flex-col h-full bg-[#1a2035] space-y-8 overflow-y-auto">
+        <div className="flex flex-col h-full bg-[#1a2035] space-y-8 overflow-y-auto custom-scrollbar">
 
             {/* Top Actions Bar */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 px-6">

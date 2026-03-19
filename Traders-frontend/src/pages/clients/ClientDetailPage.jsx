@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, User, ChevronDown, Settings, Lock, Key, Eye, FileText } from 'lucide-react';
+import DashboardFilters from '../../components/DashboardFilters';
 import { useAuth } from '../../context/AuthContext';
 import * as api from '../../services/api';
 
@@ -205,6 +206,7 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
                             onClick={() => setShowProfileDropdown(!showProfileDropdown)}
                             className="flex items-center gap-2 font-bold uppercase text-[13px] cursor-pointer hover:bg-black/10 px-3 py-1.5 rounded transition-colors select-none"
                         >
+                            <span className="mr-4 text-[12px] opacity-90 lowercase font-medium">{new Date().toLocaleDateString('en-GB')} {currentTime}</span>
                             <User className="text-white text-xs scale-125 mr-1" />
                             DEMO PANNEL
                             <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${showProfileDropdown ? 'rotate-180' : ''}`} />
@@ -316,9 +318,12 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
                         </div>
 
                         <div className="space-y-6">
+                            {/* Date Filters Grid as per Screenshot */}
+                            <DashboardFilters />
+
                             {/* Actions Button */}
                             {canViewBackup() && (
-                                <div className="relative inline-block actions-dropdown-container">
+                                <div className="relative actions-dropdown-container">
                                     <button
                                         onClick={() => setShowActionsDropdown(!showActionsDropdown)}
                                         className="bg-[#9c27b0] hover:bg-[#8e24aa] text-white font-bold py-2.5 px-8 rounded transition-all text-[11px] uppercase tracking-widest shadow-lg flex items-center gap-3"
@@ -349,120 +354,122 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
                                 </div>
                             )}
 
-                            {/* View Details Button */}
-                            <div>
+                            {/* View Details Button in a dark card-like container */}
+                            <div className="bg-[#1f283e] p-4 rounded-md border border-white/5 shadow-inner">
                                 <button
                                     onClick={() => setShowDetails(!showDetails)}
-                                    className="w-full bg-[#4caf50] hover:bg-[#43a047] text-white font-bold py-3 px-6 rounded transition-all text-[12px] uppercase tracking-[0.2em] shadow-lg"
+                                    className="w-full bg-[#5cb85c] hover:bg-[#4ea752] text-white font-bold py-4 px-6 rounded transition-all text-[14px] uppercase tracking-[0.2em] shadow-lg"
                                 >
                                     {showDetails ? 'HIDE DETAILS' : 'VIEW DETAILS'}
                                 </button>
                             </div>
 
-                            {/* KYC Verification Section */}
-                            <div className="bg-[#1a2035] rounded shadow-xl border border-white/10 overflow-hidden">
-                                <div className="p-6">
-                                    <div className="flex justify-between items-center mb-6">
-                                        <div>
-                                            <h3 className="text-white text-[19px] font-medium flex items-center gap-2">
-                                                <i className="fa-solid fa-shield-check text-orange-400"></i> KYC Verification Management
-                                            </h3>
-                                            <p className="text-slate-400 text-[11px] font-bold uppercase tracking-widest mt-1 opacity-60">Review and Update Client Documents</p>
-                                        </div>
-                                        <div className={`px-4 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-widest ${kycStatus === 'Approved' ? 'bg-green-500/10 border-green-500/20 text-green-400' :
-                                            kycStatus === 'Rejected' ? 'bg-red-500/10 border-red-500/20 text-red-400' :
-                                                'bg-orange-500/10 border-orange-500/20 text-orange-400'
-                                            }`}>
-                                            STATUS: {kycStatus}
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                                        <div className="p-4 bg-white/5 rounded border border-white/5 flex items-center justify-between">
-                                            <div className="flex items-center gap-3">
-                                                <i className="fa-solid fa-file-invoice text-slate-400"></i>
-                                                <span className="text-[13px] text-slate-300">Mandatory Documents uploaded?</span>
+                            {/* KYC Verification Section removed as per requirement */}
+                            {false && (
+                                <div className="bg-[#1a2035] rounded shadow-xl border border-white/10 overflow-hidden">
+                                    <div className="p-6">
+                                        <div className="flex justify-between items-center mb-6">
+                                            <div>
+                                                <h3 className="text-white text-[19px] font-medium flex items-center gap-2">
+                                                    <i className="fa-solid fa-shield-check text-orange-400"></i> KYC Verification Management
+                                                </h3>
+                                                <p className="text-slate-400 text-[11px] font-bold uppercase tracking-widest mt-1 opacity-60">Review and Update Client Documents</p>
                                             </div>
-                                            <span className={`text-[11px] font-bold ${docCount >= 4 ? 'text-green-400' : 'text-orange-400'}`}>{docCount >= 4 ? 'YES' : `${docCount}/4`}</span>
-                                        </div>
-                                        <div className="p-4 bg-white/5 rounded border border-white/5 flex items-center justify-between">
-                                            <div className="flex items-center gap-3">
-                                                <i className="fa-solid fa-clock-rotate-left text-slate-400"></i>
-                                                <span className="text-[13px] text-slate-300">Last Reviewed</span>
+                                            <div className={`px-4 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-widest ${kycStatus === 'Approved' ? 'bg-green-500/10 border-green-500/20 text-green-400' :
+                                                kycStatus === 'Rejected' ? 'bg-red-500/10 border-red-500/20 text-red-400' :
+                                                    'bg-orange-500/10 border-orange-500/20 text-orange-400'
+                                                }`}>
+                                                STATUS: {kycStatus}
                                             </div>
-                                            <span className="text-[11px] font-bold text-slate-500">{kycStatus !== 'Pending' ? 'REVIEWED' : 'NEVER'}</span>
                                         </div>
-                                    </div>
 
-                                    <div className="flex gap-4 mb-6">
-                                        <button
-                                            onClick={handleApproveKYC}
-                                            disabled={kycStatus === 'Approved'}
-                                            className={`flex-1 font-bold py-3 rounded text-[11px] uppercase tracking-widest transition-all shadow-lg ${kycStatus === 'Approved' ? 'bg-green-800 text-green-300 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700 text-white shadow-green-900/10'}`}
-                                        >
-                                            {kycStatus === 'Approved' ? 'KYC APPROVED' : 'APPROVE KYC'}
-                                        </button>
-                                        <button
-                                            onClick={handleRejectKYC}
-                                            disabled={kycStatus === 'Rejected'}
-                                            className={`flex-1 font-bold py-3 rounded text-[11px] uppercase tracking-widest transition-all shadow-lg ${kycStatus === 'Rejected' ? 'bg-red-800 text-red-300 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700 text-white shadow-red-900/10'}`}
-                                        >
-                                            {kycStatus === 'Rejected' ? 'KYC REJECTED' : 'REJECT KYC'}
-                                        </button>
-                                    </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                                            <div className="p-4 bg-white/5 rounded border border-white/5 flex items-center justify-between">
+                                                <div className="flex items-center gap-3">
+                                                    <i className="fa-solid fa-file-invoice text-slate-400"></i>
+                                                    <span className="text-[13px] text-slate-300">Mandatory Documents uploaded?</span>
+                                                </div>
+                                                <span className={`text-[11px] font-bold ${docCount >= 4 ? 'text-green-400' : 'text-orange-400'}`}>{docCount >= 4 ? 'YES' : `${docCount}/4`}</span>
+                                            </div>
+                                            <div className="p-4 bg-white/5 rounded border border-white/5 flex items-center justify-between">
+                                                <div className="flex items-center gap-3">
+                                                    <i className="fa-solid fa-clock-rotate-left text-slate-400"></i>
+                                                    <span className="text-[13px] text-slate-300">Last Reviewed</span>
+                                                </div>
+                                                <span className="text-[11px] font-bold text-slate-500">{kycStatus !== 'Pending' ? 'REVIEWED' : 'NEVER'}</span>
+                                            </div>
+                                        </div>
 
-                                    {/* Document Preview Section */}
-                                    {docsLoaded && (
-                                        <div>
-                                            <h4 className="text-white text-[14px] font-bold uppercase tracking-widest mb-4">Uploaded Documents</h4>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                                {[
-                                                    { key: 'pan_screenshot', label: 'PAN Card', info: documents.pan_number ? `PAN: ${documents.pan_number}` : null },
-                                                    { key: 'aadhar_front', label: 'Aadhaar Front', info: documents.aadhar_number ? `Aadhaar: ${documents.aadhar_number}` : null },
-                                                    { key: 'aadhar_back', label: 'Aadhaar Back' },
-                                                    { key: 'bank_proof', label: 'Bank Proof' }
-                                                ].map(doc => {
-                                                    const url = documents[doc.key];
-                                                    const isPdf = url && (url.toLowerCase().endsWith('.pdf') || url.includes('/pdf'));
-                                                    return (
-                                                        <div key={doc.key} className="bg-black/30 rounded-xl border border-white/10 overflow-hidden">
-                                                            <div className="h-40 relative flex items-center justify-center bg-black/20">
-                                                                {url ? (
-                                                                    isPdf ? (
-                                                                        <div className="flex flex-col items-center gap-2">
-                                                                            <FileText className="w-12 h-12 text-red-400" />
-                                                                            <span className="text-[10px] text-red-300 font-bold">PDF Document</span>
-                                                                        </div>
+                                        <div className="flex gap-4 mb-6">
+                                            <button
+                                                onClick={handleApproveKYC}
+                                                disabled={kycStatus === 'Approved'}
+                                                className={`flex-1 font-bold py-3 rounded text-[11px] uppercase tracking-widest transition-all shadow-lg ${kycStatus === 'Approved' ? 'bg-green-800 text-green-300 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700 text-white shadow-green-900/10'}`}
+                                            >
+                                                {kycStatus === 'Approved' ? 'KYC APPROVED' : 'APPROVE KYC'}
+                                            </button>
+                                            <button
+                                                onClick={handleRejectKYC}
+                                                disabled={kycStatus === 'Rejected'}
+                                                className={`flex-1 font-bold py-3 rounded text-[11px] uppercase tracking-widest transition-all shadow-lg ${kycStatus === 'Rejected' ? 'bg-red-800 text-red-300 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700 text-white shadow-red-900/10'}`}
+                                            >
+                                                {kycStatus === 'Rejected' ? 'KYC REJECTED' : 'REJECT KYC'}
+                                            </button>
+                                        </div>
+
+                                        {/* Document Preview Section */}
+                                        {docsLoaded && (
+                                            <div>
+                                                <h4 className="text-white text-[14px] font-bold uppercase tracking-widest mb-4">Uploaded Documents</h4>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                                    {[
+                                                        { key: 'pan_screenshot', label: 'PAN Card', info: documents.pan_number ? `PAN: ${documents.pan_number}` : null },
+                                                        { key: 'aadhar_front', label: 'Aadhaar Front', info: documents.aadhar_number ? `Aadhaar: ${documents.aadhar_number}` : null },
+                                                        { key: 'aadhar_back', label: 'Aadhaar Back' },
+                                                        { key: 'bank_proof', label: 'Bank Proof' }
+                                                    ].map(doc => {
+                                                        const url = documents[doc.key];
+                                                        const isPdf = url && (url.toLowerCase().endsWith('.pdf') || url.includes('/pdf'));
+                                                        return (
+                                                            <div key={doc.key} className="bg-black/30 rounded-xl border border-white/10 overflow-hidden">
+                                                                <div className="h-40 relative flex items-center justify-center bg-black/20">
+                                                                    {url ? (
+                                                                        isPdf ? (
+                                                                            <div className="flex flex-col items-center gap-2">
+                                                                                <FileText className="w-12 h-12 text-red-400" />
+                                                                                <span className="text-[10px] text-red-300 font-bold">PDF Document</span>
+                                                                            </div>
+                                                                        ) : (
+                                                                            <img src={url} alt={doc.label} crossOrigin="anonymous" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
+                                                                        )
                                                                     ) : (
-                                                                        <img src={url} alt={doc.label} crossOrigin="anonymous" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
-                                                                    )
-                                                                ) : (
-                                                                    <span className="text-slate-600 text-[11px] font-bold uppercase">Not Uploaded</span>
-                                                                )}
-                                                            </div>
-                                                            <div className="p-3 flex items-center justify-between">
-                                                                <div>
-                                                                    <p className="text-[11px] text-white font-bold">{doc.label}</p>
-                                                                    {doc.info && <p className="text-[9px] text-slate-400 mt-0.5">{doc.info}</p>}
+                                                                        <span className="text-slate-600 text-[11px] font-bold uppercase">Not Uploaded</span>
+                                                                    )}
                                                                 </div>
-                                                                {url && (
-                                                                    <button
-                                                                        onClick={() => setViewDoc({ url, label: doc.label, isPdf })}
-                                                                        className="w-8 h-8 rounded-full bg-blue-600/80 hover:bg-blue-500 flex items-center justify-center transition-all"
-                                                                        title="View Document"
-                                                                    >
-                                                                        <Eye className="w-4 h-4 text-white" />
-                                                                    </button>
-                                                                )}
+                                                                <div className="p-3 flex items-center justify-between">
+                                                                    <div>
+                                                                        <p className="text-[11px] text-white font-bold">{doc.label}</p>
+                                                                        {doc.info && <p className="text-[9px] text-slate-400 mt-0.5">{doc.info}</p>}
+                                                                    </div>
+                                                                    {url && (
+                                                                        <button
+                                                                            onClick={() => setViewDoc({ url, label: doc.label, isPdf })}
+                                                                            className="w-8 h-8 rounded-full bg-blue-600/80 hover:bg-blue-500 flex items-center justify-center transition-all"
+                                                                            title="View Document"
+                                                                        >
+                                                                            <Eye className="w-4 h-4 text-white" />
+                                                                        </button>
+                                                                    )}
+                                                                </div>
                                                             </div>
-                                                        </div>
-                                                    );
-                                                })}
+                                                        );
+                                                    })}
+                                                </div>
                                             </div>
-                                        </div>
-                                    )}
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
+                            )}
 
                             {/* Details UI Grid */}
                             {showDetails && (
@@ -529,11 +536,11 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
                             )}
 
                             {/* Fund - Withdrawal & Deposits Section */}
-                            <div className="max-w-4xl mx-auto w-full mb-8">
-                                <div className="bg-[#1a2235] rounded-lg shadow-2xl border border-white/5 overflow-hidden">
-                                    <div className="p-8">
-                                        <h3 className="text-white text-[24px] font-normal mb-1">Fund - Withdrawal & Deposits</h3>
-                                        <p className="text-[#a0aec0] text-[14px] mb-4">
+                            <div className="w-1/2 mb-10">
+                                <div className="bg-[#1a2235] rounded-lg shadow-2xl border border-white/10 overflow-hidden">
+                                    <div className="p-6">
+                                        <h3 className="text-white text-[28px] font-medium mb-1 tracking-tight">Fund - Withdrawal & Deposits</h3>
+                                        <p className="text-[#a0aec0] text-[15px] mb-4">
                                             {loading ? 'Loading...' : `Showing ${fundsData.length} of ${fundsData.length} items.`}
                                         </p>
                                         <div className="w-full h-[1px] bg-white/10 mb-6"></div>
@@ -547,18 +554,18 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
                                                         <th className="pb-6 pl-4 text-right">Notes</th>
                                                     </tr>
                                                 </thead>
-                                                <tbody className="text-[16px] text-white/90">
+                                                <tbody className="text-[17px] text-white/90 border-t border-white/10">
                                                     {fundsData.length === 0 ? (
                                                         <tr><td colSpan="3" className="py-8 text-center text-[#a0aec0]">{loading ? 'Loading...' : 'No records found'}</td></tr>
                                                     ) : fundsData.map((fund, idx) => (
-                                                        <tr key={fund.id || idx} className="border-t border-white/5">
-                                                            <td className="py-6 pr-4 font-medium">
+                                                        <tr key={fund.id || idx} className="border-t border-white/5 transition-colors hover:bg-white/[0.02]">
+                                                            <td className="py-4 pr-4 font-medium">
                                                                 {fund.amount}
                                                             </td>
-                                                            <td className="py-6 px-4 text-center text-[#a0aec0]">
+                                                            <td className="py-4 px-4 text-center text-[#a0aec0]">
                                                                 {fund.created_at || fund.createdAt || '-'}
                                                             </td>
-                                                            <td className="py-6 pl-4 text-right text-[#a0aec0]">
+                                                            <td className="py-4 pl-4 text-right text-[#a0aec0]">
                                                                 {fund.remarks || fund.notes || 'Opening Balance'}
                                                             </td>
                                                         </tr>
@@ -576,7 +583,7 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
                                     <div className="p-6">
                                         <h3 className="text-white text-[19px] font-medium mb-1">Active Trades</h3>
                                         <p className="text-slate-400 text-[13px] mb-2 font-light italic opacity-70">
-                                            {loading ? 'Loading...' : `Showing ${activeTrades.length} of items.`}
+                                            {loading ? 'Loading...' : `Showing ${activeTrades.length} items.`}
                                         </p>
                                         <div className="overflow-x-auto custom-scrollbar border border-white/10 rounded">
                                             <table className="w-full border-collapse" style={{ minWidth: '1500px' }}>
@@ -605,7 +612,7 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
                                                     ) : activeTrades.map((trade) => (
                                                         <tr key={trade.id} className="hover:bg-white/[0.03] transition-colors border-b border-white/5">
                                                             <td className="px-3 py-3 font-bold text-white flex items-center gap-1.5">
-                                                                <span 
+                                                                <span
                                                                     onClick={async (e) => {
                                                                         e.stopPropagation();
                                                                         if (!window.confirm(`Close trade #${trade.id}?`)) return;
@@ -654,7 +661,7 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
                                     <div className="p-6">
                                         <h3 className="text-white text-[19px] font-medium mb-1">Closed Trades</h3>
                                         <p className="text-slate-400 text-[13px] mb-2 font-light italic opacity-70">
-                                            {loading ? 'Loading...' : `Showing ${closedTrades.length} of items.`}
+                                            {loading ? 'Loading...' : `Showing ${closedTrades.length} items.`}
                                         </p>
                                         <div className="overflow-x-auto custom-scrollbar border border-white/10 rounded">
                                             <table className="w-full border-collapse" style={{ minWidth: '1500px' }}>

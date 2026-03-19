@@ -234,11 +234,6 @@ const LiveM2MPage = ({ onNavigate, user }) => {
         />
       </div>
 
-      <style>{`
-                .custom-scrollbar::-webkit-scrollbar {
-                    width: 0px;
-                }
-            `}</style>
     </div>
   );
 };

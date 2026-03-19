@@ -115,7 +115,7 @@ const MarketWatchPage = () => {
 
     return (
         <div className="flex flex-col h-full bg-[#1a2035] overflow-hidden relative">
-            <div className="flex-1 pb-24 px-6 pt-6">
+            <div className="flex-1 pb-24 px-6 pt-6 overflow-y-auto custom-scrollbar">
                 {/* Header / Search Area */}
                 {/* Offset Header */}
                 <div className="relative mb-12">

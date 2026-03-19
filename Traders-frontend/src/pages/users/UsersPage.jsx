@@ -159,7 +159,7 @@ const UsersPage = ({ onNavigate, roleFilter }) => {
     });
 
     return (
-        <div className="flex flex-col h-full bg-[#1a2035] space-y-6 overflow-y-auto">
+        <div className="flex flex-col h-full bg-[#1a2035] space-y-6 overflow-y-auto custom-scrollbar">
             {/* Filters */}
             <div className="bg-[#1f283e] p-10 rounded shadow-2xl border border-white/5 mx-6">
                 <div className="flex flex-col md:flex-row gap-10 md:gap-24 mb-6">

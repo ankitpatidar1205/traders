@@ -9,6 +9,7 @@ import ResetAccountPage from './ResetAccountPage';
 import RecalculateBrokeragePage from './RecalculateBrokeragePage';
 import ChangePasswordPage from './ChangePasswordPage';
 import DeleteClientPage from './DeleteClientPage';
+import CopyTradingClientForm from './CopyTradingClientForm';
 import Toast from '../../components/common/Toast';
 
 import GlobalSettingsPage from '../settings/GlobalSettingsPage';
@@ -30,6 +31,7 @@ const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavig
     const [showRecalculatePage, setShowRecalculatePage] = useState(false);
     const [showChangePasswordPage, setShowChangePasswordPage] = useState(false);
     const [showDeletePage, setShowDeletePage] = useState(false);
+    const [showCopyPage, setShowCopyPage] = useState(false);
     const [showClientSettings, setShowClientSettings] = useState(false);
     const [toast, setToast] = useState({ message: '', type: 'success' });
 
@@ -92,7 +94,7 @@ const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavig
     const handleCopy = (client) => {
         setSelectedClient(client);
         setCreateFromDetail(false);
-        setShowCreatePage(true);
+        setShowCopyPage(true);
     };
 
     const handleDeposit = (client) => {
@@ -341,7 +343,7 @@ const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavig
                         setShowDetailPage(false);
                         setSelectedClient(client);
                         setCreateFromDetail(true);
-                        setShowCreatePage(true);
+                        setShowCopyPage(true);
                     }}
                     onChangePassword={(client) => {
                         setShowDetailPage(false);
@@ -406,7 +408,7 @@ const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavig
                 />
             )}
 
-            {/* Create/Copy Client Modal */}
+            {/* Create Client Modal (Remains Unchanged) */}
             {showCreatePage && (
                 <CreateClientPage
                     client={selectedClient}
@@ -421,13 +423,40 @@ const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavig
                         }
                     }}
                     onSave={(data) => {
-                        setToast({ message: selectedClient ? 'Client copied successfully!' : 'Client created successfully!', type: 'success' });
+                        setToast({ message: 'Client created successfully!', type: 'success' });
                         setShowCreatePage(false);
                         if (createFromDetail) {
                             setShowDetailPage(true);
                         } else {
                             setSelectedClient(null);
                         }
+                        fetchClients();
+                    }}
+                />
+            )}
+
+            {/* NEW Copy Client Modal (Isolated) */}
+            {showCopyPage && (
+                <CopyTradingClientForm
+                    client={selectedClient}
+                    onLogout={onLogout}
+                    onClose={() => {
+                        setShowCopyPage(false);
+                        if (createFromDetail) {
+                            setShowDetailPage(true);
+                        } else {
+                            setSelectedClient(null);
+                        }
+                    }}
+                    onSave={(data) => {
+                        setToast({ message: 'Client copied successfully!', type: 'success' });
+                        setShowCopyPage(false);
+                        if (createFromDetail) {
+                            setShowDetailPage(true);
+                        } else {
+                            setSelectedClient(null);
+                        }
+                        fetchClients();
                     }}
                 />
             )}

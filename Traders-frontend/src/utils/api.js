@@ -25,7 +25,7 @@ console.log('[API] Initializing with base URL:', API_BASE_URL);
 
 const api = axios.create({
     baseURL: API_BASE_URL,
-    timeout: 10000,  // 10 second timeout
+    timeout: 30000,  // 30 second timeout
     headers: {
         'Content-Type': 'application/json'
     }
