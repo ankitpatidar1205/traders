@@ -12,6 +12,9 @@ const placeOrder = async (req, res) => {
     const tradeIp = req.ip || req.headers['x-forwarded-for'];
 
     try {
+        console.log('--- Place Order Request ---');
+        console.log('Body:', JSON.stringify(req.body, null, 2));
+
         // 1. Validate Transaction Password (BYPASSING FOR TESTING)
         /*
         const [userRows] = await db.execute('SELECT transaction_password FROM users WHERE id = ?', [requesterId]);
@@ -35,18 +38,30 @@ const placeOrder = async (req, res) => {
 
         // 3. Execution logic
         const currentPrice = mockEngine.getPrice(symbol);
-        const executionPrice = order_type === 'MARKET' ? currentPrice : price;
-        const marginUsed = executionPrice * qty * 0.1; // Placeholder
+        const executionPrice = (order_type === 'MARKET' || !price) ? currentPrice : parseFloat(price);
+        const qtyNum = parseInt(qty);
+        const marginUsed = executionPrice * qtyNum * 0.1; // Placeholder
+
+        if (isNaN(executionPrice) || isNaN(qtyNum) || !targetUserId) {
+            console.error('Validation failed:', { executionPrice, qtyNum, targetUserId });
+            return res.status(400).json({ 
+                message: 'Invalid trade data (Price/Qty/User missing)',
+                debug: { executionPrice, qtyNum, targetUserId }
+            });
+        }
+
+        console.log('Executing with:', { targetUserId, symbol, type, executionPrice, marginUsed });
 
         const [result] = await db.execute(
             'INSERT INTO trades (user_id, symbol, type, order_type, qty, entry_price, margin_used, is_pending, status, trade_ip) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-            [targetUserId, symbol, type, order_type || 'MARKET', qty, executionPrice, marginUsed, is_pending ? 1 : 0, 'OPEN', tradeIp]
+            [targetUserId, symbol, type, order_type || 'MARKET', qtyNum, executionPrice, marginUsed, is_pending ? 1 : 0, 'OPEN', tradeIp]
         );
 
+        console.log('✅ Trade Inserted:', result.insertId);
         res.status(201).json({ message: 'Order placed successfully', tradeId: result.insertId });
     } catch (err) {
-        console.error(err);
-        res.status(500).send('Server Error');
+        console.error('❌ Trade Placement Error:', err);
+        res.status(500).json({ message: 'Internal Server Error', error: err.message });
     }
 };
 

@@ -558,18 +558,18 @@ const AddBrokerForm = ({ onBack, onSave, brokerId, mode = 'add' }) => {
                                 {Object.keys(formData.mcxMargins).map(scrip => (
                                     <React.Fragment key={scrip}>
                                         <InputGroup
-                                            label={`${scrip} BUY RATE`}
-                                            name={`mcx_margin_${scrip}_holding`}
-                                            value={formData.mcxMargins[scrip].holding}
-                                            disabled={isViewOnly}
-                                            onChange={(e) => handleMcxMarginChange(scrip, 'holding', e.target.value)}
-                                        />
-                                        <InputGroup
                                             label={`${scrip} SELL RATE`}
                                             name={`mcx_margin_${scrip}_intraday`}
                                             value={formData.mcxMargins[scrip].intraday}
                                             disabled={isViewOnly}
                                             onChange={(e) => handleMcxMarginChange(scrip, 'intraday', e.target.value)}
+                                        />
+                                        <InputGroup
+                                            label={`${scrip} BUY RATE`}
+                                            name={`mcx_margin_${scrip}_holding`}
+                                            value={formData.mcxMargins[scrip].holding}
+                                            disabled={isViewOnly}
+                                            onChange={(e) => handleMcxMarginChange(scrip, 'holding', e.target.value)}
                                         />
                                         <InputGroup
                                             label={`${scrip} LOT`}

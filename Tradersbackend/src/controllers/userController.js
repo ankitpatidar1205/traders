@@ -131,7 +131,7 @@ const deleteUser = async (req, res) => {
 
 // ─── UPDATE USER PROFILE ─────────────────────────────
 const updateUser = async (req, res) => {
-    const { fullName, email, mobile, city, creditLimit, exposureMultiplier, isDemo, status } = req.body;
+    const { fullName, email, mobile, city, creditLimit, exposureMultiplier, isDemo, status, parentId } = req.body;
     try {
         const fields = [];
         const values = [];
@@ -144,6 +144,7 @@ const updateUser = async (req, res) => {
         if (exposureMultiplier !== undefined){ fields.push('exposure_multiplier = ?'); values.push(exposureMultiplier); }
         if (isDemo !== undefined)           { fields.push('is_demo = ?');            values.push(isDemo ? 1 : 0); }
         if (status !== undefined)           { fields.push('status = ?');             values.push(status); }
+        if (parentId !== undefined)         { fields.push('parent_id = ?');          values.push(parentId); }
 
         if (fields.length === 0) return res.status(400).json({ message: 'No fields to update' });
 

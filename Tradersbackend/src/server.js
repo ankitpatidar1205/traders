@@ -45,7 +45,8 @@ const { logIp } = require('./middleware/logger');
 
 // Middleware
 app.use(cors({ origin: ALLOWED_ORIGINS, credentials: true }));
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(logIp); // Log IP for every authenticated request
 
 // Serve uploaded files statically
