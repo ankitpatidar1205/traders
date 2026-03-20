@@ -258,7 +258,8 @@ const executeVoiceCommand = async (req, res) => {
     const { action, userId, amount, fromUserId, toUserId, name, email, password } = req.body;
 
     // ── New format detection: if body has module+operation (from new parser), route through smart system
-    if (!action && req.body.module && req.body.operation) {
+    const LEGACY_ACTIONS = ['ADD_FUND', 'BLOCK_USER', 'UNBLOCK_USER', 'CREATE_ADMIN', 'TRANSFER_FUND'];
+    if (req.body.module && req.body.operation && (!action || !LEGACY_ACTIONS.includes(action))) {
         console.log('[execute-command] Detected new format, routing through smart system');
         try {
             await loadSchema();
