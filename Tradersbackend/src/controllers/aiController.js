@@ -17,6 +17,7 @@ const { executeQuery } = require('../services/aiExecutor');
 const { loadSchema, getSchemaSummary } = require('../services/aiSchemaLoader');
 const { processMasterCommand } = require('../services/aiMasterPrompt');
 const { executeMasterCommand } = require('../services/aiMasterExecutor');
+const { mediate } = require('../services/aiMediator');
 
 // Legacy imports (backward compat)
 const { parseCommand: legacyParseCommand } = require('../services/aiService');
@@ -203,6 +204,52 @@ const masterCommand = async (req, res) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
+// POST /api/ai/mediate
+// UNIVERSAL AI MEDIATOR — Handles ANY user input in ANY language
+// Supports multi-turn conversations with message history
+// ─────────────────────────────────────────────────────────────────────────────
+
+const mediatorCommand = async (req, res) => {
+    const { text, messageHistory = [] } = req.body;
+    const reqUser = req.user || {};
+
+    console.log('\n═══════════════════════════════════════════════════════════════');
+    console.log('[mediator] 🤝 Input:', text);
+    console.log('[mediator] 👤 User:', reqUser.full_name || reqUser.id || 'anonymous');
+    console.log('[mediator] 📜 History length:', messageHistory.length);
+    console.log('═══════════════════════════════════════════════════════════════');
+
+    if (!text || !text.trim()) {
+        return res.status(400).json({
+            success: false,
+            message: 'text is required',
+        });
+    }
+
+    try {
+        const result = await mediate(text.trim(), messageHistory);
+
+        console.log('[mediator] ✅ Completed in', result.iterations, 'iterations');
+        console.log('═══════════════════════════════════════════════════════════════\n');
+
+        return res.json({
+            success: result.success,
+            message: result.message,
+            toolResults: result.toolResults,
+            iterations: result.iterations,
+            messageHistory: result.messageHistory,
+        });
+
+    } catch (err) {
+        console.error('[mediator] ❌ Error:', err.message);
+        return res.status(500).json({
+            success: false,
+            message: err.message || 'Mediator failed',
+        });
+    }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 // LEGACY: POST /api/ai/ai-command (kept for backward compatibility)
 // Routes through NEW system but returns OLD format
 // ─────────────────────────────────────────────────────────────────────────────
@@ -313,6 +360,143 @@ const aiParse = async (req, res) => {
             error: err.message,
             hint: 'Try: "trading clients dikhao" or "user 15 block karo"',
         });
+    }
+};
+
+// ── POST /api/ai/smart-search — Smart search with AI parsing ─────────────────
+
+const smartSearch = async (req, res) => {
+    try {
+        const { text } = req.body;
+        if (!text?.trim()) return res.status(400).json({ error: "Text required" });
+
+        const parsed = await parseCommand(text);
+        const { module, searchType, filters } = parsed;
+
+        let results = [];
+        let message = "";
+        let resolvedUserId = filters.userId || null;
+
+        // Step 1: Agar userName hai to pehle user ID resolve karo
+        if (filters.userName && !resolvedUserId) {
+            const [users] = await db.execute(
+                `SELECT id, name, email, role, status, balance FROM users WHERE name LIKE ? LIMIT 5`,
+                [`%${filters.userName}%`]
+            );
+
+            if (!users || users.length === 0) {
+                return res.json({
+                    success: false,
+                    data: [],
+                    count: 0,
+                    message: `"${filters.userName}" naam ka koi user nahi mila`,
+                    parsed,
+                });
+            }
+
+            if (users.length === 1 || searchType !== "user_detail") {
+                resolvedUserId = users[0].id;
+            } else {
+                return res.json({
+                    success: true,
+                    data: users,
+                    count: users.length,
+                    message: `${users.length} users mile "${filters.userName}" se`,
+                    parsed,
+                });
+            }
+        }
+
+        // Step 2: searchType ke hisaab se data fetch karo
+        switch (searchType) {
+            case "user_detail": {
+                const q = resolvedUserId
+                    ? `SELECT id, name, email, phone, role, status, balance, created_at FROM users WHERE id = ?`
+                    : `SELECT id, name, email, phone, role, status, balance, created_at FROM users WHERE name LIKE ? LIMIT 10`;
+                const p = resolvedUserId ? [resolvedUserId] : [`%${filters.userName}%`];
+                const [rows] = await db.execute(q, p);
+                results = rows || [];
+                message = `${results.length} user mila`;
+                break;
+            }
+
+            case "user_trades": {
+                const [rows] = await db.execute(
+                    `SELECT t.*, u.name as user_name
+                     FROM trades t JOIN users u ON t.user_id = u.id
+                     WHERE t.user_id = ? ORDER BY t.created_at DESC LIMIT 50`,
+                    [resolvedUserId]
+                );
+                results = rows || [];
+                message = `${results.length} trades mile`;
+                break;
+            }
+
+            case "user_funds": {
+                const [rows] = await db.execute(
+                    `SELECT f.*, u.name as user_name
+                     FROM funds f JOIN users u ON f.user_id = u.id
+                     WHERE f.user_id = ? ORDER BY f.created_at DESC LIMIT 50`,
+                    [resolvedUserId]
+                );
+                results = rows || [];
+                message = `${results.length} fund transactions`;
+                break;
+            }
+
+            case "user_portfolio": {
+                const [rows] = await db.execute(
+                    `SELECT p.*, u.name as user_name
+                     FROM portfolio p JOIN users u ON p.user_id = u.id
+                     WHERE p.user_id = ?`,
+                    [resolvedUserId]
+                );
+                results = rows || [];
+                message = `${results.length} portfolio items`;
+                break;
+            }
+
+            case "list":
+            default: {
+                let where = "WHERE 1=1";
+                const params = [];
+
+                if (filters.role) {
+                    where += " AND role = ?";
+                    params.push(filters.role);
+                }
+                if (filters.status) {
+                    where += " AND status = ?";
+                    params.push(filters.status);
+                }
+                if (resolvedUserId) {
+                    where += " AND id = ?";
+                    params.push(resolvedUserId);
+                }
+
+                const table =
+                    { trades: "trades", funds: "funds", brokers: "brokers", users: "users" }[module] ||
+                    "users";
+                const [rows] = await db.execute(
+                    `SELECT * FROM ${table} ${where} ORDER BY created_at DESC LIMIT 100`,
+                    params
+                );
+                results = rows || [];
+                message = `${results.length} results mile`;
+                break;
+            }
+        }
+
+        return res.json({
+            success: true,
+            data: results,
+            count: results.length,
+            message,
+            parsed,
+        });
+    } catch (err) {
+        console.error("[SmartSearch Error]", err);
+        res.status(500).json({ error: err.message });
     }
 };
 
@@ -440,11 +624,13 @@ const voiceExecute = async (req, res) => {
 module.exports = {
     smartCommand,
     masterCommand,
+    mediatorCommand,
     parseOnly,
     getSchema,
     aiCommand,
     processVoiceCommand,
     aiParse,
+    smartSearch,
     executeVoiceCommand,
     voiceExecute,
 };
