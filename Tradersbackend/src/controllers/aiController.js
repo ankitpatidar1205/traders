@@ -307,8 +307,10 @@ const aiParse = async (req, res) => {
 
         return res.json(compat);
     } catch (err) {
+        console.error('[aiParse] Error:', err.message);
         return res.status(422).json({
             message: 'Command not understood.',
+            error: err.message,
             hint: 'Try: "trading clients dikhao" or "user 15 block karo"',
         });
     }
