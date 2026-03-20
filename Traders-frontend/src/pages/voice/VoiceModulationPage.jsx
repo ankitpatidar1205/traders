@@ -548,7 +548,7 @@ const VoiceModulationPage = () => {
                 actionTaken: commandData?.action,
                 actionResult: execResult || { success: true },
                 status: 'executed',
-                userId: commandData?.userId || commandData?.filters?.id,
+                userId: commandData?.userId || commandData?.filters?.userId,
                 language: 'hi-IN',
             }).then(() => {
                 fetchRecordings({ limit: 10 }); // Refresh saved recordings list
@@ -571,7 +571,7 @@ const VoiceModulationPage = () => {
                 actionTaken: commandData?.action,
                 actionResult: { success: false, error: err?.message },
                 status: 'failed',
-                userId: commandData?.userId || commandData?.filters?.id,
+                userId: commandData?.userId || commandData?.filters?.userId,
                 language: 'hi-IN',
             }).then(() => {
                 fetchRecordings({ limit: 10 });
