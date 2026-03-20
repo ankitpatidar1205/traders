@@ -1,3 +1,4 @@
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -37,7 +38,7 @@ const ALL_MENU_ITEMS = [
     { id: 'change-transaction-password', label: 'Change Transaction Pwd', icon: 'fa-gear' },
 ];
 
-const Sidebar = ({ onLogout, currentView, isOpen, onClose }) => {
+const Sidebar = React.memo(({ onLogout, currentView, isOpen, onClose }) => {
     const { user, canAccess } = useAuth();
     const userRole = user?.role || 'ADMIN';
 
@@ -53,95 +54,101 @@ const Sidebar = ({ onLogout, currentView, isOpen, onClose }) => {
 
     const activeView = (() => {
         if (!currentView) return '';
-        // Use prefix matching for hierarchical routes
         if (currentView.startsWith('trading-clients')) return 'trading-clients';
         if (currentView.startsWith('brokers')) return 'brokers';
         if (currentView.startsWith('admins')) return 'admins';
         if (currentView.startsWith('trades')) return 'trades';
         if (currentView.startsWith('funds')) return 'funds';
-        
-        // Legacy/Direct mappings
         if (currentView === 'live-m2m-detail' || currentView === 'client-active-positions') return 'live-m2m';
-        
         return currentView;
     })();
 
     return (
-        <aside className={`
-            h-full text-white transition-all duration-300 ease-in-out flex-shrink-0 z-50
-            fixed inset-y-0 left-0 w-[260px]
-            md:relative md:translate-x-0 md:top-0
-            ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-            shadow-2xl safe-top
-        `} style={{ backgroundColor: 'var(--sidebar-color, #1a2035)' }}>
-            <div className="flex flex-col h-full border-r border-white/5 overflow-hidden">
-
+        <aside 
+            className={`
+                fixed inset-y-0 left-0 z-50 w-[260px] text-white 
+                transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-auto
+                ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+                flex-shrink-0 border-r border-white/5 shadow-2xl
+            `} 
+            style={{ backgroundColor: 'var(--sidebar-color, #1a2035)' }}
+        >
+            <div className="flex flex-col h-full overflow-hidden">
                 {/* Role Badge */}
-                <div className="px-4 py-3 border-b border-white/10 flex flex-col gap-2">
+                <div className="px-4 py-4 border-b border-white/10 flex flex-col gap-2 bg-black/10">
                     <div className="flex items-center gap-2">
                         <span
-                            className="text-[10px] font-bold px-2 py-0.5 rounded tracking-widest"
-                            style={{ background: badge.color + '22', color: badge.color, border: `1px solid ${badge.color}44` }}
+                            className="text-[10px] font-bold px-2 py-0.5 rounded tracking-widest uppercase border"
+                            style={{ background: badge.color + '22', color: badge.color, borderColor: badge.color + '44' }}
                         >
                             {badge.label}
                         </span>
-                        <span className="text-slate-500 text-[11px]">{menuItems.length} modules</span>
+                        <span className="text-slate-500 text-[11px] font-medium">{menuItems.length} modules</span>
                     </div>
                     {/* Segment Indicator */}
-                    <div className="flex items-center gap-2 bg-white/5 rounded px-2 py-1">
+                    <div className="flex items-center gap-2 bg-white/5 rounded px-2.5 py-1.5 border border-white/5">
                         <i className="fa-solid fa-layer-group text-[10px] text-green-400"></i>
-                        <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">
+                        <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest truncate">
                             Seg: {(user?.segment || 'NIFTY50').replace('_', ' ')}
                         </span>
                     </div>
                 </div>
 
                 {/* Navigation Items */}
-                <div className="flex-1 py-2 overflow-y-auto custom-scrollbar scroll-smooth">
-                    <div className="px-3 space-y-0.5">
-                        {menuItems.map((item) => (
-                            <Link
-                                key={item.id}
-                                to={`/${item.id}`}
-                                onClick={() => {
-                                    if (window.innerWidth < 768) onClose();
-                                }}
-                                className={`
-                                    w-full flex items-center px-3 py-2.5 rounded-md transition-all duration-200 group
-                                    ${activeView === item.id
-                                        ? 'text-white shadow-lg'
-                                        : 'text-[#bcc0cf] hover:bg-white/10 hover:text-white'}
-                                `}
-                                style={activeView === item.id ? {
-                                    background: 'linear-gradient(60deg, var(--navbar-color, #288c6c), var(--primary-color, #4ea752))',
-                                    boxShadow: '0 4px 20px 0 rgba(0,0,0,0.14), 0 7px 10px -5px rgba(76,175,80,0.4)',
-                                    fontWeight: '500',
-                                } : {}}
-                            >
-                                <div className={`w-7 flex justify-center mr-2.5 transition-colors ${activeView === item.id ? 'text-white' : 'text-slate-400 group-hover:text-white'}`}>
-                                    <i className={`fa-solid ${item.icon} text-[14px]`}></i>
-                                </div>
-                                <span className="text-[12px] font-normal truncate uppercase tracking-wide">{item.label}</span>
-                            </Link>
-                        ))}
-
-                        {/* Logout */}
-                        <div className="px-0 py-3 border-t border-white/10">
-                            <button
-                                onClick={onLogout}
-                                className="w-full flex items-center px-3 py-2.5 text-[#bcc0cf] hover:bg-red-500/10 hover:text-red-400 rounded-md transition-all duration-200"
-                            >
-                                <div className="w-7 flex justify-center mr-2.5 text-slate-400">
-                                    <i className="fa-solid fa-sign-out-alt text-[14px]"></i>
-                                </div>
-                                <span className="text-[12px] font-medium uppercase tracking-wide">Log Out</span>
-                            </button>
-                        </div>
+                <nav className="flex-1 py-4 overflow-y-auto custom-scrollbar scroll-smooth">
+                    <div className="px-3 space-y-1">
+                        {menuItems.map((item) => {
+                            const isActive = activeView === item.id;
+                            return (
+                                <Link
+                                    key={item.id}
+                                    to={`/${item.id}`}
+                                    onClick={() => {
+                                        if (window.innerWidth < 1024) onClose();
+                                    }}
+                                    className={`
+                                        w-full flex items-center px-4 py-2.5 rounded-lg transition-all duration-200 group relative
+                                        ${isActive
+                                            ? 'text-white shadow-lg'
+                                            : 'text-[#bcc0cf] hover:bg-white/5 hover:text-white'}
+                                    `}
+                                    style={isActive ? {
+                                        background: 'linear-gradient(60deg, var(--navbar-color, #288c6c), var(--primary-color, #4ea752))',
+                                        boxShadow: '0 4px 15px -3px rgba(0,0,0,0.3)',
+                                    } : {}}
+                                >
+                                    <div className={`w-8 flex justify-center mr-2 transition-colors ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-white'}`}>
+                                        <i className={`fa-solid ${item.icon} text-[15px]`}></i>
+                                    </div>
+                                    <span className={`text-[12px] uppercase tracking-wider truncate transition-all ${isActive ? 'font-bold' : 'font-normal'}`}>
+                                        {item.label}
+                                    </span>
+                                    {isActive && (
+                                        <div className="absolute right-2 w-1.5 h-1.5 rounded-full bg-white shadow-sm" />
+                                    )}
+                                </Link>
+                            );
+                        })}
                     </div>
+                </nav>
+
+                {/* Logout */}
+                <div className="p-4 border-t border-white/10 bg-black/5">
+                    <button
+                        onClick={onLogout}
+                        className="w-full flex items-center px-4 py-2.5 text-[#bcc0cf] hover:bg-red-500/10 hover:text-red-400 rounded-lg transition-all duration-200 group"
+                    >
+                        <div className="w-8 flex justify-center mr-2 text-slate-400 group-hover:text-red-400 transition-colors">
+                            <i className="fa-solid fa-sign-out-alt text-[15px]"></i>
+                        </div>
+                        <span className="text-[12px] font-bold uppercase tracking-wider">Log Out</span>
+                    </button>
                 </div>
             </div>
         </aside>
     );
-};
+});
+
+Sidebar.displayName = 'Sidebar';
 
 export default Sidebar;
