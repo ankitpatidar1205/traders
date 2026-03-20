@@ -698,7 +698,7 @@ const parseWithOpenAI = async (text) => {
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
     const completion = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4o',  // Latest & most powerful model
         messages: [
             { role: 'system', content: OPENAI_SYSTEM_PROMPT },
             { role: 'user', content: text },
