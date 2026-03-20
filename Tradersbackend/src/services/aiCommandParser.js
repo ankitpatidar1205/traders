@@ -42,10 +42,10 @@ const OP_UPDATE = [
     'badlo', 'badal', 'karo', 'kar',
 ];
 
-const OP_DELETE = [
-    'delete', 'remove', 'destroy', 'drop', 'erase',
-    'hatao', 'hata', 'mita', 'mitao', 'nikal',
-];
+// const OP_DELETE = [
+//     'delete', 'remove', 'destroy', 'drop', 'erase',
+//     'hatao', 'hata', 'mita', 'mitao', 'nikal',
+// ];
 
 const OP_BLOCK = ['block', 'suspend', 'band', 'roko', 'rok', 'disable'];
 const OP_UNBLOCK = ['unblock', 'activate', 'chalu', 'kholo', 'enable', 'restore'];
