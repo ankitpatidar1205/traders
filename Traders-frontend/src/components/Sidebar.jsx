@@ -5,8 +5,10 @@ import { useAuth } from '../context/AuthContext';
 const ALL_MENU_ITEMS = [
     { id: 'live-m2m', label: 'Dashboard', icon: 'fa-table-columns' },
     { id: 'kite-dashboard', label: 'Kite Dashboard', icon: 'fa-chart-line' },
+    { id: 'voice-modulation', label: 'Voice Modulation', icon: 'fa-microphone' },
     { id: 'market-watch', label: 'Market Watch', icon: 'fa-arrow-trend-up' },
     { id: 'notifications', label: 'Notifications', icon: 'fa-bell' },
+    { id: 'user-notifications', label: 'User Notification', icon: 'fa-bell' },
     { id: 'action-ledger', label: 'Action Ledger', icon: 'fa-podcast' },
     { id: 'active-positions', label: 'Active Positions', icon: 'fa-certificate' },
     { id: 'closed-positions', label: 'Closed Positions', icon: 'fa-certificate' },
@@ -32,8 +34,11 @@ const ALL_MENU_ITEMS = [
     { id: 'deposit-requests', label: 'Deposit Requests', icon: 'fa-gear' },
     { id: 'negative-balance', label: 'Negative Balance Txns', icon: 'fa-bell' },
     { id: 'support', label: 'Raise Ticket', icon: 'fa-ticket' },
+<<<<<<< HEAD
+=======
     { id: 'voice-modulation', label: 'Voice Modulation', icon: 'fa-microphone' },
     { id: 'expiry-rules', label: 'Expiry Rules', icon: 'fa-calendar-xmark' },
+>>>>>>> 67569e3883c8019adb953942f5e3c941c90efa7f
     { id: 'change-password', label: 'Change Login Password', icon: 'fa-user' },
     { id: 'change-transaction-password', label: 'Change Transaction Pwd', icon: 'fa-gear' },
 ];

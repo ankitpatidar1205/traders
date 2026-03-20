@@ -19,6 +19,7 @@ import ActiveTradesPage from './pages/trades/ActiveTradesPage';
 import ClosedTradesPage from './pages/trades/ClosedTradesPage';
 import MarketWatchPage from './pages/market/MarketWatchPage';
 import NotificationsPage from './pages/notifications/NotificationsPage';
+import UserNotificationsPage from './pages/notifications/UserNotificationsPage';
 import ClosedPositionsPage from './pages/positions/ClosedPositionsPage';
 import TradingClientsPage from './pages/clients/TradingClientsPage';
 import ClientDetailPage from './pages/clients/ClientDetailPage';
@@ -223,6 +224,7 @@ function App() {
                 <Route path="/closed-trades" element={<ProtectedRoute viewId="closed-trades"><ClosedTradesPage /></ProtectedRoute>} />
                 <Route path="/market-watch" element={<ProtectedRoute viewId="market-watch"><MarketWatchPage /></ProtectedRoute>} />
                 <Route path="/notifications" element={<NotificationsPage />} />
+                <Route path="/user-notifications" element={<UserNotificationsPage />} />
                 <Route path="/closed-positions" element={<ProtectedRoute viewId="closed-positions"><ClosedPositionsPage /></ProtectedRoute>} />
                 
                 <Route path="/trading-clients" element={<ProtectedRoute viewId="trading-clients"><TradingClientsPage

@@ -441,8 +441,9 @@ export const getAdminPanelSettings = async (userId) => {
 };
 
 // ─── NOTIFICATIONS ────────────────────────────────────
-export const getNotifications = async () => {
-    const response = await api.get('/notifications');
+export const getNotifications = async (source) => {
+    const params = source ? { source } : {};
+    const response = await api.get('/notifications', { params });
     return response.data;
 };
 
@@ -463,6 +464,11 @@ export const createNotification = async (data) => {
 
 export const deleteNotification = async (id) => {
     const response = await api.delete(`/notifications/${id}`);
+    return response.data;
+};
+
+export const getNotificationUsersByRole = async (role) => {
+    const response = await api.get(`/notifications/users/${role}`);
     return response.data;
 };
 
