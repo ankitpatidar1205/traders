@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { X } from 'lucide-react';
 
 const DeleteClientPage = ({ client, onClose, onDeleteConfirm }) => {
     const [transactionPassword, setTransactionPassword] = useState('');
@@ -90,6 +91,11 @@ const DeleteClientPage = ({ client, onClose, onDeleteConfirm }) => {
                 {/* Main Content */}
                 <div className="flex-1 overflow-y-auto custom-scrollbar px-6 py-4 bg-[#1a2035]">
                     <div className="max-w-4xl mx-auto mt-12">
+                        <div className="flex justify-end mb-4">
+                            <button onClick={onClose} className="text-white/40 hover:text-white transition-colors">
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
 
                         {/* Box Header Badge */}
                         <div className="relative z-20 mb-[-1.5rem] ml-4 inline-block">

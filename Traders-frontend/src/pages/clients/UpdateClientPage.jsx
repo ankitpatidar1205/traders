@@ -627,7 +627,6 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                     ].map((item) => (
                         <div
                             key={item.label}
-                            onClick={onClose}
                             className={`text-slate-400 text-[13px] flex items-center justify-between py-2.5 px-3 rounded hover:bg-white/5 cursor-pointer transition-colors ${item.active ? 'bg-[#4caf50] text-white shadow-lg' : ''}`}
                         >
                             <div className="flex items-center gap-3">
@@ -642,6 +641,11 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                 {/* Form Wrapper */}
                 <div className="flex-1 overflow-y-auto custom-scrollbar px-3 sm:px-4 md:px-6 py-2 bg-[#1a2035]">
                     <div className="max-w-6xl mx-auto mt-4 mb-6">
+                        <div className="flex justify-end mb-4">
+                            <button onClick={onClose} className="text-white/40 hover:text-white transition-colors">
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
                         {/* Floating Card Header (3D Ribbon Style) */}
                         <div className="relative z-20 -mb-8 ml-4 flex flex-col items-start">
                             <div

@@ -34,11 +34,7 @@ const ALL_MENU_ITEMS = [
     { id: 'deposit-requests', label: 'Deposit Requests', icon: 'fa-gear' },
     { id: 'negative-balance', label: 'Negative Balance Txns', icon: 'fa-bell' },
     { id: 'support', label: 'Raise Ticket', icon: 'fa-ticket' },
-<<<<<<< HEAD
-=======
-    { id: 'voice-modulation', label: 'Voice Modulation', icon: 'fa-microphone' },
     { id: 'expiry-rules', label: 'Expiry Rules', icon: 'fa-calendar-xmark' },
->>>>>>> 67569e3883c8019adb953942f5e3c941c90efa7f
     { id: 'change-password', label: 'Change Login Password', icon: 'fa-user' },
     { id: 'change-transaction-password', label: 'Change Transaction Pwd', icon: 'fa-gear' },
 ];
