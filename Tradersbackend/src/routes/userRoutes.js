@@ -4,7 +4,7 @@ const multer = require('multer');
 const {
     getUsers, getUserProfile, updateStatus, deleteUser, updatePasswords, resetPassword,
     updateUser, updateClientSettings, getBrokerShares, updateBrokerShares,
-    getDocuments, updateDocuments, getUserSegments, updateUserSegments
+    getDocuments, updateDocuments, getUserSegments, updateUserSegments, getBrokerClients
 } = require('../controllers/userController');
 const { authMiddleware, roleMiddleware } = require('../middleware/auth');
 
@@ -22,6 +22,7 @@ router.post('/:id/reset-password', authMiddleware, roleMiddleware(['SUPERADMIN',
 // ─── NEW ROUTES ───────────────────────────────────────
 router.put('/:id', authMiddleware, updateUser);
 router.put('/:id/settings', authMiddleware, updateClientSettings);
+router.get('/:id/broker-clients', authMiddleware, getBrokerClients);
 router.get('/:id/broker-shares', authMiddleware, getBrokerShares);
 router.put('/:id/broker-shares', authMiddleware, updateBrokerShares);
 router.get('/:id/documents', authMiddleware, getDocuments);

@@ -341,7 +341,7 @@ const TopBar = ({ currentViewLabel, onLogout, onNavigate }) => {
 
                         <input
                             type="text"
-                            placeholder={isListening ? '🎙 Listening...' : 'Ask AI — trades, users, funds...'}
+                            placeholder={isListening ? '🎙 Listening...' : 'Ask AI — trades, users, funds, notifications...'}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             onKeyPress={(e) => e.key === 'Enter' && handleSearch(searchQuery)}

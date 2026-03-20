@@ -30,7 +30,12 @@ class MockMarketEngine extends EventEmitter {
     }
 
     getPrice(symbol) {
-        return this.prices[symbol] || (Math.random() * 1000).toFixed(2);
+        if (!this.prices[symbol]) {
+            // Add symbol if missing, so it gets mocked henceforth
+            const basePrice = (Math.random() * 2000) + 100; // randomish start
+            this.prices[symbol] = parseFloat(basePrice.toFixed(2));
+        }
+        return this.prices[symbol];
     }
 }
 

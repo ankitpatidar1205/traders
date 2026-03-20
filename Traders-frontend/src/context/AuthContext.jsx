@@ -22,15 +22,21 @@ export const ROLE_MENU_ACCESS = {
         'change-transaction-password', 'withdrawal-requests',
         'deposit-requests', 'negative-balance', 'admins',
         'learning', 'support', 'voice-modulation', 'signal-admin', 'signals',
+<<<<<<< HEAD
+        'global-settings',
+=======
+        'expiry-rules',
+>>>>>>> 67569e3883c8019adb953942f5e3c941c90efa7f
     ],
     ADMIN: [
-        'live-m2m', 'kite-dashboard', 'market-watch', 'notifications', 'active-positions',
-        'closed-positions', 'trading-clients', 'brokers', 'trades',
+        'live-m2m', 'kite-dashboard', 'market-watch', 'notifications', 'user-notifications',
+        'active-positions', 'closed-positions', 'trading-clients', 'brokers', 'trades',
         'group-trades', 'closed-trades', 'deleted-trades', 'pending-orders',
         'funds', 'tickers', 'banned', 'new-client-bank',
         'accounts', 'broker-accounts', 'change-password', 'change-transaction-password',
         'withdrawal-requests', 'deposit-requests', 'negative-balance',
         'learning', 'support', 'voice-modulation', 'signal-admin', 'signals',
+        'expiry-rules',
     ],
     BROKER: [
         'live-m2m', 'trading-clients', 'funds', 'notifications',
@@ -259,7 +265,7 @@ export const AuthProvider = ({ children }) => {
         return accessibleItems.includes(menuId);
     };
 
-    const isSuperAdmin = () => user?.role === ROLES.SUPERADMIN;
+    const isSuperAdmin = () => user?.role?.toUpperCase() === ROLES.SUPERADMIN;
     const isAdmin = () => [ROLES.SUPERADMIN, ROLES.ADMIN].includes(user?.role);
     const isBroker = () => user?.role === ROLES.BROKER;
     const isClient = () => user?.role === ROLES.TRADER;

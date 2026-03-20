@@ -201,43 +201,50 @@ const GlobalSettingsPage = ({ onBack, clientId = null, clientName = '' }) => {
     return (
         <div className="min-h-full bg-[#1a2035] px-3 sm:px-6 md:px-10 py-4 sm:py-6 md:py-10 pb-16 sm:pb-24 md:pb-32 overflow-y-auto">
             <div className="max-w-7xl mx-auto">
-                <div className="mb-8">
-                    <button className="bg-[#4caf50] hover:bg-[#43a047] text-white px-5 py-2.5 rounded font-medium text-[15px] shadow-lg transition-all uppercase tracking-wide">
-                        Set Margins
-                    </button>
-                </div>
+                <div className="relative pt-6">
+                    <div className="absolute -top-6 left-8">
+                        <button 
+                            className="text-white px-8 py-3.5 rounded font-bold text-xs tracking-widest transition-all shadow-[0_4px_10px_rgba(76,175,80,0.3)] hover:shadow-[0_4px_20px_rgba(76,175,80,0.5)] active:scale-95 uppercase"
+                            style={{ background: 'linear-gradient(60deg, #288c6c, #4ea752)' }}
+                        >
+                            Set Margins
+                        </button>
+                    </div>
 
-                <div className="space-y-12">
-                    {settings && (
-                        <>
-                            <ConfigSection title="Comex Config:" type="comex" data={settings.comex || { enabled: false, brokerage: 0, maxLots: 0, maxSize: 0, holdingExposure: 0, brokerageType: 'Per Crore', minLots: 0, maxLotsPerScrip: 0, intradayExposure: 0, ordersAwayPct: 0 }} onChange={updateField} />
-                            <ConfigSection title="Forex Config:" type="forex" data={settings.forex || { enabled: false, brokerage: 0, maxLots: 0, maxSize: 0, holdingExposure: 0, brokerageType: 'Per Crore', minLots: 0, maxLotsPerScrip: 0, intradayExposure: 0, ordersAwayPct: 0 }} onChange={updateField} />
-                            <ConfigSection title="Crypto Config:" type="crypto" data={settings.crypto || { enabled: false, brokerage: 0, maxLots: 0, maxSize: 0, holdingExposure: 0, brokerageType: 'Per Crore', minLots: 0, maxLotsPerScrip: 0, intradayExposure: 0, ordersAwayPct: 0 }} onChange={updateField} />
-                        </>
-                    )}
-                </div>
+                    <div className="bg-[#1f283e] p-8 lg:p-12 rounded-lg border border-white/5 shadow-2xl space-y-20">
+                        {settings && (
+                            <>
+                                <ConfigSection title="Comex Config:" type="comex" data={settings.comex || { enabled: false, brokerage: 0, maxLots: 0, maxSize: 0, holdingExposure: 0, brokerageType: 'Per Crore', minLots: 0, maxLotsPerScrip: 0, intradayExposure: 0, ordersAwayPct: 0 }} onChange={updateField} />
+                                <ConfigSection title="Forex Config:" type="forex" data={settings.forex || { enabled: false, brokerage: 0, maxLots: 0, maxSize: 0, holdingExposure: 0, brokerageType: 'Per Crore', minLots: 0, maxLotsPerScrip: 0, intradayExposure: 0, ordersAwayPct: 0 }} onChange={updateField} />
+                                <ConfigSection title="Crypto Config:" type="crypto" data={settings.crypto || { enabled: false, brokerage: 0, maxLots: 0, maxSize: 0, holdingExposure: 0, brokerageType: 'Per Crore', minLots: 0, maxLotsPerScrip: 0, intradayExposure: 0, ordersAwayPct: 0 }} onChange={updateField} />
+                            </>
+                        )}
 
-                <div className="mt-12 pt-10 border-t border-white/5">
-                    <div className="max-w-md">
-                        <label className="text-[14px] text-[#bcc0cf] font-normal mb-8 block">Transaction Password</label>
-                        <div className="relative border-b border-white/20">
-                            <input 
-                                type="password" 
-                                value={transactionPassword}
-                                onChange={e => setTransactionPassword(e.target.value)}
-                                className="w-full bg-transparent py-2 text-white text-[16px] font-bold focus:outline-none focus:border-green-500 transition-colors"
-                            />
+                        <div className="mt-12 pt-10 border-t border-white/5">
+                            <div className="max-w-md">
+                                <label className="text-[14px] text-[#bcc0cf] font-normal mb-8 block font-medium uppercase tracking-wider">Transaction Password</label>
+                                <div className="relative border-b border-white/20 pb-2">
+                                    <input 
+                                        type="password" 
+                                        value={transactionPassword}
+                                        onChange={e => setTransactionPassword(e.target.value)}
+                                        className="w-full bg-transparent text-white text-[18px] font-bold focus:outline-none focus:border-green-500 transition-colors"
+                                        placeholder="Enter password to save changes"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="mt-12">
+                                <button 
+                                    onClick={handleSave}
+                                    className="text-white px-12 py-4 rounded font-bold text-sm tracking-widest transition-all shadow-[0_4px_10px_rgba(76,175,80,0.3)] hover:shadow-[0_4px_20px_rgba(76,175,80,0.5)] active:scale-95 uppercase"
+                                    style={{ background: 'linear-gradient(60deg, #288c6c, #4ea752)' }}
+                                >
+                                    SAVE SETTINGS
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-
-                <div className="mt-10">
-                    <button 
-                        onClick={handleSave}
-                        className="bg-[#4caf50] hover:bg-[#43a047] text-white px-10 py-2.5 rounded font-bold text-sm shadow-xl transition-all uppercase tracking-widest"
-                    >
-                        SAVE
-                    </button>
                 </div>
             </div>
         </div>

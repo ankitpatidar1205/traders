@@ -152,6 +152,7 @@ const runMigrations = async () => {
     `);
 
     await addColumn('admin_panel_settings', 'profile_image_path', 'VARCHAR(500) DEFAULT NULL');
+    await addColumn('admin_panel_settings', 'bg_image_path', 'VARCHAR(500) DEFAULT NULL');
 
     // ─── 7. TRADES ─────────────────────────────────────────────────────────────
 
@@ -408,6 +409,14 @@ const runMigrations = async () => {
             PRIMARY KEY (notification_id, user_id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     `);
+
+    // Add TRADER to target_role enum if not present
+    try {
+        await db.execute("ALTER TABLE notifications MODIFY COLUMN target_role ENUM('SUPERADMIN','ADMIN','BROKER','TRADER','ALL') DEFAULT 'ALL'");
+    } catch (_) {}
+
+    // Add target_user_ids column for multi-user targeting
+    await addColumn('notifications', 'target_user_ids', 'TEXT DEFAULT NULL');
 
     // ─── 11. SEED DATA ─────────────────────────────────────────────────────────
 

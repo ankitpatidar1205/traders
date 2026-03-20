@@ -5,24 +5,53 @@ const { getIo } = require('../config/socket');
 const getNotifications = async (req, res) => {
     const userId = req.user.id;
     const role   = req.user.role;
+    const source = req.query.source; // ?source=self → only show notifications created by this user
 
     try {
-        // Build WHERE clause based on role
-        // A user sees notifications targeted to their role OR to 'ALL' OR to them specifically
-        const [rows] = await db.execute(`
-            SELECT
-                n.*,
-                CASE WHEN nr.user_id IS NOT NULL THEN 1 ELSE 0 END AS is_read
-            FROM notifications n
-            LEFT JOIN notification_reads nr
-                ON nr.notification_id = n.id AND nr.user_id = ?
-            WHERE
-                n.target_role = 'ALL'
-                OR n.target_role = ?
-                OR n.target_user_id = ?
-            ORDER BY n.created_at DESC
-            LIMIT 100
-        `, [userId, role, userId]);
+        let rows;
+
+        if (source === 'self') {
+            // User Notifications page — only show notifications created by this user
+            [rows] = await db.execute(`
+                SELECT
+                    n.*,
+                    CASE WHEN nr.user_id IS NOT NULL THEN 1 ELSE 0 END AS is_read
+                FROM notifications n
+                LEFT JOIN notification_reads nr
+                    ON nr.notification_id = n.id AND nr.user_id = ?
+                WHERE n.created_by = ?
+                ORDER BY n.created_at DESC
+                LIMIT 100
+            `, [userId, userId]);
+        } else if (role === 'SUPERADMIN') {
+            // SuperAdmin sees ALL notifications (they are the sender)
+            [rows] = await db.execute(`
+                SELECT
+                    n.*,
+                    CASE WHEN nr.user_id IS NOT NULL THEN 1 ELSE 0 END AS is_read
+                FROM notifications n
+                LEFT JOIN notification_reads nr
+                    ON nr.notification_id = n.id AND nr.user_id = ?
+                ORDER BY n.created_at DESC
+                LIMIT 100
+            `, [userId]);
+        } else {
+            // Other roles see notifications targeted to them only (not superadmin's)
+            [rows] = await db.execute(`
+                SELECT
+                    n.*,
+                    CASE WHEN nr.user_id IS NOT NULL THEN 1 ELSE 0 END AS is_read
+                FROM notifications n
+                LEFT JOIN notification_reads nr
+                    ON nr.notification_id = n.id AND nr.user_id = ?
+                WHERE
+                    n.target_role = ?
+                    OR n.target_user_id = ?
+                    OR FIND_IN_SET(?, REPLACE(n.target_user_ids, ' ', '')) > 0
+                ORDER BY n.created_at DESC
+                LIMIT 100
+            `, [userId, role, userId, String(userId)]);
+        }
 
         res.json(rows);
     } catch (err) {
@@ -60,8 +89,9 @@ const markAllRead = async (req, res) => {
             FROM notifications n
             LEFT JOIN notification_reads nr ON nr.notification_id = n.id AND nr.user_id = ?
             WHERE nr.user_id IS NULL
-              AND (n.target_role = 'ALL' OR n.target_role = ? OR n.target_user_id = ?)
-        `, [userId, userId, role, userId]);
+              AND (n.target_role = 'ALL' OR n.target_role = ? OR n.target_user_id = ?
+                   OR FIND_IN_SET(?, REPLACE(n.target_user_ids, ' ', '')) > 0)
+        `, [userId, userId, role, userId, String(userId)]);
 
         res.json({ message: 'All marked as read' });
     } catch (err) {
@@ -72,7 +102,7 @@ const markAllRead = async (req, res) => {
 
 // ─── CREATE notification ──────────────────────────────────────────────────────
 const createNotification = async (req, res) => {
-    const { title, message, type = 'info', target_role = 'ALL', target_user_id = null } = req.body;
+    const { title, message, type = 'info', target_role = 'ALL', target_user_ids = [] } = req.body;
     const createdBy = req.user.id;
 
     if (!title || !message) {
@@ -80,24 +110,31 @@ const createNotification = async (req, res) => {
     }
 
     try {
+        // If specific users selected, store their IDs
+        const userIdsStr = Array.isArray(target_user_ids) && target_user_ids.length > 0
+            ? target_user_ids.join(',')
+            : null;
+
         const [result] = await db.execute(
-            `INSERT INTO notifications (title, message, type, target_role, target_user_id, created_by)
+            `INSERT INTO notifications (title, message, type, target_role, target_user_ids, created_by)
              VALUES (?, ?, ?, ?, ?, ?)`,
-            [title, message, type, target_role, target_user_id || null, createdBy]
+            [title, message, type, target_role, userIdsStr, createdBy]
         );
 
         const notifId = result.insertId;
 
-        // Fetch the new notification row to emit
         const [[notif]] = await db.execute(
             'SELECT * FROM notifications WHERE id = ?', [notifId]
         );
 
-        // Emit via socket to the right room
+        // Emit via socket
         const io = getIo();
         if (io) {
-            if (target_user_id) {
-                io.to(`user:${target_user_id}`).emit('notification', { ...notif, is_read: 0 });
+            if (userIdsStr) {
+                // Send to each specific user
+                target_user_ids.forEach(uid => {
+                    io.to(`user:${uid}`).emit('notification', { ...notif, is_read: 0 });
+                });
             } else if (target_role === 'ALL') {
                 io.emit('notification', { ...notif, is_read: 0 });
             } else {
@@ -108,6 +145,23 @@ const createNotification = async (req, res) => {
         res.status(201).json({ message: 'Notification sent', id: notifId });
     } catch (err) {
         console.error('createNotification:', err);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+// ─── GET users by role (for notification targeting) ───────────────────────────
+const getUsersByRole = async (req, res) => {
+    const { role } = req.params;
+    const userId = req.user.id;
+    try {
+        // Only show users created by the logged-in user (parent_id = current user)
+        const [rows] = await db.execute(
+            'SELECT id, username, full_name, email, role FROM users WHERE role = ? AND status = ? AND parent_id = ? ORDER BY full_name ASC',
+            [role, 'Active', userId]
+        );
+        res.json(rows);
+    } catch (err) {
+        console.error('getUsersByRole:', err);
         res.status(500).json({ message: 'Server error' });
     }
 };
@@ -130,4 +184,4 @@ const deleteNotification = async (req, res) => {
     }
 };
 
-module.exports = { getNotifications, markRead, markAllRead, createNotification, deleteNotification };
+module.exports = { getNotifications, markRead, markAllRead, createNotification, deleteNotification, getUsersByRole };

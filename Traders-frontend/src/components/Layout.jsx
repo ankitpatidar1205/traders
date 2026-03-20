@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Menu, X, Search, Bell } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Menu, X, Search } from 'lucide-react';
 import TopBar from './TopBar';
 import Sidebar from './Sidebar';
 import NotificationPopup from './common/NotificationPopup';
@@ -7,25 +7,26 @@ import { useAuth } from '../context/AuthContext';
 import logo from '../assets/shrishreenathjitraders.in.png';
 
 const Layout = ({ children, onLogout, onNavigate, currentView }) => {
-    const { user, logoPath, theme } = useAuth();
+    const { user, logoPath, theme, isSuperAdmin } = useAuth();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [showMobileSearch, setShowMobileSearch] = useState(false);
     const [mobileSearchQuery, setMobileSearchQuery] = useState('');
 
     // Admins see their uploaded logo; SuperAdmin always sees the bundled default logo
-    const resolvedLogo = (user?.role === 'ADMIN' && logoPath)
-        ? (logoPath.startsWith('http') ? logoPath : `http://https://trader-production-e063.up.railway.app${logoPath}`)
-        : logo;
+    const resolvedLogo = useMemo(() => {
+        return (user?.role === 'ADMIN' && logoPath)
+            ? (logoPath.startsWith('http') ? logoPath : `http://https://trader-production-e063.up.railway.app${logoPath}`)
+            : logo;
+    }, [user?.role, logoPath]);
 
     // Navbar gradient uses theme CSS variables
-    const navbarStyle = {
+    const navbarStyle = useMemo(() => ({
         background: `linear-gradient(60deg, ${theme?.navbarColor || '#288c6c'}, ${theme?.primaryColor || '#4ea752'})`,
-    };
+    }), [theme?.navbarColor, theme?.primaryColor]);
 
     const handleMobileSearch = (e) => {
         e.preventDefault();
         if (mobileSearchQuery.trim()) {
-            // Trigger search via custom event so TopBar's useSearch can pick it up
             window.dispatchEvent(new CustomEvent('mobile-search', { detail: { query: mobileSearchQuery } }));
             setShowMobileSearch(false);
             setMobileSearchQuery('');
@@ -33,12 +34,12 @@ const Layout = ({ children, onLogout, onNavigate, currentView }) => {
     };
 
     return (
-        <div className="flex flex-col h-screen overflow-hidden" style={{ backgroundColor: 'var(--bg-color, #1a2035)', color: 'var(--text-color, #ffffff)' }}>
-            {/* Popup Notification */}
-            {user && <NotificationPopup user={user} />}
+        <div className="flex flex-col h-screen overflow-hidden w-full fixed inset-0" style={{ backgroundColor: 'var(--bg-color, #1a2035)', color: 'var(--text-color, #ffffff)' }}>
+            {/* Popup Notification - Disabled for SUPERADMIN */}
+            {user && !isSuperAdmin() && <NotificationPopup user={user} />}
 
             {/* TopBar Area */}
-            <header className="w-full z-40 flex-shrink-0">
+            <header className="w-full z-40 flex-shrink-0 shadow-lg relative">
                 {/* Desktop TopBar — hidden on mobile */}
                 <div className="hidden md:block">
                     <TopBar
@@ -50,10 +51,9 @@ const Layout = ({ children, onLogout, onNavigate, currentView }) => {
 
                 {/* Mobile Header */}
                 <div
-                    className="flex items-center justify-between md:hidden px-3 h-14 text-white shadow-lg relative z-50 safe-top"
+                    className="flex items-center justify-between md:hidden px-4 h-16 text-white relative z-50 safe-top"
                     style={navbarStyle}
                 >
-                    {/* Logo */}
                     <div
                         className="flex items-center h-full py-2 overflow-hidden cursor-pointer flex-shrink-0"
                         onClick={() => onNavigate('dashboard')}
@@ -61,37 +61,34 @@ const Layout = ({ children, onLogout, onNavigate, currentView }) => {
                         <img
                             src={resolvedLogo}
                             alt="Logo"
-                            className="h-full w-auto max-w-[120px] object-contain mix-blend-multiply"
+                            className="h-10 w-auto max-w-[140px] object-contain mix-blend-multiply transition-transform active:scale-95"
                         />
                     </div>
 
-                    {/* Right side icons */}
-                    <div className="flex items-center gap-1">
-                        {/* Search icon */}
+                    <div className="flex items-center gap-2">
                         <button
                             onClick={() => setShowMobileSearch(v => !v)}
                             className="p-2 hover:bg-white/10 rounded-full transition-all active:scale-90"
                             aria-label="Search"
                         >
-                            <Search className="w-5 h-5" />
+                            <Search className="w-5 h-5 text-white" />
                         </button>
 
-                        {/* Hamburger */}
                         <button
                             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
                             className="p-2 hover:bg-white/10 rounded-full transition-all active:scale-90"
                             aria-label="Menu"
                         >
-                            {isSidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                            {isSidebarOpen ? <X className="w-6 h-6 text-white" /> : <Menu className="w-6 h-6 text-white" />}
                         </button>
                     </div>
                 </div>
 
-                {/* Mobile Search Bar — slides down when open */}
+                {/* Mobile Search Bar */}
                 {showMobileSearch && (
                     <form
                         onSubmit={handleMobileSearch}
-                        className="md:hidden flex items-center gap-2 px-3 py-2 z-50 relative"
+                        className="md:hidden flex items-center gap-2 px-4 py-3 z-50 relative border-t border-white/10 animate-in slide-in-from-top duration-300"
                         style={navbarStyle}
                     >
                         <div className="flex-1 relative">
@@ -101,20 +98,14 @@ const Layout = ({ children, onLogout, onNavigate, currentView }) => {
                                 type="text"
                                 value={mobileSearchQuery}
                                 onChange={e => setMobileSearchQuery(e.target.value)}
-                                placeholder="Search anything..."
-                                className="w-full bg-white/15 border border-white/20 rounded-full pl-9 pr-4 py-2 text-white text-sm placeholder-white/60 focus:outline-none focus:bg-white/25 transition-all"
+                                placeholder="Search everything..."
+                                className="w-full bg-white/20 border border-white/30 rounded-full pl-10 pr-4 py-2 text-white text-sm placeholder-white/70 focus:outline-none focus:bg-white/30 transition-all shadow-inner"
                             />
                         </div>
                         <button
-                            type="submit"
-                            className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-full text-sm font-medium transition-all"
-                        >
-                            Go
-                        </button>
-                        <button
                             type="button"
                             onClick={() => setShowMobileSearch(false)}
-                            className="p-1 text-white/70"
+                            className="p-2 text-white/80 hover:text-white"
                         >
                             <X className="w-5 h-5" />
                         </button>
@@ -122,13 +113,11 @@ const Layout = ({ children, onLogout, onNavigate, currentView }) => {
                 )}
             </header>
 
-            <div className="flex flex-1 overflow-hidden relative">
+            <div className="flex flex-1 overflow-hidden relative w-full">
+                {/* PERSISTENT SIDEBAR */}
                 <Sidebar
                     onLogout={onLogout}
-                    onNavigate={(view) => {
-                        onNavigate(view);
-                        setIsSidebarOpen(false);
-                    }}
+                    onNavigate={onNavigate}
                     currentView={currentView}
                     isOpen={isSidebarOpen}
                     onClose={() => setIsSidebarOpen(false)}
@@ -137,17 +126,20 @@ const Layout = ({ children, onLogout, onNavigate, currentView }) => {
                 {/* Backdrop for mobile */}
                 {isSidebarOpen && (
                     <div
-                        className="fixed inset-0 bg-black/50 z-40 md:hidden"
+                        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden transition-opacity duration-300"
                         onClick={() => setIsSidebarOpen(false)}
                     />
                 )}
 
-                {/* Main content — tighter padding on mobile */}
+                {/* DYNAMIC CONTENT AREA */}
                 <main
-                    className="flex-1 overflow-x-hidden overflow-y-auto flex flex-col p-3 sm:p-4 md:p-6 safe-bottom"
+                    id="content-area"
+                    className="flex-1 overflow-x-hidden overflow-y-auto flex flex-col p-4 sm:p-6 lg:p-8 safe-bottom relative z-0 scroll-smooth"
                     style={{ backgroundColor: 'var(--bg-color, #1a2035)' }}
                 >
-                    {children}
+                    <div className="w-full max-w-[1600px] mx-auto animate-in fade-in duration-500 fill-mode-both">
+                        {children}
+                    </div>
                 </main>
             </div>
         </div>

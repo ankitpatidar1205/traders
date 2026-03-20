@@ -248,6 +248,11 @@ export const getBrokerShares = async (id) => {
     return response.data;
 };
 
+export const getBrokerClients = async (id) => {
+    const response = await api.get(`/users/${id}/broker-clients`);
+    return response.data;
+};
+
 export const updateBrokerShares = async (id, data) => {
     const response = await api.put(`/users/${id}/broker-shares`, data);
     return response.data;
@@ -417,11 +422,12 @@ export const uploadLogo = async (formData) => {
     return response.data;
 };
 
-export const saveAdminPanelSettings = async (userId, theme, logoFile, profileImageFile) => {
+export const saveAdminPanelSettings = async (userId, theme, logoFile, profileImageFile, bgImageFile) => {
     const fd = new FormData();
     fd.append('theme', JSON.stringify(theme));
     if (logoFile) fd.append('logo', logoFile);
     if (profileImageFile) fd.append('profileImage', profileImageFile);
+    if (bgImageFile) fd.append('bgImage', bgImageFile);
 
     const response = await api.post(`/admin/panel-settings/${userId}`, fd, {
         headers: { 'Content-Type': 'multipart/form-data' }
@@ -435,8 +441,9 @@ export const getAdminPanelSettings = async (userId) => {
 };
 
 // ─── NOTIFICATIONS ────────────────────────────────────
-export const getNotifications = async () => {
-    const response = await api.get('/notifications');
+export const getNotifications = async (source) => {
+    const params = source ? { source } : {};
+    const response = await api.get('/notifications', { params });
     return response.data;
 };
 
@@ -457,6 +464,11 @@ export const createNotification = async (data) => {
 
 export const deleteNotification = async (id) => {
     const response = await api.delete(`/notifications/${id}`);
+    return response.data;
+};
+
+export const getNotificationUsersByRole = async (role) => {
+    const response = await api.get(`/notifications/users/${role}`);
     return response.data;
 };
 

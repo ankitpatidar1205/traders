@@ -9,6 +9,7 @@ import ResetAccountPage from './ResetAccountPage';
 import RecalculateBrokeragePage from './RecalculateBrokeragePage';
 import ChangePasswordPage from './ChangePasswordPage';
 import DeleteClientPage from './DeleteClientPage';
+import CopyTradingClientForm from './CopyTradingClientForm';
 import Toast from '../../components/common/Toast';
 
 import GlobalSettingsPage from '../settings/GlobalSettingsPage';
@@ -30,8 +31,10 @@ const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavig
     const [showRecalculatePage, setShowRecalculatePage] = useState(false);
     const [showChangePasswordPage, setShowChangePasswordPage] = useState(false);
     const [showDeletePage, setShowDeletePage] = useState(false);
+    const [showCopyPage, setShowCopyPage] = useState(false);
     const [showClientSettings, setShowClientSettings] = useState(false);
     const [toast, setToast] = useState({ message: '', type: 'success' });
+    const [deleteConfirm, setDeleteConfirm] = useState(null); // holds client to be deleted
 
     const fetchClients = async () => {
         setLoading(true);
@@ -92,7 +95,7 @@ const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavig
     const handleCopy = (client) => {
         setSelectedClient(client);
         setCreateFromDetail(false);
-        setShowCreatePage(true);
+        setShowCopyPage(true);
     };
 
     const handleDeposit = (client) => {
@@ -101,6 +104,19 @@ const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavig
 
     const handleWithdraw = (client) => {
         if (onWithdrawClick) onWithdrawClick(client);
+    };
+
+    const handleDeleteConfirm = async () => {
+        if (!deleteConfirm) return;
+        try {
+            await api.deleteUser(deleteConfirm.id);
+            setToast({ message: `Client "${deleteConfirm.username}" deleted successfully`, type: 'success' });
+            fetchClients();
+        } catch (err) {
+            setToast({ message: 'Failed to delete client: ' + err.message, type: 'error' });
+        } finally {
+            setDeleteConfirm(null);
+        }
     };
 
     return (
@@ -238,8 +254,12 @@ const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavig
                                                         <button className="text-white hover:text-blue-400 transition-colors flex justify-center items-center" onClick={() => handleCopy(client)} title="Copy">
                                                             <i className="fa-solid fa-copy text-[15px]"></i>
                                                         </button>
-                                                        <button className="text-white hover:text-blue-400 transition-colors flex justify-center items-center" onClick={() => { setSelectedClient(client); setShowClientSettings(true); }} title="Client Settings">
-                                                            <i className="fa-solid fa-gear text-[15px]"></i>
+                                                        <button
+                                                            className="text-white hover:text-red-400 transition-colors flex justify-center items-center"
+                                                            onClick={() => setDeleteConfirm(client)}
+                                                            title="Delete"
+                                                        >
+                                                            <Trash2 className="w-[15px] h-[15px]" />
                                                         </button>
                                                     </>
                                                 )}
@@ -341,7 +361,7 @@ const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavig
                         setShowDetailPage(false);
                         setSelectedClient(client);
                         setCreateFromDetail(true);
-                        setShowCreatePage(true);
+                        setShowCopyPage(true);
                     }}
                     onChangePassword={(client) => {
                         setShowDetailPage(false);
@@ -406,7 +426,7 @@ const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavig
                 />
             )}
 
-            {/* Create/Copy Client Modal */}
+            {/* Create Client Modal (Remains Unchanged) */}
             {showCreatePage && (
                 <CreateClientPage
                     client={selectedClient}
@@ -421,13 +441,40 @@ const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavig
                         }
                     }}
                     onSave={(data) => {
-                        setToast({ message: selectedClient ? 'Client copied successfully!' : 'Client created successfully!', type: 'success' });
+                        setToast({ message: 'Client created successfully!', type: 'success' });
                         setShowCreatePage(false);
                         if (createFromDetail) {
                             setShowDetailPage(true);
                         } else {
                             setSelectedClient(null);
                         }
+                        fetchClients();
+                    }}
+                />
+            )}
+
+            {/* NEW Copy Client Modal (Isolated) */}
+            {showCopyPage && (
+                <CopyTradingClientForm
+                    client={selectedClient}
+                    onLogout={onLogout}
+                    onClose={() => {
+                        setShowCopyPage(false);
+                        if (createFromDetail) {
+                            setShowDetailPage(true);
+                        } else {
+                            setSelectedClient(null);
+                        }
+                    }}
+                    onSave={(data) => {
+                        setToast({ message: 'Client copied successfully!', type: 'success' });
+                        setShowCopyPage(false);
+                        if (createFromDetail) {
+                            setShowDetailPage(true);
+                        } else {
+                            setSelectedClient(null);
+                        }
+                        fetchClients();
                     }}
                 />
             )}
@@ -482,6 +529,50 @@ const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavig
                         }
                     }}
                 />
+            )}
+
+            {/* ===== INLINE DELETE CONFIRMATION MODAL ===== */}
+            {deleteConfirm && (
+                <div
+                    className="fixed inset-0 z-[999] flex items-center justify-center"
+                    style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }}
+                    onClick={() => setDeleteConfirm(null)}
+                >
+                    <div
+                        className="bg-[#1f283e] border border-red-500/20 rounded-xl p-8 max-w-md w-full mx-4 shadow-2xl"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex items-center gap-4 mb-6">
+                            <div className="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center flex-shrink-0">
+                                <Trash2 className="w-6 h-6 text-red-400" />
+                            </div>
+                            <div>
+                                <h3 className="text-white font-bold text-lg">Delete Trading Client</h3>
+                                <p className="text-slate-400 text-sm mt-0.5">This action cannot be undone.</p>
+                            </div>
+                        </div>
+                        <p className="text-slate-300 mb-2">
+                            Are you sure you want to delete this record?
+                        </p>
+                        <p className="text-slate-500 text-sm mb-8">
+                            Client: <span className="text-white font-bold">{deleteConfirm.username}</span> ({deleteConfirm.full_name})
+                        </p>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setDeleteConfirm(null)}
+                                className="flex-1 py-3 rounded-lg border border-white/10 text-slate-300 hover:text-white hover:bg-white/5 font-bold text-sm transition-all"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleDeleteConfirm}
+                                className="flex-1 py-3 rounded-lg bg-red-500 hover:bg-red-600 text-white font-bold text-sm transition-all shadow-lg shadow-red-500/20"
+                            >
+                                Yes, Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
 
             <Toast 

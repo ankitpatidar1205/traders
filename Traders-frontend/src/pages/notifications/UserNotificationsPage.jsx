@@ -5,23 +5,21 @@ import { createNotification, deleteNotification, getNotificationUsersByRole } fr
 import { useAuth } from '../../context/AuthContext';
 
 const ROLE_OPTIONS = [
-    { value: 'TRADER', label: 'Trading Clients' },
-    { value: 'ADMIN', label: 'Admins' },
     { value: 'BROKER', label: 'Brokers' },
+    { value: 'TRADER', label: 'Trading Clients' },
 ];
 
 const FILTER_TABS = [
     { value: 'ALL', label: 'All' },
-    { value: 'ADMIN', label: 'Admins' },
     { value: 'BROKER', label: 'Brokers' },
     { value: 'TRADER', label: 'Clients' },
 ];
 
 const PAGE_SIZE = 15;
 
-const NotificationsPage = () => {
+const UserNotificationsPage = () => {
     const { user } = useAuth();
-    const { notifications, unreadCount, markAllRead, refetch } = useNotifications();
+    const { notifications, unreadCount, markAllRead, refetch } = useNotifications('self');
 
     const [page, setPage] = useState(1);
     const [showModal, setShowModal] = useState(false);
@@ -37,10 +35,8 @@ const NotificationsPage = () => {
     const [selectedUsers, setSelectedUsers] = useState([]);
     const [loadingUsers, setLoadingUsers] = useState(false);
     const [userSearch, setUserSearch] = useState('');
-    const [deleteConfirm, setDeleteConfirm] = useState(null); // notification id to delete
+    const [deleteConfirm, setDeleteConfirm] = useState(null);
     const [deleting, setDeleting] = useState(false);
-
-    const isSuperAdmin = user?.role === 'SUPERADMIN';
 
     // Filter notifications by tab
     const filteredNotifications = notifications.filter(n => {
@@ -115,7 +111,7 @@ const NotificationsPage = () => {
                 title: form.title,
                 message: form.message,
                 type: 'info',
-                target_role: selectedRoles.length === 3 ? 'ALL' : selectedRoles[0] || 'ALL',
+                target_role: selectedRoles.length === 2 ? 'ALL' : selectedRoles[0] || 'ALL',
                 target_user_ids: selectedUsers,
             });
             setShowModal(false);
@@ -166,14 +162,12 @@ const NotificationsPage = () => {
             {/* Header */}
             <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                    {isSuperAdmin && (
-                        <button
-                            onClick={() => setShowModal(true)}
-                            className="flex items-center gap-2 bg-[#5cb85c] hover:bg-[#4cae4c] text-white text-[11px] font-bold py-2.5 px-5 rounded shadow uppercase tracking-wider transition-all active:scale-95"
-                        >
-                            <Send className="w-3.5 h-3.5" /> Send Notification
-                        </button>
-                    )}
+                    <button
+                        onClick={() => setShowModal(true)}
+                        className="flex items-center gap-2 bg-[#5cb85c] hover:bg-[#4cae4c] text-white text-[11px] font-bold py-2.5 px-5 rounded shadow uppercase tracking-wider transition-all active:scale-95"
+                    >
+                        <Send className="w-3.5 h-3.5" /> Send Notification
+                    </button>
                     {unreadCount > 0 && (
                         <button
                             onClick={markAllRead}
@@ -191,23 +185,21 @@ const NotificationsPage = () => {
             </div>
 
             {/* Filter Tabs */}
-            {isSuperAdmin && (
-                <div className="flex gap-1 bg-[#151c2c] rounded-lg p-1 w-fit">
-                    {FILTER_TABS.map(tab => (
-                        <button
-                            key={tab.value}
-                            onClick={() => setActiveTab(tab.value)}
-                            className={`px-4 py-2 text-[12px] font-bold rounded-md transition-all uppercase tracking-wider ${
-                                activeTab === tab.value
-                                    ? 'bg-[#5cb85c] text-white shadow'
-                                    : 'text-slate-400 hover:text-white hover:bg-white/5'
-                            }`}
-                        >
-                            {tab.label}
-                        </button>
-                    ))}
-                </div>
-            )}
+            <div className="flex gap-1 bg-[#151c2c] rounded-lg p-1 w-fit">
+                {FILTER_TABS.map(tab => (
+                    <button
+                        key={tab.value}
+                        onClick={() => setActiveTab(tab.value)}
+                        className={`px-4 py-2 text-[12px] font-bold rounded-md transition-all uppercase tracking-wider ${
+                            activeTab === tab.value
+                                ? 'bg-[#5cb85c] text-white shadow'
+                                : 'text-slate-400 hover:text-white hover:bg-white/5'
+                        }`}
+                    >
+                        {tab.label}
+                    </button>
+                ))}
+            </div>
 
             {/* Table */}
             <div className="bg-[#1f283e]/40 rounded-sm">
@@ -220,13 +212,13 @@ const NotificationsPage = () => {
                                 <th className="px-4 py-4 border-b border-white/5">Message</th>
                                 <th className="px-4 py-4 border-b border-white/5 w-[12%]">Sent To</th>
                                 <th className="px-4 py-4 border-b border-white/5 w-[14%] text-right pr-8">Delivered At</th>
-                                {isSuperAdmin && <th className="px-4 py-4 border-b border-white/5 w-[5%]"></th>}
+                                <th className="px-4 py-4 border-b border-white/5 w-[5%]"></th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
                             {paginated.length === 0 && (
                                 <tr>
-                                    <td colSpan={isSuperAdmin ? 6 : 5} className="px-6 py-16 text-center text-slate-500">
+                                    <td colSpan={6} className="px-6 py-16 text-center text-slate-500">
                                         <Bell className="w-10 h-10 mx-auto mb-3 opacity-20" />
                                         No notifications yet
                                     </td>
@@ -258,17 +250,15 @@ const NotificationsPage = () => {
                                                 </>
                                             ) : '—'}
                                         </td>
-                                        {isSuperAdmin && (
-                                            <td className="px-4 py-4">
-                                                <button
-                                                    onClick={() => setDeleteConfirm(n.id)}
-                                                    className="p-1.5 rounded hover:bg-red-500/20 text-slate-500 hover:text-red-400 transition-all"
-                                                    title="Delete"
-                                                >
-                                                    <Trash2 className="w-3.5 h-3.5" />
-                                                </button>
-                                            </td>
-                                        )}
+                                        <td className="px-4 py-4">
+                                            <button
+                                                onClick={() => setDeleteConfirm(n.id)}
+                                                className="p-1.5 rounded hover:bg-red-500/20 text-slate-500 hover:text-red-400 transition-all"
+                                                title="Delete"
+                                            >
+                                                <Trash2 className="w-3.5 h-3.5" />
+                                            </button>
+                                        </td>
                                     </tr>
                                 );
                             })}
@@ -308,8 +298,8 @@ const NotificationsPage = () => {
                 </div>
             )}
 
-            {/* Send Notification Modal — SUPERADMIN only */}
-            {showModal && isSuperAdmin && (
+            {/* Send Notification Modal */}
+            {showModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
                     <div className="bg-[#1f283e] border border-white/10 rounded-xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden max-h-[90vh] flex flex-col">
                         {/* Modal Header */}
@@ -423,9 +413,8 @@ const NotificationsPage = () => {
                                                     </div>
                                                     <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase ${
                                                         u.role === 'TRADER' ? 'bg-blue-500/20 text-blue-400' :
-                                                        u.role === 'ADMIN' ? 'bg-purple-500/20 text-purple-400' :
                                                         'bg-orange-500/20 text-orange-400'
-                                                    }`}>{u.role}</span>
+                                                    }`}>{u.role === 'TRADER' ? 'CLIENT' : u.role}</span>
                                                     <span className="text-slate-600 text-[10px] font-mono">#{u.id}</span>
                                                 </label>
                                             ))
@@ -460,7 +449,6 @@ const NotificationsPage = () => {
             {deleteConfirm && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
                     <div className="bg-[#1f283e] border border-white/10 rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
-                        {/* Header */}
                         <div className="flex items-center justify-between px-5 py-4 border-b border-white/8">
                             <div className="flex items-center gap-2">
                                 <AlertTriangle className="w-5 h-5 text-red-400" />
@@ -470,13 +458,11 @@ const NotificationsPage = () => {
                                 <X className="w-4 h-4" />
                             </button>
                         </div>
-                        {/* Body */}
                         <div className="px-5 py-6">
                             <p className="text-slate-300 text-[13px]">
                                 Are you sure you want to delete this notification? This action cannot be undone.
                             </p>
                         </div>
-                        {/* Footer */}
                         <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-white/8">
                             <button
                                 onClick={() => setDeleteConfirm(null)}
@@ -499,4 +485,4 @@ const NotificationsPage = () => {
     );
 };
 
-export default NotificationsPage;
+export default UserNotificationsPage;

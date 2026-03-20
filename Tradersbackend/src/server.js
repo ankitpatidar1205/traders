@@ -13,7 +13,7 @@ app.set('trust proxy', true);
 const server = http.createServer(app);
 const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
-  : ['http://localhost:5173', 'http://localhost:3000'];
+  : ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:3000'];
 
 const io = new Server(server, {
   cors: {
@@ -84,7 +84,7 @@ app.get('/', (req, res) => {
 
 // Socket.io logic
 io.on('connection', (socket) => {
-  console.log('User connected:', socket.id);
+  // console.log('User connected:', socket.id);
 
   // Client sends { userId, role } right after connecting
   socket.on('join', ({ userId, role }) => {
@@ -93,11 +93,14 @@ io.on('connection', (socket) => {
   });
 
   socket.on('subscribe_market', (scrips) => {
-    console.log(`User ${socket.id} subscribed to:`, scrips);
+    // console.log(`User ${socket.id} subscribed to:`, scrips);
+    if (Array.isArray(scrips)) {
+        scrips.forEach(s => mockEngine.getPrice(s)); // Ensure mock engine starts tracking them
+    }
   });
 
   socket.on('disconnect', () => {
-    console.log('User disconnected');
+    // console.log('User disconnected');
   });
 });
 
@@ -131,6 +134,13 @@ runMigrations()
     .then(async () => {
         server.listen(PORT, () => {
             console.log(`🚀 Server running on port ${PORT}`);
+        }).on('error', (err) => {
+            if (err.code === 'EADDRINUSE') {
+                console.log(`⚠️  Port ${PORT} is already in use. Server may already be running.`);
+                process.exit(0);
+            } else {
+                throw err;
+            }
         });
 
         // Try to start Kite Ticker for live data
