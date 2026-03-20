@@ -22,11 +22,8 @@ export const ROLE_MENU_ACCESS = {
         'change-transaction-password', 'withdrawal-requests',
         'deposit-requests', 'negative-balance', 'admins',
         'learning', 'support', 'voice-modulation', 'signal-admin', 'signals',
-<<<<<<< HEAD
         'global-settings',
-=======
         'expiry-rules',
->>>>>>> 67569e3883c8019adb953942f5e3c941c90efa7f
     ],
     ADMIN: [
         'live-m2m', 'kite-dashboard', 'market-watch', 'notifications', 'user-notifications',
