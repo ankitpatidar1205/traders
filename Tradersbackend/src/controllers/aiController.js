@@ -225,7 +225,25 @@ const aiParse = async (req, res) => {
     try {
         // Use new parser
         const parsed = await parseCommand(text.trim());
-        return res.json(parsed);
+
+        // Add backward-compatible fields so legacy UI (VoiceModulationPage) can display summary
+        const compat = { ...parsed };
+        if (!compat.action) {
+            const opMap = {
+                add_fund: 'ADD_FUND', withdraw: 'WITHDRAW', transfer: 'TRANSFER_FUND',
+                block: 'BLOCK_USER', unblock: 'UNBLOCK_USER', create: 'CREATE_USER',
+                read: 'READ', aggregate: 'AGGREGATE', update: 'UPDATE', delete: 'DELETE',
+            };
+            compat.action = opMap[parsed.operation] || parsed.operation?.toUpperCase() || 'READ';
+        }
+        if (parsed.filters?.id && !compat.userId) compat.userId = parsed.filters.id;
+        if (parsed.data?.amount && !compat.amount) compat.amount = parsed.data.amount;
+        if (parsed.data?.fromUserId) compat.fromUserId = parsed.data.fromUserId;
+        if (parsed.data?.toUserId) compat.toUserId = parsed.data.toUserId;
+        if (parsed.data?.name) compat.name = parsed.data.name;
+        if (parsed.data?.email) compat.email = parsed.data.email;
+
+        return res.json(compat);
     } catch (err) {
         return res.status(422).json({
             message: 'Command not understood.',
@@ -238,6 +256,19 @@ const aiParse = async (req, res) => {
 
 const executeVoiceCommand = async (req, res) => {
     const { action, userId, amount, fromUserId, toUserId, name, email, password } = req.body;
+
+    // ── New format detection: if body has module+operation (from new parser), route through smart system
+    if (!action && req.body.module && req.body.operation) {
+        console.log('[execute-command] Detected new format, routing through smart system');
+        try {
+            await loadSchema();
+            const query = await generateQuery(req.body);
+            const result = await executeQuery(query, req.body, req.user || {});
+            return res.json({ success: result.type !== 'error', ...result });
+        } catch (err) {
+            return res.status(500).json({ success: false, message: err.message });
+        }
+    }
 
     if (!action) {
         return res.status(400).json({ success: false, message: 'action is required' });
