@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const {
     smartCommand,
+    masterCommand,
     parseOnly,
     getSchema,
     aiCommand,
@@ -18,6 +19,9 @@ const { authMiddleware } = require('../middleware/auth');
 
 // POST /api/ai/smart-command — Main AI endpoint (parse + generate + execute)
 router.post('/smart-command', authMiddleware, smartCommand);
+
+// POST /api/ai/master-command — Advanced: Master AI brain (single OpenAI call)
+router.post('/master-command', authMiddleware, masterCommand);
 
 // POST /api/ai/parse-only — Parse without executing (for preview/confirmation)
 router.post('/parse-only', authMiddleware, parseOnly);

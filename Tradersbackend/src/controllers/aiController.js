@@ -15,6 +15,8 @@ const { parseCommand } = require('../services/aiCommandParser');
 const { generateQuery } = require('../services/aiQueryGenerator');
 const { executeQuery } = require('../services/aiExecutor');
 const { loadSchema, getSchemaSummary } = require('../services/aiSchemaLoader');
+const { processMasterCommand } = require('../services/aiMasterPrompt');
+const { executeMasterCommand } = require('../services/aiMasterExecutor');
 
 // Legacy imports (backward compat)
 const { parseCommand: legacyParseCommand } = require('../services/aiService');
@@ -141,6 +143,66 @@ const getSchema = async (req, res) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
+// POST /api/ai/master-command
+// ADVANCED: Uses comprehensive master prompt (single OpenAI call)
+// Returns execution-ready JSON with SQL queries
+// ─────────────────────────────────────────────────────────────────────────────
+
+const masterCommand = async (req, res) => {
+    const { text } = req.body;
+    const reqUser = req.user || {};
+
+    console.log('\n═══════════════════════════════════════════════════════════════');
+    console.log('[master-command] 🧠 Input:', text);
+    console.log('[master-command] 👤 User:', reqUser.full_name || reqUser.id || 'anonymous');
+    console.log('═══════════════════════════════════════════════════════════════');
+
+    if (!text || !text.trim()) {
+        return res.status(400).json({
+            success: false,
+            message: 'text is required',
+        });
+    }
+
+    try {
+        // Step 1: Process through master prompt
+        console.log('[master-command] 🧠 Processing through master AI...');
+        const masterOutput = await processMasterCommand(text.trim(), {
+            id: reqUser.id,
+            role: reqUser.role,
+            full_name: reqUser.full_name,
+        });
+
+        console.log('[master-command] ✅ Master output:', JSON.stringify({
+            module: masterOutput.intent?.module,
+            operation: masterOutput.intent?.operation,
+            executionType: masterOutput.execution?.type,
+        }));
+
+        // Step 2: Execute the plan
+        console.log('[master-command] ▶️  Executing...');
+        const execResult = await executeMasterCommand(masterOutput, reqUser);
+
+        console.log('[master-command] ✅ Execution result:', execResult.message);
+        console.log('═══════════════════════════════════════════════════════════════\n');
+
+        return res.json({
+            success: execResult.success,
+            ...execResult,
+            intent: masterOutput.intent,
+            ui: masterOutput.ui,
+        });
+
+    } catch (err) {
+        console.error('[master-command] ❌ Error:', err.message);
+        return res.status(500).json({
+            success: false,
+            message: err.message || 'Master command failed',
+        });
+    }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 // LEGACY: POST /api/ai/ai-command (kept for backward compatibility)
 // Routes through NEW system but returns OLD format
 // ─────────────────────────────────────────────────────────────────────────────
@@ -258,7 +320,8 @@ const executeVoiceCommand = async (req, res) => {
     const { action, userId, amount, fromUserId, toUserId, name, email, password } = req.body;
 
     // ── New format detection: if body has module+operation (from new parser), route through smart system
-    if (!action && req.body.module && req.body.operation) {
+    const LEGACY_ACTIONS = ['ADD_FUND', 'BLOCK_USER', 'UNBLOCK_USER', 'CREATE_ADMIN', 'TRANSFER_FUND'];
+    if (req.body.module && req.body.operation && (!action || !LEGACY_ACTIONS.includes(action))) {
         console.log('[execute-command] Detected new format, routing through smart system');
         try {
             await loadSchema();
@@ -374,6 +437,7 @@ const voiceExecute = async (req, res) => {
 
 module.exports = {
     smartCommand,
+    masterCommand,
     parseOnly,
     getSchema,
     aiCommand,
