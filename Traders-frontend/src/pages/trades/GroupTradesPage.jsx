@@ -128,16 +128,16 @@ const GroupTradesPage = () => {
                     </div>
                 </div>
 
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
                     <button
                         onClick={handleSearch}
-                        className="bg-[#4CAF50] hover:bg-[#43A047] text-white font-bold py-2.5 px-8 rounded uppercase tracking-wide text-xs transition-all shadow-md"
+                        className="bg-[#4CAF50] hover:bg-[#43A047] text-white font-bold py-3 md:py-2.5 px-8 rounded uppercase tracking-wide text-xs transition-all shadow-md flex-1 md:flex-none"
                     >
                         SEARCH
                     </button>
                     <button
                         onClick={handleReset}
-                        className="bg-[#607d8b] hover:bg-[#546e7a] text-white font-bold py-2.5 px-8 rounded uppercase tracking-wide text-xs transition-all shadow-md"
+                        className="bg-[#607d8b] hover:bg-[#546e7a] text-white font-bold py-3 md:py-2.5 px-8 rounded uppercase tracking-wide text-xs transition-all shadow-md flex-1 md:flex-none"
                     >
                         RESET
                     </button>
@@ -158,16 +158,16 @@ const GroupTradesPage = () => {
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="text-white text-sm bg-[#151c2c] border-b border-white/10">
-                                <th className="px-4 py-4 font-bold">Actions</th>
-                                <th className="px-4 py-4 font-bold">ID ↑</th>
-                                <th className="px-4 py-4 font-bold">Scrip</th>
-                                <th className="px-4 py-4 font-bold">Segment</th>
-                                <th className="px-4 py-4 font-bold">User ID</th>
-                                <th className="px-4 py-4 font-bold">Buy Rate</th>
-                                <th className="px-4 py-4 font-bold">Sell Rate</th>
-                                <th className="px-4 py-4 font-bold">Lots / Units</th>
-                                <th className="px-4 py-4 font-bold">Bought at</th>
-                                <th className="px-4 py-4 font-bold">Sold at</th>
+                                <th className="px-4 py-4 font-bold whitespace-nowrap">Actions</th>
+                                <th className="px-4 py-4 font-bold whitespace-nowrap">ID ↑</th>
+                                <th className="px-4 py-4 font-bold whitespace-nowrap">Scrip</th>
+                                <th className="px-4 py-4 font-bold whitespace-nowrap">Segment</th>
+                                <th className="px-4 py-4 font-bold whitespace-nowrap">User ID</th>
+                                <th className="px-4 py-4 font-bold whitespace-nowrap">Buy Rate</th>
+                                <th className="px-4 py-4 font-bold whitespace-nowrap">Sell Rate</th>
+                                <th className="px-4 py-4 font-bold whitespace-nowrap">Lots / Units</th>
+                                <th className="px-4 py-4 font-bold whitespace-nowrap">Bought at</th>
+                                <th className="px-4 py-4 font-bold whitespace-nowrap">Sold at</th>
                             </tr>
                         </thead>
                         <tbody className="text-sm text-slate-300">
@@ -177,15 +177,15 @@ const GroupTradesPage = () => {
                                         <td className="px-4 py-4">
                                             {/* Actions placeholder */}
                                         </td>
-                                        <td className="px-4 py-4 text-white">{trade.id}</td>
-                                        <td className="px-4 py-4 text-[#00BCD4]">{trade.scrip}</td>
-                                        <td className="px-4 py-4">{trade.segment}</td>
-                                        <td className="px-4 py-4">{trade.userId}</td>
-                                        <td className="px-4 py-4">{trade.buyRate}</td>
-                                        <td className="px-4 py-4">{trade.sellRate}</td>
-                                        <td className="px-4 py-4">{trade.lots}</td>
-                                        <td className="px-4 py-4">{trade.boughtAt}</td>
-                                        <td className="px-4 py-4">{trade.soldAt || '-'}</td>
+                                        <td className="px-4 py-4 whitespace-nowrap font-mono">{trade.id}</td>
+                                        <td className="px-4 py-4 text-[#00BCD4] whitespace-nowrap">{trade.scrip}</td>
+                                        <td className="px-4 py-4 whitespace-nowrap">{trade.segment}</td>
+                                        <td className="px-4 py-4 whitespace-nowrap">{trade.userId}</td>
+                                        <td className="px-4 py-4 whitespace-nowrap font-mono">{trade.buyRate}</td>
+                                        <td className="px-4 py-4 whitespace-nowrap font-mono">{trade.sellRate}</td>
+                                        <td className="px-4 py-4 whitespace-nowrap font-mono">{trade.lots}</td>
+                                        <td className="px-4 py-4 whitespace-nowrap">{trade.boughtAt}</td>
+                                        <td className="px-4 py-4 whitespace-nowrap">{trade.soldAt || '-'}</td>
                                     </tr>
                                 ))
                             ) : (

@@ -67,32 +67,38 @@ const TraderFundsPage = ({ onNavigate }) => {
 
             <div className="px-3 sm:px-4 md:px-6 space-y-4 md:space-y-8 pb-6 md:pb-10">
                 {/* Top Bar - Date Filters and Download Button */}
-                <div className="flex flex-col md:flex-row gap-4 items-end">
-                    <div className="flex flex-col md:flex-row gap-4 flex-1">
-                        <input
-                            type="text"
-                            name="fromDate"
-                            value={filters.fromDate}
-                            onChange={handleFilterChange}
-                            onFocus={(e) => (e.target.type = "date")}
-                            onBlur={(e) => { if (!e.target.value) e.target.type = "text"; }}
-                            placeholder="From Date"
-                            className="bg-white text-slate-900 px-4 py-2.5 rounded text-sm outline-none border border-slate-300 min-w-[180px]"
-                        />
-                        <input
-                            type="text"
-                            name="toDate"
-                            value={filters.toDate}
-                            onChange={handleFilterChange}
-                            onFocus={(e) => (e.target.type = "date")}
-                            onBlur={(e) => { if (!e.target.value) e.target.type = "text"; }}
-                            placeholder="To Date"
-                            className="bg-white text-slate-900 px-4 py-2.5 rounded text-sm outline-none border border-slate-300 min-w-[180px]"
-                        />
+                <div className="flex flex-col md:flex-row gap-4 items-start md:items-end">
+                    <div className="flex flex-col md:flex-row gap-4 flex-1 w-full md:w-auto">
+                        <div className="flex-1 w-full">
+                            <label className="block text-[10px] text-slate-500 mb-2 font-black uppercase tracking-widest ml-1">From Date</label>
+                            <input
+                                type="text"
+                                name="fromDate"
+                                value={filters.fromDate}
+                                onChange={handleFilterChange}
+                                onFocus={(e) => (e.target.type = "date")}
+                                onBlur={(e) => { if (!e.target.value) e.target.type = "text"; }}
+                                placeholder="From Date"
+                                className="bg-white text-slate-900 px-4 py-2.5 rounded text-sm outline-none border border-slate-300 w-full md:min-w-[180px]"
+                            />
+                        </div>
+                        <div className="flex-1 w-full">
+                            <label className="block text-[10px] text-slate-500 mb-2 font-black uppercase tracking-widest ml-1">To Date</label>
+                            <input
+                                type="text"
+                                name="toDate"
+                                value={filters.toDate}
+                                onChange={handleFilterChange}
+                                onFocus={(e) => (e.target.type = "date")}
+                                onBlur={(e) => { if (!e.target.value) e.target.type = "text"; }}
+                                placeholder="To Date"
+                                className="bg-white text-slate-900 px-4 py-2.5 rounded text-sm outline-none border border-slate-300 w-full md:min-w-[180px]"
+                            />
+                        </div>
                     </div>
                     <button
                         onClick={handleDownloadReport}
-                        className="bg-[#00BCD4] hover:bg-[#00ACC1] text-white font-bold py-2.5 px-6 rounded uppercase tracking-wide text-xs transition-all shadow-md whitespace-nowrap"
+                        className="bg-[#00BCD4] hover:bg-[#00ACC1] text-white font-bold py-2.5 px-6 rounded uppercase tracking-wide text-[11px] transition-all shadow-md whitespace-nowrap w-full md:w-auto"
                     >
                         DOWNLOAD FUNDS REPORT
                     </button>
@@ -126,17 +132,17 @@ const TraderFundsPage = ({ onNavigate }) => {
                         </div>
 
                         {/* Buttons Row */}
-                        <div className="flex gap-2">
+                        <div className="flex flex-row gap-4">
                             <button
                                 onClick={handleSearch}
-                                className="text-white font-bold py-2 px-5 rounded uppercase tracking-wide text-[11px] transition-all shadow-[0_4px_10px_rgba(76,175,80,0.3)] hover:shadow-[0_4px_20px_rgba(76,175,80,0.5)] active:scale-95"
+                                className="flex-1 md:flex-none text-white font-bold py-2.5 px-8 rounded uppercase tracking-wide text-[11px] transition-all shadow-[0_4px_10px_rgba(76,175,80,0.3)] hover:shadow-[0_4px_20px_rgba(76,175,80,0.5)] active:scale-95"
                                 style={{ background: 'linear-gradient(60deg, #288c6c, #4ea752)' }}
                             >
                                 SEARCH
                             </button>
                             <button
                                 onClick={handleReset}
-                                className="bg-[#607d8b] hover:bg-[#546e7a] text-white font-bold py-2 px-5 rounded uppercase tracking-wide text-[11px] transition-all shadow-md"
+                                className="flex-1 md:flex-none bg-[#607d8b] hover:bg-[#546e7a] text-white font-bold py-2.5 px-8 rounded uppercase tracking-wide text-[11px] transition-all shadow-md"
                             >
                                 RESET
                             </button>
@@ -147,7 +153,7 @@ const TraderFundsPage = ({ onNavigate }) => {
                 <div>
                     <button
                         onClick={() => onNavigate?.('create-fund')}
-                        className="text-white font-bold py-2.5 px-6 rounded uppercase tracking-wide text-xs transition-all shadow-[0_4px_10px_rgba(76,175,80,0.3)] hover:shadow-[0_4px_20px_rgba(76,175,80,0.5)] active:scale-95"
+                        className="w-full md:w-auto text-white font-bold py-2.5 px-8 rounded uppercase tracking-wide text-xs transition-all shadow-[0_4px_10px_rgba(76,175,80,0.3)] hover:shadow-[0_4px_20px_rgba(76,175,80,0.5)] active:scale-95"
                         style={{ background: 'linear-gradient(60deg, #288c6c, #4ea752)' }}
                     >
                         CREATE FUNDS WD

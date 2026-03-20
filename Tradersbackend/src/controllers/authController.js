@@ -162,7 +162,8 @@ const createUser = async (req, res) => {
         }
 
         // Auto-create broker_shares (BROKER and ADMIN)
-        if (['BROKER', 'ADMIN'].includes(role || 'TRADER')) {
+        const roleUpper = (role || 'TRADER').toUpperCase();
+        if (['BROKER', 'ADMIN'].includes(roleUpper)) {
             try {
                 await db.execute('INSERT IGNORE INTO broker_shares (user_id) VALUES (?)', [newUserId]);
             } catch (e) { console.error('broker_shares auto-create failed:', e.message); }

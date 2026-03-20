@@ -34,7 +34,6 @@ const ALL_MENU_ITEMS = [
     { id: 'deposit-requests', label: 'Deposit Requests', icon: 'fa-gear' },
     { id: 'negative-balance', label: 'Negative Balance Txns', icon: 'fa-bell' },
     { id: 'support', label: 'Raise Ticket', icon: 'fa-ticket' },
-    { id: 'voice-modulation', label: 'Voice Modulation', icon: 'fa-microphone' },
     { id: 'expiry-rules', label: 'Expiry Rules', icon: 'fa-calendar-xmark' },
     { id: 'change-password', label: 'Change Login Password', icon: 'fa-user' },
     { id: 'change-transaction-password', label: 'Change Transaction Pwd', icon: 'fa-gear' },
