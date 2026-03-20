@@ -2,6 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { X, Save, ArrowLeft, Info, Check, ChevronDown, Settings, User, Lock, Key, FileUp, ShieldCheck, Eye, FileText, Globe } from 'lucide-react';
 import * as api from '../../services/api';
 import EditMCXFutureSection from './EditMCXFutureSection';
+import ComexForm from './ComexForm';
+import ForexForm from './ForexForm';
+import CryptoForm from './CryptoForm';
 
 const InputField = ({ label, name, value, onChange, type = "text", placeholder, hint, className = "" }) => (
     <div className={`mb-10 group px-2 ${className}`}>
@@ -48,8 +51,8 @@ const SelectField = ({ label, name, value, onChange, options, hint, className = 
     </div>
 );
 
-const CheckboxField = ({ label, name, checked, onChange, className = "" }) => (
-    <label htmlFor={name} className={`flex items-center gap-4 cursor-pointer group mb-10 px-2 ${className}`}>
+const CheckboxField = ({ label, name, checked, onChange, disabled, className = "", tooltip }) => (
+    <label htmlFor={name} className={`flex items-center gap-4 cursor-pointer group mb-10 px-2 ${className} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
         <div className="relative flex items-center justify-center">
             <input
                 id={name}
@@ -57,16 +60,27 @@ const CheckboxField = ({ label, name, checked, onChange, className = "" }) => (
                 name={name}
                 checked={checked}
                 onChange={onChange}
-                className="appearance-none w-[19px] h-[19px] border border-white/30 rounded-[3px] checked:bg-[#3b82f6] checked:border-[#3b82f6] transition-all cursor-pointer"
+                disabled={disabled}
+                className="appearance-none w-[19px] h-[19px] border border-white/30 rounded-[3px] checked:bg-[#3b82f6] checked:border-[#3b82f6] transition-all cursor-pointer disabled:cursor-not-allowed"
             />
             {checked && <Check className="w-3.5 h-3.5 text-white absolute pointer-events-none stroke-[3]" />}
         </div>
-        <span className="text-[15px] group-hover:text-white transition-colors text-[#bcc0cf] font-normal">{label}</span>
+        <div className="flex items-center gap-2">
+            <span className="text-[15px] group-hover:text-white transition-colors text-[#bcc0cf] font-normal">{label}</span>
+            {tooltip && (
+                <div title={tooltip} className="cursor-help">
+                    <Info className="w-4 h-4 text-slate-500 hover:text-cyan-400 transition-colors" />
+                </div>
+            )}
+        </div>
     </label>
 );
 
-const SectionHeader = ({ title }) => (
-    <h3 className="text-[26px] font-normal mb-10 px-2 text-white">{title}</h3>
+const SectionHeader = ({ title, rightControl }) => (
+    <div className="flex items-center justify-between mb-10 px-2">
+        <h3 className="text-[26px] font-normal text-white">{title}</h3>
+        {rightControl && <div>{rightControl}</div>}
+    </div>
 );
 
 const ScripField = ({ label, value, onChange, name, className = "" }) => (
@@ -118,14 +132,13 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
         autoCloseTrades: client?.autoCloseTrades || false,
         autoClosePercentage: client?.autoClosePercentage || '90',
         notifyPercentage: client?.notifyPercentage || '70',
-        minTimeToBookProfit: client?.minTimeToBookProfit || '120',
-        scalpingStopLoss: client?.scalpingStopLoss || 'Disabled',
         banAllSegmentLimitOrder: client?.banAllSegmentLimitOrder || false,
 
         // 3. MCX Futures
         mcxTrading: client?.mcxTrading !== undefined ? client.mcxTrading : true,
         banMcxLimitOrder: client?.banMcxLimitOrder || false,
         mcxMinTimeToBookProfit: client?.mcxMinTimeToBookProfit || '120',
+        mcxScalpingStopLoss: client?.mcxScalpingStopLoss || 'Disabled',
         mcxMinLot: client?.mcxMinLot || '1',
         mcxMaxLot: client?.mcxMaxLot || '100',
         mcxMaxLotScrip: client?.mcxMaxLotScrip || '1000',
@@ -175,7 +188,9 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
         // 4. Equity Futures
         equityTrading: client?.equityTrading !== undefined ? client.equityTrading : true,
         banEquityLimitOrder: client?.banEquityLimitOrder || false,
+        equitySegmentLimit: client?.equitySegmentLimit || '50',
         equityMinTimeToBookProfit: client?.equityMinTimeToBookProfit || '120',
+        equityScalpingStopLoss: client?.equityScalpingStopLoss || 'Disabled',
         equityBrokerage: client?.equityBrokerage || '800',
         equityMinLot: client?.equityMinLot || '1',
         equityMaxLot: client?.equityMaxLot || '100',
@@ -195,6 +210,7 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
         mcxOptionsTrading: client?.mcxOptionsTrading || false,
         banOptionsLimitOrder: client?.banOptionsLimitOrder || false,
         optionsMinTimeToBookProfit: client?.optionsMinTimeToBookProfit || '120',
+        optionsScalpingStopLoss: client?.optionsScalpingStopLoss || 'Disabled',
         optionsIndexBrokerageType: client?.optionsIndexBrokerageType || 'per_lot',
         optionsIndexBrokerage: client?.optionsIndexBrokerage || '20.0000',
         optionsEquityBrokerageType: client?.optionsEquityBrokerageType || 'per_lot',
@@ -238,8 +254,23 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
 
         // 7. International Segments
         comexTrading: client?.comexTrading || false,
+        comexConfig: client?.comexConfig || {
+            brokerage: '0', brokerageType: 'per_crore', minLot: '0', maxLot: '0',
+            maxLotScrip: '0', maxSizeAll: '0', intradayMargin: '0', holdingMargin: '0',
+            ordersAway: '0', banLimitOrder: false, minTimeToBookProfit: '120', scalpingStopLoss: 'Disabled'
+        },
         forexTrading: client?.forexTrading || false,
+        forexConfig: client?.forexConfig || {
+            brokerage: '0', brokerageType: 'per_crore', minLot: '0', maxLot: '0',
+            maxLotScrip: '0', maxSizeAll: '0', intradayMargin: '0', holdingMargin: '0',
+            ordersAway: '0', banLimitOrder: false, minTimeToBookProfit: '120', scalpingStopLoss: 'Disabled'
+        },
         cryptoTrading: client?.cryptoTrading || false,
+        cryptoConfig: client?.cryptoConfig || {
+            brokerage: '0', brokerageType: 'per_crore', minLot: '0', maxLot: '0',
+            maxLotScrip: '0', maxSizeAll: '0', intradayMargin: '0', holdingMargin: '0',
+            ordersAway: '0', banLimitOrder: false, minTimeToBookProfit: '120', scalpingStopLoss: 'Disabled'
+        },
 
         // 8. Other
         notes: client?.notes || '',
@@ -289,15 +320,23 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                     allowFreshEntry: settings.allow_fresh_entry === 1,
                     allowOrdersBetweenHL: settings.allow_orders_between_hl === 1,
                     tradeEquityUnits: settings.trade_equity_units === 1,
-                    autoClosePercentage: String(settings.auto_close_at_m2m_pct || '90'),
                     notifyPercentage: String(settings.notify_at_m2m_pct || '70'),
-                    minTimeToBookProfit: String(settings.min_time_to_book_profit || '120'),
-                    scalpingStopLoss: settings.scalping_sl_enabled === 1 ? 'Enabled' : 'Disabled',
+                    banAllSegmentLimitOrder: settings.ban_all_segment_limit_order === 1,
+                    // Initial load from global for legacy data, overridden by config below
+                    mcxMinTimeToBookProfit: String(settings.min_time_to_book_profit || '120'),
+                    mcxScalpingStopLoss: settings.scalping_sl_enabled === 1 ? 'Enabled' : 'Disabled',
+                    equityMinTimeToBookProfit: String(settings.min_time_to_book_profit || '120'),
+                    equityScalpingStopLoss: settings.scalping_sl_enabled === 1 ? 'Enabled' : 'Disabled',
+                    optionsMinTimeToBookProfit: String(settings.min_time_to_book_profit || '120'),
+                    optionsScalpingStopLoss: settings.scalping_sl_enabled === 1 ? 'Enabled' : 'Disabled',
                     autoCloseTrades: settings.scalping_sl_enabled === 1,
                     // Merge all config_json fields (MCX, Equity, Options, etc.)
                     ...(Object.keys(config).length > 0 ? {
                         mcxTrading: config.mcxTrading ?? prev.mcxTrading,
                         mcxMinLot: config.mcxMinLot ?? prev.mcxMinLot,
+                        banMcxLimitOrder: config.banMcxLimitOrder ?? prev.banMcxLimitOrder,
+                        mcxMinTimeToBookProfit: config.mcxMinTimeToBookProfit ?? prev.mcxMinTimeToBookProfit,
+                        mcxScalpingStopLoss: config.mcxScalpingStopLoss ?? prev.mcxScalpingStopLoss,
                         mcxMaxLot: config.mcxMaxLot ?? prev.mcxMaxLot,
                         mcxMaxLotScrip: config.mcxMaxLotScrip ?? prev.mcxMaxLotScrip,
                         mcxMaxSizeAll: config.mcxMaxSizeAll ?? prev.mcxMaxSizeAll,
@@ -312,6 +351,10 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                         equityTrading: config.equityTrading ?? prev.equityTrading,
                         equityBrokerage: config.equityBrokerage ?? prev.equityBrokerage,
                         equityMinLot: config.equityMinLot ?? config.equityMinQty ?? prev.equityMinLot,
+                        banEquityLimitOrder: config.banEquityLimitOrder ?? prev.banEquityLimitOrder,
+                        equitySegmentLimit: config.equitySegmentLimit ?? prev.equitySegmentLimit,
+                        equityMinTimeToBookProfit: config.equityMinTimeToBookProfit ?? prev.equityMinTimeToBookProfit,
+                        equityScalpingStopLoss: config.equityScalpingStopLoss ?? prev.equityScalpingStopLoss,
                         equityMaxLot: config.equityMaxLot ?? config.equityMaxQty ?? prev.equityMaxLot,
                         equityMinIndexLot: config.equityMinIndexLot ?? config.equityMinIndexQty ?? prev.equityMinIndexLot,
                         equityMaxIndexLot: config.equityMaxIndexLot ?? config.equityMaxIndexQty ?? prev.equityMaxIndexLot,
@@ -330,7 +373,10 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                         optionsEquityBrokerageType: config.optionsEquityBrokerageType ?? prev.optionsEquityBrokerageType,
                         optionsEquityBrokerage: config.optionsEquityBrokerage ?? prev.optionsEquityBrokerage,
                         optionsMcxBrokerageType: config.optionsMcxBrokerageType ?? prev.optionsMcxBrokerageType,
+                        banOptionsLimitOrder: config.banOptionsLimitOrder ?? prev.banOptionsLimitOrder,
                         optionsMcxBrokerage: config.optionsMcxBrokerage ?? prev.optionsMcxBrokerage,
+                        optionsMinTimeToBookProfit: config.optionsMinTimeToBookProfit ?? prev.optionsMinTimeToBookProfit,
+                        optionsScalpingStopLoss: config.optionsScalpingStopLoss ?? prev.optionsScalpingStopLoss,
                         optionsMinBidPrice: config.optionsMinBidPrice ?? prev.optionsMinBidPrice,
                         optionsIndexShortSelling: config.optionsIndexShortSelling ?? prev.optionsIndexShortSelling,
                         optionsEquityShortSelling: config.optionsEquityShortSelling ?? prev.optionsEquityShortSelling,
@@ -359,6 +405,9 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                         allowExpiringScrip: config.allowExpiringScrip ?? prev.allowExpiringScrip,
                         daysBeforeExpiry: config.daysBeforeExpiry ?? prev.daysBeforeExpiry,
                         mcxOptionsAwayPoints: config.mcxOptionsAwayPoints ?? prev.mcxOptionsAwayPoints,
+                        comexConfig: config.comexConfig ?? prev.comexConfig,
+                        forexConfig: config.forexConfig ?? prev.forexConfig,
+                        cryptoConfig: config.cryptoConfig ?? prev.cryptoConfig,
                         notes: config.notes ?? prev.notes,
                         broker: config.broker ?? prev.broker,
                     } : {})
@@ -433,8 +482,7 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                 tradeEquityUnits: formData.tradeEquityUnits,
                 autoClosePct: formData.autoClosePercentage,
                 notifyPct: formData.notifyPercentage,
-                minProfitTime: formData.minTimeToBookProfit,
-                scalpingSlEnabled: formData.scalpingStopLoss,
+                banAllSegmentLimitOrder: formData.banAllSegmentLimitOrder ? 1 : 0,
                 config: configToSave
             });
 
@@ -639,8 +687,9 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                         <SectionHeader title="Config:" />
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12">
                                             <CheckboxField label="demo account?" name="isDemoAccount" checked={formData.isDemoAccount} onChange={handleChange} />
+                                            <CheckboxField label="Allow order between high and low" name="allowOrdersBetweenHL" checked={formData.allowOrdersBetweenHL} onChange={handleChange} />
                                             <CheckboxField label="Allow Fresh Entry Order above high & below low?" name="allowFreshEntry" checked={formData.allowFreshEntry} onChange={handleChange} />
-                                            <CheckboxField label="Allow Orders between High - Low?" name="allowOrdersBetweenHL" checked={formData.allowOrdersBetweenHL} onChange={handleChange} />
+                                            <CheckboxField label="Ban All Segment Limit Order" name="banAllSegmentLimitOrder" checked={formData.banAllSegmentLimitOrder} onChange={handleChange} />
                                             <CheckboxField label="Trade equity as units instead of lots." name="tradeEquityUnits" checked={formData.tradeEquityUnits} onChange={handleChange} />
                                             <CheckboxField label="Account Status" name="accountStatus" checked={formData.accountStatus} onChange={handleChange} />
                                             <CheckboxField label="Auto Close Trades if condition met" name="autoCloseTrades" checked={formData.autoCloseTrades} onChange={handleChange} />
@@ -649,8 +698,6 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 mt-4">
                                             <InputField label="auto-Close all active trades when the losses reach % of Ledger-balance" name="autoClosePercentage" value={formData.autoClosePercentage} onChange={handleChange} hint="Example: 95, will close when losses reach 95% of ledger balance" />
                                             <InputField label="Notify client when the losses reach % of Ledger-balance" name="notifyPercentage" value={formData.notifyPercentage} onChange={handleChange} hint="Example: 70, will send notification to customer every 5-minutes until losses cross 70% of ledger balance" />
-                                            <InputField label="Min. Time to book profit (No. of Seconds)" name="minTimeToBookProfit" value={formData.minTimeToBookProfit} onChange={handleChange} hint="Example: 120, will hold the trade for 2 minutes before closing a trade in profit" />
-                                            <SelectField label="Scalping Stop Loss" name="scalpingStopLoss" value={formData.scalpingStopLoss} onChange={handleChange} options={[{ value: 'Disabled', label: 'Disabled' }, { value: 'Enabled', label: 'Enabled' }]} hint="If Disabled, Stop Loss or Booking Loss can be done after Min. time of profit booking." />
                                         </div>
                                     </fieldset>
 
@@ -661,17 +708,46 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                         formData={formData}
                                         handleChange={handleChange}
                                         handleNestedChange={handleNestedChange}
+                                        globalBanAll={formData.banAllSegmentLimitOrder}
                                     />
 
                                     <hr className="border-white/5" />
 
                                     {/* EQUITY FUTURES */}
                                     <fieldset className="border-none p-0 m-0">
-                                        <SectionHeader title="Equity Futures:" />
+                                        <SectionHeader title="Equity Futures" />
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 px-2 mb-4">
+                                            <div className="space-y-0">
+                                                <div className="mb-0">
+                                                    <CheckboxField 
+                                                        label=" Equity Trading" 
+                                                        name="equityTrading" 
+                                                        checked={formData.equityTrading} 
+                                                        onChange={handleChange} 
+                                                    />
+                                                </div>
+                                                <div className="mb-0">
+                                                    <CheckboxField 
+                                                        label="Ban Equity Limit Order" 
+                                                        name="banEquityLimitOrder" 
+                                                        checked={formData.banEquityLimitOrder} 
+                                                        onChange={handleChange}
+                                                        disabled={formData.banAllSegmentLimitOrder}
+                                                        tooltip="If enabled, client cannot place limit orders in Equity Futures segment."
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12">
-                                            <CheckboxField label="Equity Trading" name="equityTrading" checked={formData.equityTrading} onChange={handleChange} />
+
+                                            <div className="mt-4">
+                                                <InputField label="Equity Segment Limit" name="equitySegmentLimit" value={formData.equitySegmentLimit} onChange={handleChange} />
+                                            </div>
 
                                             <InputField label="Min. Time to book profit (No. of Seconds)" name="equityMinTimeToBookProfit" value={formData.equityMinTimeToBookProfit} onChange={handleChange} hint="Example: 120, will hold the trade for 2 minutes before closing a trade in profit" />
+                                            <SelectField label="Scalping Stop Loss" name="equityScalpingStopLoss" value={formData.equityScalpingStopLoss} onChange={handleChange} options={[{ value: 'Disabled', label: 'Disabled' }, { value: 'Enabled', label: 'Enabled' }]} hint="If Disabled, Stop Loss or Booking Loss can be done after Min. time of profit booking." />
                                             <InputField label="Equity brokerage Per Crore" name="equityBrokerage" value={formData.equityBrokerage} onChange={handleChange} />
                                             <InputField label="Minimum lot size required per single trade of Equity" name="equityMinLot" value={formData.equityMinLot} onChange={handleChange} />
                                             <InputField label="Maximum lot size allowed per single trade of Equity" name="equityMaxLot" value={formData.equityMaxLot} onChange={handleChange} />
@@ -691,10 +767,28 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
 
                                     {/* OPTIONS CONFIG */}
                                     <fieldset className="border-none p-0 m-0">
-                                        <SectionHeader title="Options Config:" />
+                                        <SectionHeader title="Option Config" />
+
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 px-2 mb-8 items-start">
                                             <div className="space-y-0">
-                                                <CheckboxField label="Index Options Trading" name="indexOptionsTrading" checked={formData.indexOptionsTrading} onChange={handleChange} />
+                                                <div className="mb-0">
+                                                    <CheckboxField 
+                                                        label=" Options Trading" 
+                                                        name="indexOptionsTrading" 
+                                                        checked={formData.indexOptionsTrading} 
+                                                        onChange={handleChange} 
+                                                    />
+                                                </div>
+                                                <div className="mb-0">
+                                                    <CheckboxField 
+                                                        label="Ban Option Limit Order" 
+                                                        name="banOptionsLimitOrder" 
+                                                        checked={formData.banOptionsLimitOrder} 
+                                                        onChange={handleChange}
+                                                        disabled={formData.banAllSegmentLimitOrder}
+                                                        tooltip="If enabled, client cannot place limit orders in Options segment."
+                                                    />
+                                                </div>
                                                 <CheckboxField label="Equity Options Trading" name="equityOptionsTrading" checked={formData.equityOptionsTrading} onChange={handleChange} />
                                             </div>
                                             <div className="space-y-0">
@@ -705,6 +799,7 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12">
 
                                             <InputField label="Min. Time to book profit (No. of Seconds)" name="optionsMinTimeToBookProfit" value={formData.optionsMinTimeToBookProfit} onChange={handleChange} hint="Example: 120, will hold the trade for 2 minutes before closing a trade in profit" />
+                                            <SelectField label="Scalping Stop Loss" name="optionsScalpingStopLoss" value={formData.optionsScalpingStopLoss} onChange={handleChange} options={[{ value: 'Disabled', label: 'Disabled' }, { value: 'Enabled', label: 'Enabled' }]} hint="If Disabled, Stop Loss or Booking Loss can be done after Min. time of profit booking." />
                                             <SelectField label="Options Index Brokerage Type" name="optionsIndexBrokerageType" value={formData.optionsIndexBrokerageType} onChange={handleChange} options={[{ value: 'per_lot', label: 'Per Lot Basis' }, { value: 'per_crore', label: 'Per Crore Basis' }]} />
                                             <InputField label="Options Index brokerage" name="optionsIndexBrokerage" value={formData.optionsIndexBrokerage} onChange={handleChange} />
 
@@ -791,35 +886,6 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                         </div>
                                     </fieldset>
 
-                                    <hr className="border-white/5" />
-
-                                    {/* EXPIRY RULES */}
-                                    <fieldset className="border-none p-0 m-0">
-                                        <SectionHeader title="Expiry Rules:" />
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12">
-                                            <SelectField label="Auto Square-off on Expiry Day" name="autoSquareOff" value={formData.autoSquareOff} onChange={handleChange} options={[{ value: 'No', label: 'No' }, { value: 'Yes', label: 'Yes' }]} />
-                                            <InputField label="Square-off Time" name="expirySquareOffTime" value={formData.expirySquareOffTime} onChange={handleChange} hint="Time in HH:MM format (e.g. 11:30)" />
-                                            <SelectField label="Allow buying of expiring scrip" name="allowExpiringScrip" value={formData.allowExpiringScrip} onChange={handleChange} options={[{ value: 'No', label: 'No' }, { value: 'Yes', label: 'Yes' }]} />
-                                            <InputField label="Days before expiry to stop buying" name="daysBeforeExpiry" value={formData.daysBeforeExpiry} onChange={handleChange} />
-                                        </div>
-
-                                        {/* MCX Options Away Points */}
-                                        <div className="mt-6">
-                                            <h4 className="text-[14px] text-slate-400 uppercase font-bold tracking-wider mb-4 px-2">MCX Options Away Points:</h4>
-                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 px-2">
-                                                {Object.keys(formData.mcxOptionsAwayPoints || {}).map(scrip => (
-                                                    <ScripField
-                                                        key={scrip}
-                                                        label={`${scrip}:`}
-                                                        value={formData.mcxOptionsAwayPoints[scrip] || '0'}
-                                                        onChange={(e) => handleNestedChange('mcxOptionsAwayPoints', scrip, e.target.value)}
-                                                    />
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </fieldset>
-
-                                    <hr className="border-white/5" />
 
                                     {/* INTERNATIONAL SEGMENTS */}
                                     <fieldset className="border-none p-0 m-0">
@@ -829,51 +895,81 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
 
                                         <div className="space-y-6 px-2">
                                             {/* COMEX */}
-                                            <div className="bg-[#1a2035]/50 rounded-xl p-6 border border-white/5">
+                                            <div className="bg-[#1a202e] rounded-xl p-6 border border-white/5 overflow-hidden transition-all duration-500">
                                                 <div className="flex justify-between items-center mb-4">
                                                     <div>
                                                         <h4 className="text-[16px] font-black text-cyan-400 uppercase tracking-wider border-l-2 border-cyan-400 pl-3">Comex Commodities</h4>
                                                         <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-1 pl-3">Global Commodity Exchange Settings</p>
                                                     </div>
-                                                    <div className="flex items-center gap-3 bg-[#202940] px-4 py-2 rounded-lg border border-white/5">
-                                                        <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Status</span>
-                                                        <input type="checkbox" name="comexTrading" checked={formData.comexTrading} onChange={handleChange} className="w-5 h-5 rounded accent-[#4caf50] cursor-pointer" />
-                                                        <span className={`text-[11px] font-black uppercase tracking-wider ${formData.comexTrading ? 'text-green-400' : 'text-slate-500'}`}>{formData.comexTrading ? 'ENABLED' : 'DISABLED'}</span>
+                                                    <div className="flex items-center gap-6">
+                                                        <div className="flex items-center gap-3 bg-[#202940] px-4 py-2 rounded-lg border border-white/5">
+                                                            <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Status</span>
+                                                            <input type="checkbox" name="comexTrading" checked={formData.comexTrading} onChange={handleChange} className="w-5 h-5 rounded accent-[#4caf50] cursor-pointer" />
+                                                            <span className={`text-[11px] font-black uppercase tracking-wider ${formData.comexTrading ? 'text-green-400' : 'text-slate-500'}`}>{formData.comexTrading ? 'ENABLED' : 'DISABLED'}</span>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                                <hr className="border-white/5" />
+                                                {formData.comexTrading && (
+                                                    <div className="mt-6 pt-6 border-t border-white/5 animate-in fade-in slide-in-from-top-4 duration-500">
+                                                        <ComexForm 
+                                                            config={formData.comexConfig}
+                                                            onChange={(field, val) => handleNestedChange('comexConfig', field, val)}
+                                                            globalBanAll={formData.banAllSegmentLimitOrder}
+                                                        />
+                                                    </div>
+                                                )}
                                             </div>
 
                                             {/* FOREX */}
-                                            <div className="bg-[#1a2035]/50 rounded-xl p-6 border border-white/5">
+                                            <div className="bg-[#1a202e] rounded-xl p-6 border border-white/5 overflow-hidden transition-all duration-500">
                                                 <div className="flex justify-between items-center mb-4">
                                                     <div>
                                                         <h4 className="text-[16px] font-black text-green-400 uppercase tracking-wider border-l-2 border-green-400 pl-3">Forex / Currency</h4>
                                                         <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-1 pl-3">Universal Currency Trading Parameters</p>
                                                     </div>
-                                                    <div className="flex items-center gap-3 bg-[#202940] px-4 py-2 rounded-lg border border-white/5">
-                                                        <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Status</span>
-                                                        <input type="checkbox" name="forexTrading" checked={formData.forexTrading} onChange={handleChange} className="w-5 h-5 rounded accent-[#4caf50] cursor-pointer" />
-                                                        <span className={`text-[11px] font-black uppercase tracking-wider ${formData.forexTrading ? 'text-green-400' : 'text-slate-500'}`}>{formData.forexTrading ? 'ENABLED' : 'DISABLED'}</span>
+                                                    <div className="flex items-center gap-6">
+                                                        <div className="flex items-center gap-3 bg-[#202940] px-4 py-2 rounded-lg border border-white/5">
+                                                            <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Status</span>
+                                                            <input type="checkbox" name="forexTrading" checked={formData.forexTrading} onChange={handleChange} className="w-5 h-5 rounded accent-[#4caf50] cursor-pointer" />
+                                                            <span className={`text-[11px] font-black uppercase tracking-wider ${formData.forexTrading ? 'text-green-400' : 'text-slate-500'}`}>{formData.forexTrading ? 'ENABLED' : 'DISABLED'}</span>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                                <hr className="border-white/5" />
+                                                {formData.forexTrading && (
+                                                    <div className="mt-6 pt-6 border-t border-white/5 animate-in fade-in slide-in-from-top-4 duration-500">
+                                                        <ForexForm 
+                                                            config={formData.forexConfig}
+                                                            onChange={(field, val) => handleNestedChange('forexConfig', field, val)}
+                                                            globalBanAll={formData.banAllSegmentLimitOrder}
+                                                        />
+                                                    </div>
+                                                )}
                                             </div>
 
                                             {/* CRYPTO */}
-                                            <div className="bg-[#1a2035]/50 rounded-xl p-6 border border-white/5">
+                                            <div className="bg-[#1a202e] rounded-xl p-6 border border-white/5 overflow-hidden transition-all duration-500">
                                                 <div className="flex justify-between items-center mb-4">
                                                     <div>
                                                         <h4 className="text-[16px] font-black text-orange-400 uppercase tracking-wider border-l-2 border-orange-400 pl-3">Crypto (Bitcoin/ETH)</h4>
                                                         <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-1 pl-3">Cryptocurrency Asset Execution Hub</p>
                                                     </div>
-                                                    <div className="flex items-center gap-3 bg-[#202940] px-4 py-2 rounded-lg border border-white/5">
-                                                        <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Status</span>
-                                                        <input type="checkbox" name="cryptoTrading" checked={formData.cryptoTrading} onChange={handleChange} className="w-5 h-5 rounded accent-[#4caf50] cursor-pointer" />
-                                                        <span className={`text-[11px] font-black uppercase tracking-wider ${formData.cryptoTrading ? 'text-green-400' : 'text-slate-500'}`}>{formData.cryptoTrading ? 'ENABLED' : 'DISABLED'}</span>
+                                                    <div className="flex items-center gap-6">
+                                                        <div className="flex items-center gap-3 bg-[#202940] px-4 py-2 rounded-lg border border-white/5">
+                                                            <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Status</span>
+                                                            <input type="checkbox" name="cryptoTrading" checked={formData.cryptoTrading} onChange={handleChange} className="w-5 h-5 rounded accent-[#4caf50] cursor-pointer" />
+                                                            <span className={`text-[11px] font-black uppercase tracking-wider ${formData.cryptoTrading ? 'text-green-400' : 'text-slate-500'}`}>{formData.cryptoTrading ? 'ENABLED' : 'DISABLED'}</span>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                                <hr className="border-white/5" />
+                                                {formData.cryptoTrading && (
+                                                    <div className="mt-6 pt-6 border-t border-white/5 animate-in fade-in slide-in-from-top-4 duration-500">
+                                                        <CryptoForm 
+                                                            config={formData.cryptoConfig}
+                                                            onChange={(field, val) => handleNestedChange('cryptoConfig', field, val)}
+                                                            globalBanAll={formData.banAllSegmentLimitOrder}
+                                                        />
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     </fieldset>

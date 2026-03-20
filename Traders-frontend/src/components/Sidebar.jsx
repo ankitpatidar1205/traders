@@ -33,6 +33,11 @@ const ALL_MENU_ITEMS = [
     { id: 'deposit-requests', label: 'Deposit Requests', icon: 'fa-gear' },
     { id: 'negative-balance', label: 'Negative Balance Txns', icon: 'fa-bell' },
     { id: 'support', label: 'Raise Ticket', icon: 'fa-ticket' },
+<<<<<<< HEAD
+=======
+    { id: 'voice-modulation', label: 'Voice Modulation', icon: 'fa-microphone' },
+    { id: 'expiry-rules', label: 'Expiry Rules', icon: 'fa-calendar-xmark' },
+>>>>>>> 67569e3883c8019adb953942f5e3c941c90efa7f
     { id: 'change-password', label: 'Change Login Password', icon: 'fa-user' },
     { id: 'change-transaction-password', label: 'Change Transaction Pwd', icon: 'fa-gear' },
 ];
@@ -50,6 +55,21 @@ const Sidebar = ({ onLogout, currentView, isOpen, onClose }) => {
         TRADER:     { label: 'CLIENT',      color: '#8b5cf6' },
     };
     const badge = roleBadge[userRole] || roleBadge['ADMIN'];
+
+    const activeView = (() => {
+        if (!currentView) return '';
+        // Use prefix matching for hierarchical routes
+        if (currentView.startsWith('trading-clients')) return 'trading-clients';
+        if (currentView.startsWith('brokers')) return 'brokers';
+        if (currentView.startsWith('admins')) return 'admins';
+        if (currentView.startsWith('trades')) return 'trades';
+        if (currentView.startsWith('funds')) return 'funds';
+        
+        // Legacy/Direct mappings
+        if (currentView === 'live-m2m-detail' || currentView === 'client-active-positions') return 'live-m2m';
+        
+        return currentView;
+    })();
 
     return (
         <aside className={`
@@ -93,17 +113,17 @@ const Sidebar = ({ onLogout, currentView, isOpen, onClose }) => {
                                 }}
                                 className={`
                                     w-full flex items-center px-3 py-2.5 rounded-md transition-all duration-200 group
-                                    ${currentView === item.id
+                                    ${activeView === item.id
                                         ? 'text-white shadow-lg'
                                         : 'text-[#bcc0cf] hover:bg-white/10 hover:text-white'}
                                 `}
-                                style={currentView === item.id ? {
+                                style={activeView === item.id ? {
                                     background: 'linear-gradient(60deg, var(--navbar-color, #288c6c), var(--primary-color, #4ea752))',
                                     boxShadow: '0 4px 20px 0 rgba(0,0,0,0.14), 0 7px 10px -5px rgba(76,175,80,0.4)',
                                     fontWeight: '500',
                                 } : {}}
                             >
-                                <div className={`w-7 flex justify-center mr-2.5 transition-colors ${currentView === item.id ? 'text-white' : 'text-slate-400 group-hover:text-white'}`}>
+                                <div className={`w-7 flex justify-center mr-2.5 transition-colors ${activeView === item.id ? 'text-white' : 'text-slate-400 group-hover:text-white'}`}>
                                     <i className={`fa-solid ${item.icon} text-[14px]`}></i>
                                 </div>
                                 <span className="text-[12px] font-normal truncate uppercase tracking-wide">{item.label}</span>
