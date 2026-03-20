@@ -141,6 +141,23 @@ function ruleBasedFallback(text) {
     };
   }
 
+  // DEDUCT_FUND / WITHDRAW
+  const withdrawMatch = text.match(/(?:hatao|deduct|withdraw|nikalo|minus)\s+(\d+)|(\d+)\s+(?:hatao|deduct|nikalo)/i);
+  const withdrawAmount = withdrawMatch ? parseInt(withdrawMatch[1] || withdrawMatch[2]) : null;
+  if (/hatao|deduct|withdraw|nikalo|minus/.test(t) && userId && withdrawAmount) {
+    return {
+      module: "funds",
+      operation: "deduct_fund",
+      action: "DEDUCT_FUND",
+      searchType: null,
+      filters: { userId, userName: null, role: null, status: null, symbol: null },
+      data: { amount: withdrawAmount },
+      displayMessage: `User ${userId} se ${withdrawAmount} hatana hai?`,
+      route: "/funds",
+      raw: text
+    };
+  }
+
   // BLOCK_USER
   if (/block|suspend|band\s*karo/.test(t) && userId) {
     return {
@@ -181,6 +198,38 @@ function ruleBasedFallback(text) {
       data: {},
       displayMessage: `User ${userId} ko unblock karna hai?`,
       route: "/users",
+      raw: text
+    };
+  }
+
+  // DELETE_USER
+  if (/delete|hatao|remove/.test(t) && /user/.test(t) && userId) {
+    return {
+      module: "users",
+      operation: "delete",
+      action: "DELETE_USER",
+      searchType: null,
+      filters: { userId, userName: null, role: null, status: null, symbol: null },
+      data: {},
+      displayMessage: `User ${userId} ko delete karna hai?`,
+      route: "/users",
+      raw: text
+    };
+  }
+
+  // CLOSE_TRADE
+  const tradeIdMatch = text.match(/trade\s+(\d+)|(\d+)\s+close/i);
+  const tradeId = tradeIdMatch ? parseInt(tradeIdMatch[1] || tradeIdMatch[2]) : null;
+  if (/close|band/.test(t) && /trade/.test(t) && tradeId) {
+    return {
+      module: "trades",
+      operation: "close_trade",
+      action: "CLOSE_TRADE",
+      searchType: null,
+      filters: { userId: null, userName: null, role: null, status: null, symbol: null },
+      data: { tradeId },
+      displayMessage: `Trade ${tradeId} ko close karna hai?`,
+      route: "/trades",
       raw: text
     };
   }
