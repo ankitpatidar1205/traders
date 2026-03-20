@@ -177,14 +177,6 @@ const EditMCXFutureSection = ({ formData, handleChange, handleNestedChange, glob
                     hint="If Disabled, Stop Loss or Booking Loss can be done after Min. time of profit booking."
                 />
 
-                <div className="md:col-span-2 pt-6 border-t border-white/5 mt-4 grid grid-cols-1 md:grid-cols-2 gap-x-12">
-                    <InputField 
-                        label="MCX Segment Limit" 
-                        name="mcxSegmentLimit" 
-                        value={formData.mcxSegmentLimit} 
-                        onChange={handleChange} 
-                    />
-                </div>
             </div>
 
             {formData.mcxExposureType === 'per_lot' && (

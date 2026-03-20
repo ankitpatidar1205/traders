@@ -21,7 +21,7 @@ const InputField = ({ label, name, value, onChange, type = "text", placeholder, 
     </div>
 );
 
-const SelectField = ({ label, name, options, value, onChange }) => (
+const SelectField = ({ label, name, options, value, onChange, hint }) => (
     <div className="mb-6 group px-2">
         <label htmlFor={name} className="block text-sm mb-1 font-light text-[#bcc0cf]">
             {label}
@@ -42,6 +42,9 @@ const SelectField = ({ label, name, options, value, onChange }) => (
                 <ChevronDown className="w-4 h-4" />
             </div>
         </div>
+        {hint && <p className="text-[11px] mt-2 font-light leading-relaxed text-[#8b8f9a]">
+            {hint}
+        </p>}
     </div>
 );
 
@@ -91,6 +94,14 @@ const ForexForm = ({ config, onChange, globalBanAll }) => {
                     onChange={(e) => onChange(e.target.name, e.target.value)} 
                     hint="Holding Exposure auto calculates the margin money required to hold a position overnight for the next market working day. Calculation : turnover of a trade divided by Exposure is required margin. eg. if gold having lot size of 100 is trading @ 45000 and holding exposure is 800, (45000 X 100) / 80 = 56250 is required to hold position overnight. System automatically checks at a given time around market closure to check and close all trades if margin(M2M) insufficient."
                 />
+                <InputField
+                    label="Min. Time to book profit (No. of Seconds)"
+                    name="minTimeToBookProfit"
+                    value={config.minTimeToBookProfit || '120'}
+                    onChange={(e) => onChange(e.target.name, e.target.value)}
+                    placeholder="120"
+                    hint="Example: 120, will hold the trade for 2 minutes before closing a trade in profit"
+                />
             </div>
             <div>
                 <SelectField 
@@ -128,15 +139,17 @@ const ForexForm = ({ config, onChange, globalBanAll }) => {
                     value={config.ordersAway} 
                     onChange={(e) => onChange(e.target.name, e.target.value)} 
                 />
-                <div className="mt-4">
-                    <InputField 
-                        label="Forex Segment Limit" 
-                        name="segmentLimit" 
-                        value={config.segmentLimit} 
-                        onChange={(e) => onChange('segmentLimit', e.target.value)} 
-                        placeholder="10" 
-                    />
-                </div>
+                <SelectField
+                    label="Scalping Stop Loss"
+                    name="scalpingStopLoss"
+                    value={config.scalpingStopLoss || 'Disabled'}
+                    onChange={(e) => onChange(e.target.name, e.target.value)}
+                    options={[
+                        { value: 'Disabled', label: 'Disabled' },
+                        { value: 'Enabled', label: 'Enabled' }
+                    ]}
+                    hint="If Disabled, Stop Loss or Booking Loss can be done after Min. time of profit booking."
+                />
             </div>
         </div>
     );
