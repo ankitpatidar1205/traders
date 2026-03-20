@@ -52,7 +52,7 @@ If the command is unclear, ambiguous, or doesn't match any known patterns, retur
   "searchType": null,
   "filters": {},
   "data": {},
-  "displayMessage": "Command not recognized. Please be more specific.",
+  "displayMessage": "Kripya apne command ko dobara puchiye ya alag tareeke se samjhaye",
   "route": null,
   "raw": "text here"
 }
@@ -287,7 +287,7 @@ function ruleBasedFallback(text) {
     searchType: null,
     filters: {},
     data: {},
-    displayMessage: "Command samajh nahi aaya. Try: 'ID 16 me 5000 add karo' or 'user 20 ko block karo'",
+    displayMessage: "Kripya apne command ko dobara puchiye ya alag tareeke se samjhaye",
     route: null,
     raw: text,
     error: "Command not understood"

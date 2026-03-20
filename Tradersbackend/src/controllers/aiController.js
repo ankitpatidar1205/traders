@@ -356,9 +356,9 @@ const aiParse = async (req, res) => {
     } catch (err) {
         console.error('[aiParse] Error:', err.message);
         return res.status(422).json({
-            message: 'Command not understood.',
+            message: 'Kripya apne command ko dobara puchiye',
             error: err.message,
-            hint: 'Try: "trading clients dikhao" or "user 15 block karo"',
+            displayMessage: 'Kripya apne command ko dobara puchiye ya alag tareeke se samjhaye',
         });
     }
 };
