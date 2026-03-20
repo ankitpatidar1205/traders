@@ -790,13 +790,13 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                                     {Object.keys(formData.mcxLotMargins).map((scrip) => (
                                                         <div key={scrip} className="mb-6 grid grid-cols-3 gap-4 items-end">
                                                             <ScripField
-                                                                label={`${scrip} Intraday`}
+                                                                label={`${scrip} Sell Rate`}
                                                                 name={`mcx-intraday-${scrip}`}
                                                                 value={formData.mcxLotMargins[scrip].INTRADAY}
                                                                 onChange={(e) => handleNestedChange('mcxLotMargins', scrip, e.target.value, 'INTRADAY')}
                                                             />
                                                             <ScripField
-                                                                label={`${scrip} Holding`}
+                                                                label={`${scrip} Buy Rate`}
                                                                 name={`mcx-holding-${scrip}`}
                                                                 value={formData.mcxLotMargins[scrip].HOLDING}
                                                                 onChange={(e) => handleNestedChange('mcxLotMargins', scrip, e.target.value, 'HOLDING')}

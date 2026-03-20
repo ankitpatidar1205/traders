@@ -204,27 +204,27 @@ const AddBrokerForm = ({ onBack, onSave, brokerId, mode = 'add' }) => {
 
         // MCX Lot Wise Margins
         mcxMargins: {
-            ALUMINI: { intraday: '', holding: '' },
-            ALUMINIUM: { intraday: '', holding: '' },
-            COPPER: { intraday: '', holding: '' },
-            COTTON: { intraday: '', holding: '' },
-            CRUDEOIL: { intraday: '', holding: '' },
-            CRUDEOILM: { intraday: '', holding: '' },
-            GOLD: { intraday: '', holding: '' },
-            GOLDGUINEA: { intraday: '', holding: '' },
-            GOLDM: { intraday: '', holding: '' },
-            GOLDPETAL: { intraday: '', holding: '' },
-            LEAD: { intraday: '', holding: '' },
-            LEADMINI: { intraday: '', holding: '' },
-            MCXBULLDEX: { intraday: '', holding: '' },
-            NATGASMINI: { intraday: '', holding: '' },
-            NATURALGAS: { intraday: '', holding: '' },
-            NICKEL: { intraday: '', holding: '' },
-            SILVER: { intraday: '', holding: '' },
-            SILVERM: { intraday: '', holding: '' },
-            SILVERMIC: { intraday: '', holding: '' },
-            ZINC: { intraday: '', holding: '' },
-            ZINCMINI: { intraday: '', holding: '' }
+            ALUMINI: { intraday: '', holding: '', lot: '1' },
+            ALUMINIUM: { intraday: '', holding: '', lot: '1' },
+            COPPER: { intraday: '', holding: '', lot: '1' },
+            COTTON: { intraday: '', holding: '', lot: '1' },
+            CRUDEOIL: { intraday: '', holding: '', lot: '1' },
+            CRUDEOILM: { intraday: '', holding: '', lot: '1' },
+            GOLD: { intraday: '', holding: '', lot: '1' },
+            GOLDGUINEA: { intraday: '', holding: '', lot: '1' },
+            GOLDM: { intraday: '', holding: '', lot: '1' },
+            GOLDPETAL: { intraday: '', holding: '', lot: '1' },
+            LEAD: { intraday: '', holding: '', lot: '1' },
+            LEADMINI: { intraday: '', holding: '', lot: '1' },
+            MCXBULLDEX: { intraday: '', holding: '', lot: '1' },
+            NATGASMINI: { intraday: '', holding: '', lot: '1' },
+            NATURALGAS: { intraday: '', holding: '', lot: '1' },
+            NICKEL: { intraday: '', holding: '', lot: '1' },
+            SILVER: { intraday: '', holding: '', lot: '1' },
+            SILVERM: { intraday: '', holding: '', lot: '1' },
+            SILVERMIC: { intraday: '', holding: '', lot: '1' },
+            ZINC: { intraday: '', holding: '', lot: '1' },
+            ZINCMINI: { intraday: '', holding: '', lot: '1' }
         },
 
         // MCX Lot Wise Brokerage
@@ -248,9 +248,8 @@ const AddBrokerForm = ({ onBack, onSave, brokerId, mode = 'add' }) => {
         setFetching(true);
         try {
             const data = await api.getBrokerShares(brokerId);
-            // We also need the user's basic profile (first name, last name, username)
-            const users = await api.getClients({ role: 'BROKER' });
-            const user = users.find(u => u.id === parseInt(brokerId));
+            const res = await api.getClientById(brokerId);
+            const user = res.profile;
 
             if (user) {
                 const nameParts = (user.full_name || '').split(' ');
@@ -555,22 +554,29 @@ const AddBrokerForm = ({ onBack, onSave, brokerId, mode = 'add' }) => {
                         {/* 5. MCX LOT WISE MARGINS */}
                         <div className="mb-6">
                             <SectionHeader title="MCX Lot wise Margins" />
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6 px-8 mt-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-12 gap-y-6 px-8 mt-4">
                                 {Object.keys(formData.mcxMargins).map(scrip => (
                                     <React.Fragment key={scrip}>
                                         <InputGroup
-                                            label={`${scrip} INTRADAY`}
+                                            label={`${scrip} BUY RATE`}
+                                            name={`mcx_margin_${scrip}_holding`}
+                                            value={formData.mcxMargins[scrip].holding}
+                                            disabled={isViewOnly}
+                                            onChange={(e) => handleMcxMarginChange(scrip, 'holding', e.target.value)}
+                                        />
+                                        <InputGroup
+                                            label={`${scrip} SELL RATE`}
                                             name={`mcx_margin_${scrip}_intraday`}
                                             value={formData.mcxMargins[scrip].intraday}
                                             disabled={isViewOnly}
                                             onChange={(e) => handleMcxMarginChange(scrip, 'intraday', e.target.value)}
                                         />
                                         <InputGroup
-                                            label={`${scrip} HOLDING`}
-                                            name={`mcx_margin_${scrip}_holding`}
-                                            value={formData.mcxMargins[scrip].holding}
+                                            label={`${scrip} LOT`}
+                                            name={`mcx_margin_${scrip}_lot`}
+                                            value={formData.mcxMargins[scrip].lot}
                                             disabled={isViewOnly}
-                                            onChange={(e) => handleMcxMarginChange(scrip, 'holding', e.target.value)}
+                                            onChange={(e) => handleMcxMarginChange(scrip, 'lot', e.target.value)}
                                         />
                                     </React.Fragment>
                                 ))}
@@ -621,7 +627,7 @@ const AddBrokerForm = ({ onBack, onSave, brokerId, mode = 'add' }) => {
                                     disabled={loading || fetching}
                                     className="bg-[#4caf50] hover:bg-[#43a047] text-white px-12 py-3 rounded shadow-lg shadow-green-900/40 font-bold text-xs tracking-widest uppercase transition-all disabled:opacity-60"
                                 >
-                                    {loading ? 'PROCESSING...' : (isEditMode ? 'UPDATE BROKER' : 'CREATE SUB BROKER')}
+                                    {loading ? 'PROCESSING...' : (isEditMode ? 'UPDATE BROKER' : 'CREATE BROKER')}
                                 </button>
                             )}
                             <button
