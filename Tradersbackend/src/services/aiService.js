@@ -59,7 +59,7 @@ const parseWithRules = (rawText) => {
 
     const isBlock   = /(?<!un)\bblock\b|suspend|band\s*karo|\broko\b/.test(tl);
     const isUnblock = /unblock|activate|chalu\s*karo|kholo/.test(tl);
-    const isAddWord = /\badd\b|deposit|jama|daalo|dalo|credit|bdhao|badhao|amount/.test(tl);
+    const isAddWord = /\badd\b|deposit|jama|daalo|dalo|credit|bdhao|badhao/.test(tl);
 
     // ── Priority order: most specific → least specific ────────────────────────
 
@@ -129,30 +129,32 @@ const parseWithRules = (rawText) => {
         };
     }
 
-    // 5. ADD_FUND (flexible parsing)
+    // 5. ADD_FUND (flexible parsing - works with various formats)
     if (isAddWord) {
-        // Extract userId (look for any number near user/id keywords)
         const userIdMatch = extractIdAfter(tl, /(?:user\s*id|user|id)/);
-        const userId = userIdMatch ? userIdMatch.value : null;
+        const textWithoutId = userIdMatch ? tl.replace(userIdMatch.fullMatch, '') : tl;
+        const amount = parseAmount(textWithoutId);
 
-        // Extract amount (find any number in the string)
-        const allNumbers = [...tl.matchAll(/\b(\d+)\b/g)].map(m => parseInt(m[1], 10));
-
-        // If we found a userId, remove it from the number list to avoid confusion
-        const amountCandidates = userId
-            ? allNumbers.filter(n => n !== userId)
-            : allNumbers;
-
-        // Use the first or largest remaining number as amount
-        const amount = amountCandidates.length > 0 ? amountCandidates[0] : null;
-
-        // Return ADD_FUND if we have both userId and amount
-        if (userId && amount !== null) {
+        if (userIdMatch && amount !== null) {
             return {
                 action: 'ADD_FUND',
-                userId,
+                userId: userIdMatch.value,
                 amount,
             };
+        }
+
+        // Fallback: if original logic didn't work, try extracting any numbers
+        const allNumbers = [...tl.matchAll(/\b(\d+)\b/g)].map(m => parseInt(m[1], 10));
+        if (allNumbers.length >= 2 && userIdMatch) {
+            const userId = userIdMatch.value;
+            const otherNum = allNumbers.find(n => n !== userId);
+            if (otherNum) {
+                return {
+                    action: 'ADD_FUND',
+                    userId,
+                    amount: otherNum,
+                };
+            }
         }
     }
 
