@@ -67,7 +67,16 @@ class KiteTickerService extends EventEmitter {
             });
 
             this.ticker.on('error', (err) => {
-                console.error('Kite Ticker Error:', err);
+                const errMsg = err?.message || String(err);
+                if (errMsg.includes('403')) {
+                    console.log('⛔ Kite Ticker 403 — token expired, stopping reconnect');
+                    this.ticker.autoReconnect(false);
+                    this.connected = false;
+                    this.fallbackToMock = true;
+                    try { this.ticker.disconnect(); } catch(e) {}
+                    return;
+                }
+                console.error('Kite Ticker Error:', errMsg);
             });
 
             this.ticker.on('reconnect', (retries) => {

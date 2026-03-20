@@ -89,6 +89,25 @@ router.get('/callback', asyncHandler(async (req, res) => {
     }
 }));
 
+// Set access token directly (skip OAuth)
+router.post('/set-token', authMiddleware, asyncHandler(async (req, res) => {
+    const { access_token } = req.body;
+    if (!access_token) return res.status(400).json({ error: 'access_token is required' });
+
+    const session = await kiteService.setAccessToken(access_token);
+
+    // Start Kite Ticker
+    try {
+        kiteTicker.disconnect();
+        kiteTicker.fallbackToMock = false;
+        await kiteTicker.start();
+    } catch (e) {
+        console.log('Ticker start after set-token failed:', e.message);
+    }
+
+    res.json({ success: true, ...kiteService.getStatus() });
+}));
+
 // Check connection status
 router.get('/status', authMiddleware, (req, res) => {
     res.json(kiteService.getStatus());
@@ -100,6 +119,37 @@ router.post('/disconnect', authMiddleware, (req, res) => {
     kiteTicker.disconnect();
     res.json({ success: true, message: 'Kite disconnected' });
 });
+
+// ── MCX Market Data (all symbols at once) ────────────
+const MCX_SYMBOLS = [
+    'MCX:ALUMINIUM26APRFUT',
+    'MCX:COPPER26APRFUT',
+    'MCX:CRUDEOIL26APRFUT',
+    'MCX:GOLD26APRFUT',
+    'MCX:GOLDM26APRFUT',
+    'MCX:SILVER26APRFUT',
+    'MCX:SILVERM26APRFUT',
+    'MCX:ZINC26APRFUT',
+    'MCX:LEAD26APRFUT',
+    'MCX:NATURALGAS26APRFUT',
+];
+
+router.get('/market', authMiddleware, asyncHandler(async (req, res) => {
+    if (!kiteService.isAuthenticated()) {
+        return res.status(401).json({ error: 'Kite not connected. Re-login required.' });
+    }
+    try {
+        const quotes = await kiteService.getQuote(MCX_SYMBOLS.join(','));
+        console.log('📊 MCX Market Data fetched:', Object.keys(quotes).length, 'symbols');
+        res.json(quotes);
+    } catch (err) {
+        if (err.message?.includes('expired') || err.message?.includes('403')) {
+            return res.status(401).json({ error: 'Token expired. Re-login required.' });
+        }
+        console.error('MCX Market fetch error:', err.message);
+        res.status(500).json({ error: 'Failed to fetch market data: ' + err.message });
+    }
+}));
 
 // ── KITE DATA APIs ────────────────────────────────────
 

@@ -29,6 +29,8 @@ const KiteDashboard = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [activeTab, setActiveTab] = useState('holdings');
+    const [tokenInput, setTokenInput] = useState('');
+    const [settingToken, setSettingToken] = useState(false);
 
     // Check Kite connection status
     const checkStatus = useCallback(async () => {
@@ -113,6 +115,23 @@ const KiteDashboard = () => {
         }
     };
 
+    // Handle Set Token Directly
+    const handleSetToken = async () => {
+        if (!tokenInput.trim()) return;
+        try {
+            setSettingToken(true);
+            setError(null);
+            await api.setKiteAccessToken(tokenInput.trim());
+            setTokenInput('');
+            await checkStatus();
+            await fetchKiteData();
+        } catch (err) {
+            setError(err.response?.data?.error || err.message || 'Invalid access token');
+        } finally {
+            setSettingToken(false);
+        }
+    };
+
     // Handle Disconnect
     const handleDisconnect = async () => {
         try {
@@ -159,6 +178,32 @@ const KiteDashboard = () => {
                     <p className="text-slate-500 text-xs mt-6">
                         You'll be redirected to Zerodha's login page. Token is valid for one trading day.
                     </p>
+
+                    {/* OR Divider */}
+                    <div className="flex items-center gap-3 my-6">
+                        <div className="flex-1 h-px bg-white/10"></div>
+                        <span className="text-slate-500 text-xs font-bold uppercase">or paste access token</span>
+                        <div className="flex-1 h-px bg-white/10"></div>
+                    </div>
+
+                    {/* Token Input */}
+                    <div className="flex gap-2">
+                        <input
+                            type="text"
+                            value={tokenInput}
+                            onChange={e => setTokenInput(e.target.value)}
+                            onKeyDown={e => e.key === 'Enter' && handleSetToken()}
+                            placeholder="Paste access token here..."
+                            className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-[13px] text-white placeholder-slate-500 focus:outline-none focus:border-green-500/50"
+                        />
+                        <button
+                            onClick={handleSetToken}
+                            disabled={settingToken || !tokenInput.trim()}
+                            className="bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white px-5 py-2.5 rounded-lg font-bold text-[12px] uppercase tracking-wider transition-all active:scale-95 whitespace-nowrap"
+                        >
+                            {settingToken ? 'Connecting...' : 'Connect'}
+                        </button>
+                    </div>
                     {error && (
                         <div className="mt-4 bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-red-400 text-sm">
                             {error}

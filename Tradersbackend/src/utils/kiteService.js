@@ -21,6 +21,13 @@ class KiteService {
 
         // Load existing session if available
         this.loadSession();
+
+        // Auto-load from .env if no session loaded
+        if (!this.accessToken && process.env.KITE_ACCESS_TOKEN) {
+            this.accessToken = process.env.KITE_ACCESS_TOKEN;
+            this.sessionData = { access_token: process.env.KITE_ACCESS_TOKEN };
+            console.log('🔑 Kite access token loaded from .env');
+        }
     }
 
     // ─── SESSION MANAGEMENT ───────────────────────────────
@@ -72,6 +79,33 @@ class KiteService {
         try {
             if (fs.existsSync(SESSION_FILE)) fs.unlinkSync(SESSION_FILE);
         } catch (e) { /* ignore */ }
+    }
+
+    // ─── SET ACCESS TOKEN DIRECTLY ─────────────────────────
+
+    async setAccessToken(token) {
+        this.accessToken = token;
+        this.sessionData = { access_token: token };
+
+        // Validate by fetching profile
+        try {
+            const profile = await this.makeRequest('/user/profile');
+            this.sessionData = {
+                access_token: token,
+                user_name: profile.user_name,
+                user_id: profile.user_id,
+                email: profile.email,
+                broker: profile.broker,
+                login_time: profile.login_time,
+            };
+            this.saveSession(this.sessionData);
+            console.log('✅ Kite access token set manually. User:', profile.user_name || profile.user_id);
+            return this.sessionData;
+        } catch (err) {
+            this.accessToken = null;
+            this.sessionData = null;
+            throw new Error('Invalid access token: ' + err.message);
+        }
     }
 
     // ─── AUTH FLOW ────────────────────────────────────────
@@ -192,8 +226,7 @@ class KiteService {
 
         // Token expired
         if (response.status === 403) {
-            this.clearSession();
-            throw new Error('Kite session expired. Please login again via /api/kite/login');
+            throw new Error('Kite session expired (403). Please set a new access token.');
         }
 
         const data = await response.json();
