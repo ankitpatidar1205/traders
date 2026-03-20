@@ -373,6 +373,17 @@ const smartSearch = async (req, res) => {
         const parsed = await parseCommand(text);
         const { module, searchType, filters } = parsed;
 
+        // Reject if command wasn't recognized
+        if (!module || parsed.operation === "unknown") {
+            return res.json({
+                success: false,
+                data: [],
+                count: 0,
+                message: parsed.displayMessage || "Command not understood. Please be more specific.",
+                parsed,
+            });
+        }
+
         let results = [];
         let message = "";
         let resolvedUserId = filters.userId || null;
@@ -456,8 +467,7 @@ const smartSearch = async (req, res) => {
                 break;
             }
 
-            case "list":
-            default: {
+            case "list": {
                 let where = "WHERE 1=1";
                 const params = [];
 
@@ -474,9 +484,20 @@ const smartSearch = async (req, res) => {
                     params.push(resolvedUserId);
                 }
 
-                const table =
-                    { trades: "trades", funds: "funds", brokers: "brokers", users: "users" }[module] ||
-                    "users";
+                const validTables = { trades: "trades", funds: "funds", brokers: "brokers", users: "users" };
+                const table = validTables[module];
+
+                // Reject if module not recognized
+                if (!table) {
+                    return res.json({
+                        success: false,
+                        data: [],
+                        count: 0,
+                        message: `Module "${module}" not recognized. Try: "trades", "funds", "brokers", or "users"`,
+                        parsed,
+                    });
+                }
+
                 const [rows] = await db.execute(
                     `SELECT * FROM ${table} ${where} ORDER BY created_at DESC LIMIT 100`,
                     params
@@ -484,6 +505,16 @@ const smartSearch = async (req, res) => {
                 results = rows || [];
                 message = `${results.length} results mile`;
                 break;
+            }
+
+            default: {
+                return res.json({
+                    success: false,
+                    data: [],
+                    count: 0,
+                    message: `Search type "${searchType}" not supported`,
+                    parsed,
+                });
             }
         }
 

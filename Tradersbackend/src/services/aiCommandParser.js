@@ -43,14 +43,28 @@ Understand Hindi, English, Hinglish. Convert to structured JSON for DB queries.
 ${DB_SCHEMA}
 ${EXAMPLES}
 
+IMPORTANT: Only recognize commands that are CLEAR and ACTIONABLE.
+If the command is unclear, ambiguous, or doesn't match any known patterns, return:
+{
+  "module": null,
+  "operation": "unknown",
+  "action": null,
+  "searchType": null,
+  "filters": {},
+  "data": {},
+  "displayMessage": "Command not recognized. Please be more specific.",
+  "route": null,
+  "raw": "text here"
+}
+
 Respond ONLY with valid JSON. No explanation. No markdown.
 
 JSON format:
 {
-  "module": "users|trades|funds|portfolio|alerts|brokers|admins",
-  "operation": "list|search|add_fund|deduct_fund|block|unblock|delete|close_trade",
+  "module": "users|trades|funds|portfolio|alerts|brokers|admins|null",
+  "operation": "list|search|add_fund|deduct_fund|block|unblock|delete|close_trade|unknown",
   "action": "ADD_FUND|DEDUCT_FUND|BLOCK_USER|UNBLOCK_USER|DELETE_USER|CLOSE_TRADE|null",
-  "searchType": "list|user_trades|user_detail|user_funds|user_portfolio",
+  "searchType": "list|user_trades|user_detail|user_funds|user_portfolio|null",
   "filters": {
     "userId": null,
     "userName": null,
@@ -79,18 +93,36 @@ JSON format:
     let parsed = JSON.parse(response.choices[0].message.content);
     parsed.raw = text;
     parsed = safetyCheck(text, parsed);
+
+    // Validation: if module is null or operation is unknown, it means the command wasn't recognized
+    if (!parsed.module || parsed.operation === "unknown") {
+      console.warn(`[Parser] Command rejected as unclear: "${text}"`);
+      return {
+        module: null,
+        operation: "unknown",
+        action: null,
+        searchType: null,
+        filters: {},
+        data: {},
+        displayMessage: "Command not recognized. Please be specific. Example: 'rahul ke trades' or 'user 16 block karo'",
+        route: null,
+        raw: text,
+        error: "Command not clear"
+      };
+    }
+
     console.log(`[Parser] "${text}" →`, JSON.stringify(parsed, null, 2));
     return parsed;
   } catch (err) {
     console.error("[Parser Error]", err.message);
     return {
-      module: "unknown",
+      module: null,
       operation: "unknown",
       action: null,
-      searchType: "list",
+      searchType: null,
       filters: {},
       data: {},
-      displayMessage: "Samajh nahi aaya",
+      displayMessage: "Error parsing command. Please try again.",
       route: null,
       raw: text,
       error: err.message,
