@@ -83,7 +83,8 @@ api.interceptors.response.use(
 
             // Clear stored data
             localStorage.removeItem('token');
-            localStorage.removeItem('user');
+            localStorage.removeItem('traders_user');
+            localStorage.removeItem('traders_session_valid');
             sessionStorage.clear();
 
             // Show error message
@@ -203,9 +204,10 @@ export const getToken = () => {
  */
 export const clearToken = () => {
     localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    localStorage.removeItem('traders_user');
+    localStorage.removeItem('traders_session_valid');
     sessionStorage.clear();
-    console.log('[API] ✅ Token cleared - User logged out');
+    console.log('[API] ✅ Token and user state cleared - Logged out');
 };
 
 /**
