@@ -59,7 +59,7 @@ const parseWithRules = (rawText) => {
 
     const isBlock   = /(?<!un)\bblock\b|suspend|band\s*karo|\broko\b/.test(tl);
     const isUnblock = /unblock|activate|chalu\s*karo|kholo/.test(tl);
-    const isAddWord = /\badd\b|deposit|jama|daalo|dalo|credit|bdhao|badhao/.test(tl);
+    const isAddWord = /\badd\b|deposit|jama|daalo|dalo|credit|bdhao|badhao|amount/.test(tl);
 
     // ── Priority order: most specific → least specific ────────────────────────
 
@@ -129,16 +129,28 @@ const parseWithRules = (rawText) => {
         };
     }
 
-    // 5. ADD_FUND
+    // 5. ADD_FUND (flexible parsing)
     if (isAddWord) {
+        // Extract userId (look for any number near user/id keywords)
         const userIdMatch = extractIdAfter(tl, /(?:user\s*id|user|id)/);
-        const textWithoutId = userIdMatch ? tl.replace(userIdMatch.fullMatch, '') : tl;
-        const amount = parseAmount(textWithoutId);
+        const userId = userIdMatch ? userIdMatch.value : null;
 
-        if (userIdMatch && amount !== null) {
+        // Extract amount (find any number in the string)
+        const allNumbers = [...tl.matchAll(/\b(\d+)\b/g)].map(m => parseInt(m[1], 10));
+
+        // If we found a userId, remove it from the number list to avoid confusion
+        const amountCandidates = userId
+            ? allNumbers.filter(n => n !== userId)
+            : allNumbers;
+
+        // Use the first or largest remaining number as amount
+        const amount = amountCandidates.length > 0 ? amountCandidates[0] : null;
+
+        // Return ADD_FUND if we have both userId and amount
+        if (userId && amount !== null) {
             return {
                 action: 'ADD_FUND',
-                userId: userIdMatch.value,
+                userId,
                 amount,
             };
         }
