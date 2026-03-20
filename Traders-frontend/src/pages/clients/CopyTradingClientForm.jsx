@@ -186,6 +186,11 @@ const CopyTradingClientForm = ({ client, onClose, onSave, onLogout }) => {
                 {/* Form Content */}
                 <div className="flex-1 overflow-y-auto px-10 py-8 bg-[#0b111e] custom-scrollbar">
                     <div className="max-w-5xl mx-auto">
+                        <div className="flex justify-end mb-4">
+                            <button onClick={onClose} className="text-white/40 hover:text-white transition-colors">
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
                         
                         {/* Title Ribbon */}
                         <div className="inline-block relative mb-12">

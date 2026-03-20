@@ -22,6 +22,7 @@ export const ROLE_MENU_ACCESS = {
         'change-transaction-password', 'withdrawal-requests',
         'deposit-requests', 'negative-balance', 'admins',
         'learning', 'support', 'voice-modulation', 'signal-admin', 'signals',
+        'global-settings', 'expiry-rules', 'user-notifications',
         'global-settings',
         'expiry-rules',
     ],

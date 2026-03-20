@@ -13,11 +13,9 @@ const Layout = ({ children, onLogout, onNavigate, currentView }) => {
     const [mobileSearchQuery, setMobileSearchQuery] = useState('');
 
     // Admins see their uploaded logo; SuperAdmin always sees the bundled default logo
-    const resolvedLogo = useMemo(() => {
-        return (user?.role === 'ADMIN' && logoPath)
-            ? (logoPath.startsWith('http') ? logoPath : `http://https://trader-production-e063.up.railway.app${logoPath}`)
-            : logo;
-    }, [user?.role, logoPath]);
+    const resolvedLogo = (user?.role === 'ADMIN' && logoPath)
+        ? (logoPath.startsWith('http') ? logoPath : `https://trader-production-e063.up.railway.app${logoPath}`)
+        : logo;
 
     // Navbar gradient uses theme CSS variables
     const navbarStyle = useMemo(() => ({
