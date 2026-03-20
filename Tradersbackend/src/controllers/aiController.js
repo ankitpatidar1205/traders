@@ -345,7 +345,7 @@ const aiParse = async (req, res) => {
             };
             compat.action = opMap[parsed.operation] || parsed.operation?.toUpperCase() || 'READ';
         }
-        if (parsed.filters?.id && !compat.userId) compat.userId = parsed.filters.id;
+        if ((parsed.filters?.userId || parsed.filters?.id) && !compat.userId) compat.userId = parsed.filters.userId || parsed.filters.id;
         if (parsed.data?.amount && !compat.amount) compat.amount = parsed.data.amount;
         if (parsed.data?.fromUserId) compat.fromUserId = parsed.data.fromUserId;
         if (parsed.data?.toUserId) compat.toUserId = parsed.data.toUserId;
