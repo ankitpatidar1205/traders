@@ -6,6 +6,7 @@
  * - Voice transcription errors & typos
  * - Ambiguous user intent
  *
+ * Safety net catches common errors (ID/amount swaps)
  * Falls back to rule-based parsing if OpenAI fails
  */
 
@@ -17,84 +18,75 @@ const openai = new OpenAI({
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// DATABASE SCHEMA (Used in AI prompts)
+// DATABASE SCHEMA
 // ─────────────────────────────────────────────────────────────────────────────
 
 const DB_SCHEMA = `
-Database Tables (Trading Admin Panel):
+Tables in our trading software MySQL database:
 
-1. users
-   - id (PK), username, password, full_name, email, mobile, balance, credit_limit,
-   - role (SUPERADMIN/ADMIN/BROKER/TRADER), status (Active/Inactive/Suspended)
-   - created_at, updated_at
-
-2. trades
-   - id (PK), user_id (FK), symbol, type (BUY/SELL), quantity, entry_price,
-   - exit_price, status (OPEN/CLOSED/PENDING), pnl, created_at, updated_at
-
-3. funds
-   - id (PK), user_id (FK), amount, type (DEPOSIT/WITHDRAWAL), note, created_at
-
-4. ledger
-   - id (PK), user_id (FK), amount, type (DEPOSIT/WITHDRAW), balance_after, remarks, created_at
-
-5. payment_requests
-   - id (PK), user_id (FK), amount, type (DEPOSIT/WITHDRAW), status (PENDING/APPROVED/REJECTED),
-   - created_at, updated_at
-
-6. portfolio
-   - id (PK), user_id (FK), symbol, quantity, average_price, current_price, updated_at
-
-7. alerts
-   - id (PK), user_id (FK), symbol, condition, value, active, created_at
-
-8. banks
-   - id (PK), user_id (FK), account_holder, account_number, ifsc, bank_name, created_at
-
-9. support_tickets
-   - id (PK), user_id (FK), subject, description, status (OPEN/IN_PROGRESS/RESOLVED), created_at
-
-10. ip_logins
-    - id (PK), user_id (FK), ip_address, login_time, logout_time
-
-11. action_ledger
-    - id (PK), user_id (FK), action, details, created_at
-
-12. notifications
-    - id (PK), user_id (FK), message, read (0/1), created_at
-
-13. global_configs
-    - id (PK), key, value, updated_at
+users (id, name, email, balance, status[active/blocked], role[admin/trader/client], created_at)
+trades (id, user_id, symbol, type[buy/sell], qty, price, status[open/closed/pending], created_at)
+funds (id, user_id, amount, type[credit/debit], note, created_at)
+ledger (id, user_id, amount, type, balance_after, created_at)
+portfolio (id, user_id, symbol, qty, avg_price, updated_at)
+alerts (id, user_id, symbol, condition, value, active, created_at)
+settings (id, key, value, updated_at)
+admins (id, user_id, permissions, created_at)
 `;
 
-const SUPPORTED_OPERATIONS = `
-FUNDS OPERATIONS:
-  add_fund - ADD funds to user balance
-  withdraw - WITHDRAW funds from user
-  transfer - TRANSFER funds between users
+const SUPPORTED_ACTIONS = `
+ADD_FUND, DEDUCT_FUND, BLOCK_USER, UNBLOCK_USER, DELETE_USER,
+CREATE_ADMIN, CLOSE_TRADE, SHOW_USERS, SHOW_TRADES, SHOW_FUNDS,
+CHECK_USER, UPDATE_BALANCE, UPDATE_SETTING, CREATE_ALERT
+`;
 
-USER OPERATIONS:
-  read - SHOW/LIST users with filters
-  create - CREATE new user/admin/broker
-  update - UPDATE user details
-  block - BLOCK/SUSPEND user
-  unblock - UNBLOCK/ACTIVATE user
-  delete - DELETE user
+// ─────────────────────────────────────────────────────────────────────────────
+// PARSING EXAMPLES — Teaches OpenAI how to extract ID vs Amount correctly
+// ─────────────────────────────────────────────────────────────────────────────
 
-TRADE OPERATIONS:
-  read - SHOW/LIST trades
-  create - CREATE new trade
-  close - CLOSE trade
-  delete - DELETE trade
+const PARSING_EXAMPLES = `
+CRITICAL RULE — How to extract ID vs Amount:
 
-LEDGER OPERATIONS:
-  read - SHOW transaction history
-  aggregate - COUNT/SUM transactions
+The number that comes RIGHT AFTER "id", "user", "ID", "user id" keywords = that is the USER ID.
+The number that comes after "add", "deposit", "credit", "me", "mein", "ko" = that is the AMOUNT.
 
-PAYMENT REQUEST OPERATIONS:
-  read - SHOW requests
-  approve - APPROVE request
-  reject - REJECT request
+EXAMPLES (study these carefully):
+
+Input:  "add 3000 in user id 16"
+Output: { "action": "ADD_FUND", "filters": { "id": 16 }, "data": { "amount": 3000 } }
+Why: "user id 16" → id=16. "add 3000" → amount=3000.
+
+Input:  "ID 16 me 5000 add karo"
+Output: { "action": "ADD_FUND", "filters": { "id": 16 }, "data": { "amount": 5000 } }
+Why: "ID 16" → id=16. "5000 add" → amount=5000.
+
+Input:  "user 16 mein 3000 daalo"
+Output: { "action": "ADD_FUND", "filters": { "id": 16 }, "data": { "amount": 3000 } }
+Why: "user 16" → id=16. "3000 daalo" → amount=3000.
+
+Input:  "user id 5 se 2000 hatao"
+Output: { "action": "DEDUCT_FUND", "filters": { "id": 5 }, "data": { "amount": 2000 } }
+Why: "user id 5" → id=5. "2000 hatao" → amount=2000.
+
+Input:  "add 500 to user 22"
+Output: { "action": "ADD_FUND", "filters": { "id": 22 }, "data": { "amount": 500 } }
+Why: "user 22" → id=22. "add 500" → amount=500.
+
+Input:  "user 8 ka 10000 balance update karo"
+Output: { "action": "UPDATE_BALANCE", "filters": { "id": 8 }, "data": { "amount": 10000 } }
+Why: "user 8" → id=8. "10000 balance" → amount=10000.
+
+Input:  "block user 20"
+Output: { "action": "BLOCK_USER", "filters": { "id": 20 }, "data": {} }
+Why: "user 20" → id=20. No amount needed.
+
+Input:  "close trade 100"
+Output: { "action": "CLOSE_TRADE", "filters": { "id": 100 }, "data": {} }
+Why: "trade 100" → trade id=100. No amount needed.
+
+WRONG (never do this):
+Input:  "add 3000 in user id 16"
+WRONG Output: { "filters": { "id": 3000 }, "data": { "amount": 16 } }  ← NEVER swap them!
 `;
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -109,33 +101,29 @@ Database Schema:
 ${DB_SCHEMA}
 
 Supported Operations:
-${SUPPORTED_OPERATIONS}
+${SUPPORTED_ACTIONS}
 
-CRITICAL RULES:
-1. Respond with ONLY valid JSON - no explanation, no markdown code blocks
-2. Never output \`\`\`json or \`\`\` markers
-3. Extract ALL numbers, IDs, amounts, names from the command
-4. Map Hindi/Hinglish to English operations
-5. If command is unclear, set operation to "unknown"
-6. Always include "raw" field with original text
+${PARSING_EXAMPLES}
+
+STRICT RULES:
+1. Respond with ONLY valid JSON — no explanation, no markdown, no extra text.
+2. NEVER swap ID and amount. The user/entity identifier goes in filters.id, the money goes in data.amount.
+3. Keywords that signal USER ID: "user", "id", "ID", "user id", "user ID", "trade", "trader"
+4. Keywords that signal AMOUNT: "add", "deposit", "credit", "daalo", "hatao", "deduct", "withdraw", "me", "mein"
+5. If a sentence has two numbers: smaller context numbers near "id/user" = ID, larger standalone numbers = amount (but always use context first).
+6. If unclear, use action: "UNKNOWN".
 
 Response format (MUST BE VALID JSON):
 {
   "module": "users|trades|funds|ledger|payment_requests|banks|alerts|portfolio|support_tickets|ip_logins|notifications|global_configs",
   "operation": "read|create|update|delete|block|unblock|add_fund|withdraw|transfer|close|approve|reject|aggregate|unknown",
-  "filters": { "id": 16, "status": "Active", "role": "TRADER" },
-  "data": { "amount": 5000, "full_name": "Rahul" },
-  "sort": null,
-  "limit": null,
-  "route": "/trading-clients",
+  "action": "ACTION_FROM_LIST",
+  "filters": { "id": <USER_ID_NUMBER> },
+  "data": { "amount": <AMOUNT_NUMBER> },
+  "displayMessage": "Hindi/Hinglish confirmation message",
+  "route": "/funds",
   "raw": "original command text"
-}
-
-Examples:
-- "ID 16 me 5000 add karo" → module: "funds", operation: "add_fund", filters: {id: 16}, data: {amount: 5000}
-- "Saare traders dikhao" → module: "users", operation: "read", filters: {role: "TRADER"}
-- "User 20 ko block karo" → module: "users", operation: "block", filters: {id: 20}
-- "Closed trades dikha" → module: "trades", operation: "read", filters: {status: "CLOSED"}`;
+}`;
 
   try {
     console.log(`[OpenAI Parser] Processing: "${text}"`);
@@ -155,23 +143,23 @@ Examples:
 
     // Remove markdown code blocks if present
     let jsonStr = content;
-    if (jsonStr.startsWith("```json")) {
-      jsonStr = jsonStr.slice(7);
-    }
-    if (jsonStr.startsWith("```")) {
-      jsonStr = jsonStr.slice(3);
-    }
-    if (jsonStr.endsWith("```")) {
-      jsonStr = jsonStr.slice(0, -3);
-    }
+    if (jsonStr.startsWith("```json")) jsonStr = jsonStr.slice(7);
+    if (jsonStr.startsWith("```")) jsonStr = jsonStr.slice(3);
+    if (jsonStr.endsWith("```")) jsonStr = jsonStr.slice(0, -3);
 
     const parsed = JSON.parse(jsonStr.trim());
     parsed.raw = text;
+
+    // ─────────────────────────────────────────────────────────────────
+    // SAFETY NET: Detect and fix ID/amount swaps
+    // ─────────────────────────────────────────────────────────────────
+    safetyCheck(text, parsed);
 
     console.log(`[OpenAI Parser] ✅ Result:`, JSON.stringify({
       module: parsed.module,
       operation: parsed.operation,
       filters: parsed.filters,
+      data: parsed.data,
     }));
 
     return parsed;
@@ -180,6 +168,39 @@ Examples:
     throw err;
   }
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SAFETY NET — Detect & Fix Common Parsing Errors
+// ─────────────────────────────────────────────────────────────────────────────
+
+function safetyCheck(text, parsed) {
+  // Extract ID using regex (direct from text)
+  const idMatch = text.match(/(?:user\s*id|user|ID|id|trade)\s*[:#]?\s*(\d+)/i);
+
+  // Extract amount using regex (direct from text)
+  const amountMatch = text.match(
+    /(?:add|deposit|credit|daalo|hatao|deduct|withdraw|me|mein)\s+(\d+)|(\d+)\s+(?:add|daalo|hatao|deposit|credit|deduct|withdraw)/i
+  );
+
+  if (idMatch && amountMatch) {
+    const extractedId = parseInt(idMatch[1]);
+    const extractedAmount = parseInt(amountMatch[1] || amountMatch[2]);
+
+    const currentId = parsed?.filters?.id;
+    const currentAmount = parsed?.data?.amount;
+
+    // Check if AI swapped ID and amount
+    if (currentId === extractedAmount && currentAmount === extractedId) {
+      console.warn(
+        `[SafetyNet] ⚠️  ID/Amount swap detected! Fixing: id=${extractedId}, amount=${extractedAmount}`
+      );
+      parsed.filters.id = extractedId;
+      parsed.data.amount = extractedAmount;
+    }
+  }
+
+  return parsed;
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // FALLBACK RULE-BASED PARSER
@@ -296,7 +317,10 @@ const parseCommand = async (text) => {
     try {
       return await parseCommandWithOpenAI(text);
     } catch (err) {
-      console.warn(`[parseCommand] OpenAI failed, falling back to rules:`, err.message);
+      console.warn(
+        `[parseCommand] OpenAI failed, falling back to rules:`,
+        err.message
+      );
     }
   }
 
