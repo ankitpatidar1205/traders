@@ -94,40 +94,155 @@ JSON format:
     parsed.raw = text;
     parsed = safetyCheck(text, parsed);
 
-    // Validation: if module is null or operation is unknown, it means the command wasn't recognized
+    // Validation: if module is null or operation is unknown, try fallback
     if (!parsed.module || parsed.operation === "unknown") {
-      console.warn(`[Parser] Command rejected as unclear: "${text}"`);
-      return {
-        module: null,
-        operation: "unknown",
-        action: null,
-        searchType: null,
-        filters: {},
-        data: {},
-        displayMessage: "Command not recognized. Please be specific. Example: 'rahul ke trades' or 'user 16 block karo'",
-        route: null,
-        raw: text,
-        error: "Command not clear"
-      };
+      console.warn(`[Parser] OpenAI returned unknown, trying rule-based fallback: "${text}"`);
+      return ruleBasedFallback(text);
     }
 
-    console.log(`[Parser] "${text}" →`, JSON.stringify(parsed, null, 2));
+    console.log(`[Parser] ✅ OpenAI success: "${text}" →`, JSON.stringify(parsed, null, 2));
     return parsed;
   } catch (err) {
     console.error("[Parser Error]", err.message);
+    console.log("[Parser] Falling back to rule-based parser");
+    return ruleBasedFallback(text);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RULE-BASED FALLBACK — works for common voice commands without OpenAI
+// ─────────────────────────────────────────────────────────────────────────────
+
+function ruleBasedFallback(text) {
+  const t = text.toLowerCase().trim();
+
+  // Extract numbers and names
+  const userIdMatch = text.match(/(?:user\s*id|user|ID|id)\s*[:#]?\s*(\d+)/i);
+  const userId = userIdMatch ? parseInt(userIdMatch[1]) : null;
+  const amountMatch = text.match(/(?:add|deposit|credit|daalo)\s+(\d+)|(\d+)\s+(?:add|daalo|me\s+add|me\s+daalo)/i);
+  const amount = amountMatch ? parseInt(amountMatch[1] || amountMatch[2]) : null;
+
+  // Check for names (proper nouns)
+  const nameMatch = text.match(/\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\b/);
+  const userName = nameMatch ? nameMatch[1] : null;
+
+  // ADD_FUND
+  if (/add|deposit|credit|daalo|jama/.test(t) && userId && amount) {
     return {
-      module: null,
-      operation: "unknown",
-      action: null,
+      module: "funds",
+      operation: "add_fund",
+      action: "ADD_FUND",
       searchType: null,
-      filters: {},
-      data: {},
-      displayMessage: "Error parsing command. Please try again.",
-      route: null,
-      raw: text,
-      error: err.message,
+      filters: { userId, userName: null, role: null, status: null, symbol: null },
+      data: { amount },
+      displayMessage: `User ${userId} ko ${amount} add karna hai?`,
+      route: "/funds",
+      raw: text
     };
   }
+
+  // BLOCK_USER
+  if (/block|suspend|band\s*karo/.test(t) && userId) {
+    return {
+      module: "users",
+      operation: "block",
+      action: "BLOCK_USER",
+      searchType: null,
+      filters: { userId, userName: null, role: null, status: null, symbol: null },
+      data: {},
+      displayMessage: `User ${userId} ko block karna hai?`,
+      route: "/users",
+      raw: text
+    };
+  }
+
+  if (/block|suspend|band\s*karo/.test(t) && userName) {
+    return {
+      module: "users",
+      operation: "block",
+      action: "BLOCK_USER",
+      searchType: null,
+      filters: { userId: null, userName, role: null, status: null, symbol: null },
+      data: {},
+      displayMessage: `${userName} ko block karna hai?`,
+      route: "/users",
+      raw: text
+    };
+  }
+
+  // UNBLOCK_USER
+  if (/unblock|activate|kholo|chalu/.test(t) && userId) {
+    return {
+      module: "users",
+      operation: "unblock",
+      action: "UNBLOCK_USER",
+      searchType: null,
+      filters: { userId, userName: null, role: null, status: null, symbol: null },
+      data: {},
+      displayMessage: `User ${userId} ko unblock karna hai?`,
+      route: "/users",
+      raw: text
+    };
+  }
+
+  // SHOW_TRADES
+  if (/trade|position/.test(t) && userName) {
+    return {
+      module: "trades",
+      operation: "search",
+      action: null,
+      searchType: "user_trades",
+      filters: { userId: null, userName, role: null, status: null, symbol: null },
+      data: {},
+      displayMessage: `${userName} ke trades dikhane hain?`,
+      route: "/trades",
+      raw: text
+    };
+  }
+
+  if (/trade|position/.test(t) && userId) {
+    return {
+      module: "trades",
+      operation: "search",
+      action: null,
+      searchType: "user_trades",
+      filters: { userId, userName: null, role: null, status: null, symbol: null },
+      data: {},
+      displayMessage: `User ${userId} ke trades dikhane hain?`,
+      route: "/trades",
+      raw: text
+    };
+  }
+
+  // SHOW_USERS - traders/clients
+  if (/trader|trading.*client/.test(t)) {
+    return {
+      module: "users",
+      operation: "list",
+      action: null,
+      searchType: "list",
+      filters: { userId: null, userName: null, role: "TRADER", status: null, symbol: null },
+      data: {},
+      displayMessage: "Trading clients dikhane hain?",
+      route: "/users",
+      raw: text
+    };
+  }
+
+  // Default: unknown
+  console.log(`[Parser] Rule-based fallback also failed: "${text}"`);
+  return {
+    module: null,
+    operation: "unknown",
+    action: null,
+    searchType: null,
+    filters: {},
+    data: {},
+    displayMessage: "Command samajh nahi aaya. Try: 'ID 16 me 5000 add karo' or 'user 20 ko block karo'",
+    route: null,
+    raw: text,
+    error: "Command not understood"
+  };
 }
 
 function safetyCheck(text, parsed) {
