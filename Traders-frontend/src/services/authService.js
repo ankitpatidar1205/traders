@@ -44,9 +44,10 @@ export const login = async (email, password) => {
 
         // Save token
         setToken(token);
-
-        // Save user data
-        localStorage.setItem('user', JSON.stringify(user));
+        
+        // Save user data for AuthContext
+        localStorage.setItem('traders_user', JSON.stringify(user));
+        localStorage.setItem('traders_session_valid', 'true');
         console.log('[Auth] ✅ User data saved');
 
         return { token, user };
@@ -112,7 +113,7 @@ export const logout = async () => {
  */
 export const getCurrentUser = () => {
     try {
-        const userJson = localStorage.getItem('user');
+        const userJson = localStorage.getItem('traders_user');
         if (!userJson) {
             console.log('[Auth] No user data found');
             return null;
@@ -192,7 +193,8 @@ export const refreshUserData = async () => {
         const user = response.data;
 
         // Update stored user data
-        localStorage.setItem('user', JSON.stringify(user));
+        localStorage.setItem('traders_user', JSON.stringify(user));
+        localStorage.setItem('traders_session_valid', 'true');
         console.log('[Auth] ✅ User data refreshed');
 
         return user;
@@ -226,7 +228,8 @@ export const updateProfile = async (updates) => {
         const user = response.data;
 
         // Update stored user data
-        localStorage.setItem('user', JSON.stringify(user));
+        localStorage.setItem('traders_user', JSON.stringify(user));
+        localStorage.setItem('traders_session_valid', 'true');
         console.log('[Auth] ✅ Profile updated');
 
         return user;
