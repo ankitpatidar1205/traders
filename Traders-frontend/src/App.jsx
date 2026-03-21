@@ -48,6 +48,7 @@ import SignalAdminPage from './pages/trades/SignalAdminPage';
 import SignalsPage from './pages/trades/SignalsPage';
 import RaiseTicketPage from './pages/support/RaiseTicketPage';
 import VoiceModulationPage from './pages/voice/VoiceModulationPage';
+import VoiceHistoryPage from './pages/voice/VoiceHistoryPage';
 import ClientDetailsForm from './components/ClientDetailsForm';
 import Toast from './components/common/Toast';
 import EditBrokerPage from './pages/brokers/EditBrokerPage';
@@ -293,6 +294,7 @@ function App() {
                 <Route path="/learning" element={<LearningPage segment={user?.segment} />} />
                 <Route path="/support" element={<RaiseTicketPage user={user} />} />
                 <Route path="/voice-modulation" element={<VoiceModulationPage />} />
+                <Route path="/voice-history" element={<VoiceHistoryPage />} />
                 <Route path="/signal-admin" element={<SignalAdminPage />} />
                 <Route path="/signals" element={<SignalsPage />} />
                 <Route path="/expiry-rules" element={<ProtectedRoute viewId="expiry-rules"><ExpiryRulesPage /></ProtectedRoute>} />

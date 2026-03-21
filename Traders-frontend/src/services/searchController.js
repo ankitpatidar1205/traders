@@ -644,82 +644,49 @@ const normalizeResults = (raw) => {
 // ─── PUBLIC API ───────────────────────────────────────────────────────────────
 
 /**
- * Main entry point: send query → AI parse → fetch → return
+ * Main entry point: send query → Backend smart-search (AI parsing + DB fetch in one call)
  *
  * @param {string} userQuery - Natural language query
- * @returns {Promise<{ success, data, query, count, message, requiresConfirmation? }>}
+ * @returns {Promise<{ success, data, query, count, message }>}
  */
 export const processSearch = async (userQuery) => {
-    console.log('[SearchController] Query:', userQuery);
+    if (!userQuery?.trim()) return { success: false, data: [], message: "Empty query" };
 
-    // Step 0: Try local fuzzy parse first — if clear match, skip slow AI call
-    const localParsed = fallbackLocalParse(userQuery);
-    const isDefaultFallback = localParsed.module === 'users' && localParsed.filters?.role === 'TRADER' && !userQuery.toLowerCase().match(/\b(client|user|trader|member|show|list|get|all)\b/);
-
-    // Step 1: If local parse found a specific module (not the default), use it directly
-    // Otherwise, try AI parse for smarter understanding
-    let parsed;
-    if (!isDefaultFallback) {
-        parsed = localParsed;
-        console.log('[SearchController] Local fuzzy match:', parsed);
-    } else {
-        parsed = await parseWithAI(userQuery);
-        console.log('[SearchController] AI parsed:', parsed);
-    }
-
-    if (parsed.error) {
-        return { success: false, error: parsed.error, message: parsed.error };
-    }
-
-    const { module, operation, filters = {}, route, message, riskLevel, requiresConfirmation } = parsed;
-
-    // High-risk operations (delete/block/financial) — don't auto-execute, return for confirmation
-    if (requiresConfirmation || riskLevel === 'high') {
-        return {
-            success: false,
-            requiresConfirmation: true,
-            riskLevel,
-            parsed,
-            message: message || `⚠️ This is a high-risk operation. Please confirm before proceeding.`,
-            query: parsed,
-            data: [],
-        };
-    }
-
-    // Only execute read (get) operations from search bar
-    if (operation !== 'get') {
-        return {
-            success: false,
-            requiresConfirmation: true,
-            riskLevel: riskLevel || 'medium',
-            parsed,
-            message: `This action requires confirmation: ${message || operation} on ${module}`,
-            query: parsed,
-            data: [],
-        };
-    }
-
-    // Step 2: Fetch data
     try {
-        const raw = await executeSearch(module, filters);
-        const data = normalizeResults(raw);
+        console.log('[SearchController] Query:', userQuery);
 
-        console.log('[SearchController] Results:', data.length, 'records');
+        // All smart parsing and execution happens on backend
+        const response = await api.post('/ai/smart-search', { text: userQuery });
+
+        const result = response.data;
+
+        if (!result.success) {
+            return {
+                success: false,
+                data: [],
+                count: 0,
+                message: result.message || "Search failed",
+                query: result.parsed || {},
+            };
+        }
+
+        console.log('[SearchController] Results:', result.count, 'records');
 
         return {
             success: true,
-            data,
-            count: data.length,
-            message: message || `Found ${data.length} result(s) in ${module}`,
-            query: { module, operation, filters, route },
+            data: result.data || [],
+            count: result.count || 0,
+            message: result.message || `Found ${result.count || 0} result(s)`,
+            query: result.parsed || {},
         };
     } catch (err) {
-        console.error('[SearchController] Execution error:', err.message);
+        console.error('[SearchController] Error:', err.message);
         return {
             success: false,
-            error: err.message,
-            message: `Could not fetch ${module}: ${err.message}`,
-            query: parsed,
+            data: [],
+            count: 0,
+            message: "Search error: " + err.message,
+            query: {},
         };
     }
 };

@@ -467,6 +467,28 @@ const runMigrations = async () => {
         ) s
     `);
 
+    // ─── 13. VOICE RECORDINGS ──────────────────────────────────────────────────
+
+    await db.execute(`
+        CREATE TABLE IF NOT EXISTS voice_recordings (
+            id              INT AUTO_INCREMENT PRIMARY KEY,
+            user_id         INT DEFAULT NULL,
+            admin_id        INT DEFAULT NULL,
+            audio_filename  VARCHAR(255) DEFAULT NULL,
+            audio_duration  INT DEFAULT NULL,
+            transcript      TEXT DEFAULT NULL,
+            parsed_command  JSON DEFAULT NULL,
+            action_taken    VARCHAR(100) DEFAULT NULL,
+            action_result   JSON DEFAULT NULL,
+            status          ENUM('saved','executed','failed') DEFAULT 'saved',
+            language        VARCHAR(10) DEFAULT 'hi-IN',
+            created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            KEY user_id (user_id),
+            KEY admin_id (admin_id),
+            KEY status (status)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+
     console.log('✅ DB migrations complete\n');
 };
 

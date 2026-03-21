@@ -18,9 +18,10 @@ import React, { useState, useRef, useCallback, useEffect, useReducer } from 'rea
 import {
     Mic, MicOff, Square, Play, Pause, Clock, FileText,
     Bot, CheckCircle2, AlertCircle, Loader2, Trash2,
-    RefreshCcw, Radio, Headphones, X
+    RefreshCcw, Radio, Headphones, X, ExternalLink
 } from 'lucide-react';
 import useVoiceRecorder from '../../hooks/useVoiceRecorder';
+import { useVoiceHistory } from '../../hooks/useVoiceHistory';
 import { parseVoiceCommand, executeCommand } from '../../services/voiceService';
 
 // ─── Status constants ─────────────────────────────────────────────────────────
@@ -399,11 +400,19 @@ const ConfirmationDialog = ({ data, onConfirm, onCancel, loading }) => {
 
 const VoiceModulationPage = () => {
     const recorder = useVoiceRecorder();
+    const blobRef = useRef(null); // Capture blob for auto-save
+    const { recordings: savedRecordings, loading: histLoading, fetchRecordings, saveRecording } = useVoiceHistory();
 
     const [history, dispatch] = useReducer(historyReducer, []);
     const [activePlayingId, setActivePlayingId] = useState(null);
+    const [savedPlayingId, setSavedPlayingId] = useState(null);
     const [toast, setToast] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Load recent saved recordings on mount
+    useEffect(() => {
+        fetchRecordings({ limit: 10 });
+    }, [fetchRecordings]);
 
     // ── Voice command states ───────────────────────────────────────────────────
     const [isListening, setIsListening] = useState(false);
@@ -524,12 +533,27 @@ const VoiceModulationPage = () => {
         setConfirmLoading(true);
 
         try {
-            await executeCommand(commandData);
+            const execResult = await executeCommand(commandData);
             dispatch({
                 type: 'UPDATE',
                 id: itemId,
                 patch: { status: STATUS.SUCCESS },
             });
+
+            // Auto-save to DB
+            saveRecording({
+                audioBlob: blobRef.current,
+                transcript: finalTranscriptRef.current.trim(),
+                parsedCommand: commandData,
+                actionTaken: commandData?.action,
+                actionResult: execResult || { success: true },
+                status: 'executed',
+                userId: commandData?.userId || commandData?.filters?.userId,
+                language: 'hi-IN',
+            }).then(() => {
+                fetchRecordings({ limit: 10 }); // Refresh saved recordings list
+            });
+
             showToast('Command executed successfully!', 'success');
             speakMessage('Command executed successfully');
         } catch (err) {
@@ -538,12 +562,27 @@ const VoiceModulationPage = () => {
                 id: itemId,
                 patch: { status: STATUS.FAILED },
             });
+
+            // Auto-save failed command
+            saveRecording({
+                audioBlob: blobRef.current,
+                transcript: finalTranscriptRef.current.trim(),
+                parsedCommand: commandData,
+                actionTaken: commandData?.action,
+                actionResult: { success: false, error: err?.message },
+                status: 'failed',
+                userId: commandData?.userId || commandData?.filters?.userId,
+                language: 'hi-IN',
+            }).then(() => {
+                fetchRecordings({ limit: 10 });
+            });
+
             showToast(err?.message || 'Command execution failed.', 'error');
         } finally {
             setConfirmLoading(false);
             setConfirmData(null);
         }
-    }, [confirmData, showToast, speakMessage]);
+    }, [confirmData, showToast, speakMessage, saveRecording, fetchRecordings]);
 
     const handleCancel = useCallback(() => {
         if (confirmData?.itemId) {
@@ -559,6 +598,7 @@ const VoiceModulationPage = () => {
     // ── Submit recording → ai-parse → confirmation ────────────────────────────
 
     const submitRecording = useCallback(async (blob, audioURL) => {
+        blobRef.current = blob; // Capture for auto-save
         if (!blob) return;
 
         const capturedTranscript = finalTranscriptRef.current.trim();
@@ -840,6 +880,14 @@ const VoiceModulationPage = () => {
                                 </p>
                             </div>
 
+                            {/* View All link */}
+                            <a
+                                href="/voice-history"
+                                className="flex items-center gap-1.5 text-[10px] font-black text-green-400 hover:text-green-300 uppercase tracking-widest transition-colors"
+                            >
+                                View All <ExternalLink className="w-3 h-3" />
+                            </a>
+
                             {/* Now playing indicator */}
                             {activePlayingId && (
                                 <div className="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 border border-green-500/20 rounded-lg">
@@ -887,6 +935,81 @@ const VoiceModulationPage = () => {
                         </div>
                     </div>
                 </div>
+            </div>
+
+            {/* ── Recently Saved Recordings (from DB) ── */}
+            <div className="mt-12">
+                <div className="flex items-center gap-2 mb-4">
+                    <h2 className="text-lg font-black text-white uppercase tracking-tighter">
+                        Recently Saved
+                    </h2>
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                        {histLoading ? 'Loading…' : `${savedRecordings.length}`}
+                    </span>
+                </div>
+
+                {histLoading ? (
+                    <div className="text-center py-8 text-slate-500 text-sm">
+                        Loading saved recordings…
+                    </div>
+                ) : savedRecordings.length === 0 ? (
+                    <div className="text-center py-8 text-slate-500 text-sm">
+                        No saved recordings yet
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                        {savedRecordings.map(rec => {
+                            const statusCfg = {
+                                executed: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', label: '✓' },
+                                failed: { bg: 'bg-red-500/10', text: 'text-red-400', label: '✕' },
+                                saved: { bg: 'bg-amber-500/10', text: 'text-amber-400', label: '◆' },
+                            }[rec.status] || { bg: 'bg-slate-500/10', text: 'text-slate-400', label: '○' };
+
+                            return (
+                                <div
+                                    key={rec.id}
+                                    className={`rounded-xl border border-white/8 p-4 ${statusCfg.bg} hover:border-white/15 transition-all cursor-pointer group`}
+                                >
+                                    {/* Status indicator */}
+                                    <div className={`text-xs font-black ${statusCfg.text} mb-2 uppercase tracking-wider`}>
+                                        {statusCfg.label} {rec.status}
+                                    </div>
+
+                                    {/* Transcript */}
+                                    <p className="text-[11px] text-slate-300 mb-3 line-clamp-2 leading-relaxed">
+                                        "{rec.transcript || '(no text)'}"
+                                    </p>
+
+                                    {/* User */}
+                                    {rec.target_user_name && (
+                                        <p className="text-[10px] text-slate-500 mb-2 font-medium">
+                                            User: <span className="text-slate-300">{rec.target_user_name}</span>
+                                        </p>
+                                    )}
+
+                                    {/* Time */}
+                                    <p className="text-[9px] text-slate-600 mb-3">
+                                        {new Date(rec.created_at).toLocaleTimeString('en-IN', {
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                        })}
+                                    </p>
+
+                                    {/* Audio player */}
+                                    {rec.audio_filename && (
+                                        <audio
+                                            controls
+                                            src={`/api/ai/voice/audio/${rec.audio_filename}`}
+                                            className="w-full h-7 rounded opacity-80 group-hover:opacity-100 transition-opacity"
+                                            onPlay={() => setSavedPlayingId(rec.id)}
+                                            onPause={() => setSavedPlayingId(null)}
+                                        />
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
             </div>
 
             {/* ── Confirmation Dialog ── */}
