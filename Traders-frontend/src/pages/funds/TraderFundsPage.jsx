@@ -152,7 +152,7 @@ const TraderFundsPage = ({ onNavigate }) => {
 
                 <div>
                     <button
-                        onClick={() => onNavigate?.('create-fund')}
+                        onClick={() => onNavigate?.('funds/create')}
                         className="w-full md:w-auto text-white font-bold py-2.5 px-8 rounded uppercase tracking-wide text-xs transition-all shadow-[0_4px_10px_rgba(76,175,80,0.3)] hover:shadow-[0_4px_20px_rgba(76,175,80,0.5)] active:scale-95"
                         style={{ background: 'linear-gradient(60deg, #288c6c, #4ea752)' }}
                     >

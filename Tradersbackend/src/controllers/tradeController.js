@@ -6,29 +6,26 @@ const bcrypt = require('bcryptjs');
  * Place a New Order
  */
 const placeOrder = async (req, res) => {
-    const { symbol, type, qty, price, order_type, is_pending, userId: traderId, transactionPassword } = req.body;
+    const { 
+        symbol, type, qty, price, 
+        order_type = 'MARKET', 
+        is_pending = false, 
+        userId: traderId, 
+        transactionPassword 
+    } = req.body;
+
     const requesterId = req.user.id;
     const requesterRole = req.user.role;
-    const tradeIp = req.ip || req.headers['x-forwarded-for'];
+    const tradeIp = req.ip || req.headers['x-forwarded-for'] || '127.0.0.1';
 
     try {
         console.log('--- Place Order Request ---');
         console.log('Body:', JSON.stringify(req.body, null, 2));
 
-        // 1. Validate Transaction Password (BYPASSING FOR TESTING)
-        /*
-        const [userRows] = await db.execute('SELECT transaction_password FROM users WHERE id = ?', [requesterId]);
-        const user = userRows[0];
-        
-        if (!user || !user.transaction_password) {
-            return res.status(400).json({ message: 'Transaction password not set' });
+        // 1. Basic Field Validation
+        if (!symbol || !type || !qty) {
+            return res.status(400).json({ message: 'Missing required fields: symbol, type, or qty' });
         }
-
-        const isMatch = await bcrypt.compare(transactionPassword, user.transaction_password);
-        if (!isMatch) {
-            return res.status(401).json({ message: 'Invalid transaction password' });
-        }
-        */
 
         // 2. Determine target user (Trader)
         let targetUserId = requesterId;
@@ -36,29 +33,95 @@ const placeOrder = async (req, res) => {
             targetUserId = traderId;
         }
 
-        // 3. Execution logic
+        // 3. Validate User Exists and Get Balance/Password
+        const [userRows] = await db.execute(
+            'SELECT id, balance, transaction_password, role FROM users WHERE id = ?', 
+            [targetUserId]
+        );
+        const targetUser = userRows[0];
+        if (!targetUser) {
+            return res.status(404).json({ message: 'Target user not found' });
+        }
+
+        // 4. Validate Transaction Password for the requester
+        const [requesterRows] = await db.execute(
+            'SELECT transaction_password FROM users WHERE id = ?', 
+            [requesterId]
+        );
+        const requester = requesterRows[0];
+
+        if (!requester || !requester.transaction_password) {
+            return res.status(400).json({ message: 'Your transaction password is not set' });
+        }
+
+        if (!transactionPassword) {
+            return res.status(400).json({ message: 'Transaction password is required' });
+        }
+
+        const isMatch = await bcrypt.compare(transactionPassword, requester.transaction_password);
+        if (!isMatch) {
+            return res.status(401).json({ message: 'Invalid transaction password' });
+        }
+
+        // 5. Execution Price Logic
         const currentPrice = mockEngine.getPrice(symbol);
         const executionPrice = (order_type === 'MARKET' || !price) ? currentPrice : parseFloat(price);
         const qtyNum = parseInt(qty);
-        const marginUsed = executionPrice * qtyNum * 0.1; // Placeholder
 
-        if (isNaN(executionPrice) || isNaN(qtyNum) || !targetUserId) {
-            console.error('Validation failed:', { executionPrice, qtyNum, targetUserId });
+        if (isNaN(executionPrice) || executionPrice <= 0) {
+            return res.status(400).json({ message: 'Invalid price for the selected scrip' });
+        }
+        if (isNaN(qtyNum) || qtyNum <= 0) {
+            return res.status(400).json({ message: 'Quantity must be a positive number' });
+        }
+
+        // 6. Basic Margin/Balance Check (Placeholder: 10% margin requirement)
+        const totalValue = executionPrice * qtyNum;
+        const marginRequired = totalValue * 0.1; // 10% Margin
+
+        if (targetUser.balance < marginRequired) {
             return res.status(400).json({ 
-                message: 'Invalid trade data (Price/Qty/User missing)',
-                debug: { executionPrice, qtyNum, targetUserId }
+                message: 'Insufficient balance', 
+                required: marginRequired.toFixed(2), 
+                available: parseFloat(targetUser.balance || 0).toFixed(2) 
             });
         }
 
-        console.log('Executing with:', { targetUserId, symbol, type, executionPrice, marginUsed });
+        console.log('Executing with:', { targetUserId, symbol, type, executionPrice, marginRequired });
 
+        // 7. Insert Trade
         const [result] = await db.execute(
-            'INSERT INTO trades (user_id, symbol, type, order_type, qty, entry_price, margin_used, is_pending, status, trade_ip) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-            [targetUserId, symbol, type, order_type || 'MARKET', qtyNum, executionPrice, marginUsed, is_pending ? 1 : 0, 'OPEN', tradeIp]
+            `INSERT INTO trades 
+                (user_id, symbol, type, order_type, qty, entry_price, margin_used, is_pending, status, trade_ip) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+                targetUserId, 
+                symbol.toUpperCase(), 
+                type.toUpperCase(), 
+                order_type, 
+                qtyNum, 
+                executionPrice, 
+                marginRequired, 
+                is_pending ? 1 : 0, 
+                'OPEN', 
+                tradeIp
+            ]
+        );
+
+        // 8. Deduct Margin from Balance
+        await db.execute(
+            'UPDATE users SET balance = balance - ? WHERE id = ?',
+            [marginRequired, targetUserId]
         );
 
         console.log('✅ Trade Inserted:', result.insertId);
-        res.status(201).json({ message: 'Order placed successfully', tradeId: result.insertId });
+        res.status(201).json({ 
+            message: 'Order placed successfully', 
+            tradeId: result.insertId,
+            executionPrice,
+            marginUsed: marginRequired
+        });
+
     } catch (err) {
         console.error('❌ Trade Placement Error:', err);
         res.status(500).json({ message: 'Internal Server Error', error: err.message });
@@ -123,7 +186,7 @@ const getGroupTrades = async (req, res) => {
 };
 
 /**
- * Close/Squre-off Trade
+ * Close/Square-off Trade
  */
 const closeTrade = async (req, res) => {
     const { exitPrice } = req.body;
@@ -132,6 +195,10 @@ const closeTrade = async (req, res) => {
         if (trades.length === 0) return res.status(404).json({ message: 'Trade not found' });
         
         const trade = trades[0];
+        if (trade.status !== 'OPEN') {
+            return res.status(400).json({ message: 'Trade is already closed or inactive' });
+        }
+
         const currentPrice = mockEngine.getPrice(trade.symbol);
         const finalExitPrice = exitPrice || currentPrice;
         
@@ -139,17 +206,31 @@ const closeTrade = async (req, res) => {
             ? (finalExitPrice - trade.entry_price) * trade.qty 
             : (trade.entry_price - finalExitPrice) * trade.qty;
 
+        // Release margin + Add/Subtract PnL
+        const marginToRelease = parseFloat(trade.margin_used || 0);
+        const balanceChange = pnl + marginToRelease;
+
         await db.execute(
             'UPDATE trades SET status = "CLOSED", exit_price = ?, exit_time = NOW(), pnl = ? WHERE id = ?',
             [finalExitPrice, pnl, req.params.id]
         );
 
-        // Update User Balance with PnL
-        await db.execute('UPDATE users SET balance = balance + ? WHERE id = ?', [pnl, trade.user_id]);
+        // Update User Balance
+        await db.execute(
+            'UPDATE users SET balance = balance + ? WHERE id = ?', 
+            [balanceChange, trade.user_id]
+        );
 
-        res.json({ message: 'Trade closed successfully', pnl });
+        console.log(`✅ Trade ${trade.id} closed. PnL: ${pnl}, Margin Released: ${marginToRelease}, Balance Change: ${balanceChange}`);
+
+        res.json({ 
+            message: 'Trade closed successfully', 
+            pnl, 
+            marginReleased: marginToRelease,
+            newBalanceChange: balanceChange
+        });
     } catch (err) {
-        console.error(err);
+        console.error('❌ Close Trade Error:', err);
         res.status(500).send('Server Error');
     }
 };
