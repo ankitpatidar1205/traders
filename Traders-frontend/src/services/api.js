@@ -171,7 +171,7 @@ export const deleteIpLogin = async (id) => {
 };
 
 export const getTradeIpTracking = async () => {
-    const response = await api.get('/security/trade-ip');
+    const response = await api.get('/security/trade-audit');
     return response.data;
 };
 
@@ -480,6 +480,16 @@ export const getKiteLoginURL = async () => {
     return response.data;
 };
 
+export const setKiteAccessToken = async (access_token) => {
+    const response = await api.post('/kite/set-token', { access_token });
+    return response.data;
+};
+
+export const getKiteMarketData = async () => {
+    const response = await api.get('/kite/market');
+    return response.data;
+};
+
 export const getKiteStatus = async () => {
     const response = await api.get('/kite/status');
     return response.data;
@@ -581,5 +591,11 @@ export const submitVoiceRecording = async (audioBlob, meta = {}) => {
     const response = await api.post('/voice/record', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
     });
+    return response.data;
+};
+
+// ─── AI CHAT ───────────────────────────────────────────
+export const sendAIMessage = async (message) => {
+    const response = await api.post('/ai/chat', { message });
     return response.data;
 };

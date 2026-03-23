@@ -95,18 +95,20 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'center',
         paddingHorizontal: 12,
         paddingVertical: 12,
         backgroundColor: 'black',
+        position: 'relative',
     },
     backButton: {
-        marginRight: 10,
+        position: 'absolute',
+        left: 12,
     },
     headerTitle: {
         color: 'white',
         fontSize: 16,
         fontWeight: 'bold',
-        flex: 1,
         textAlign: 'center',
     },
     balanceSummary: {

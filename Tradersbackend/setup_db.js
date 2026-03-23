@@ -7,15 +7,15 @@ async function setupDatabase() {
     const connection = await mysql.createConnection({
       host: 'localhost',
       user: 'root',
-      password: ''
+      password: '12345678'
     });
 
     console.log('✅ Connected to MySQL server.');
 
-    await connection.query('CREATE DATABASE IF NOT EXISTS traders_db');
-    console.log('✅ Database "traders_db" ensured.');
+    await connection.query('CREATE DATABASE IF NOT EXISTS traderdb');
+    console.log('✅ Database "traderdb" ensured.');
 
-    await connection.query('USE traders_db');
+    await connection.query('USE traderdb');
 
     const sqlPath = path.join(__dirname, 'traderdb.sql');
     const sql = fs.readFileSync(sqlPath, 'utf8');

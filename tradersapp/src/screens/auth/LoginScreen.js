@@ -44,7 +44,6 @@ const LoginScreen = ({ navigation }) => {
                 riskScore: Math.floor(Math.random() * 20)
             });
             await fetchInitialData();
-            Alert.alert("Success", "login successfully");
             setIsLoginSuccessVisible(true);
         } catch (err) {
             Alert.alert("Login Failed", "Invalid credentials or server not accessible");

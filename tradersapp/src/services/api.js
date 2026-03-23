@@ -169,3 +169,30 @@ export const createDeposit = async (amount, screenshotUri) => {
         throw error;
     }
 };
+
+// ─── NOTIFICATIONS ────────────────────────────────────
+export const getNotifications = async () => {
+    const res = await fetch(`${BASE_URL}/notifications`, {
+        headers: await getHeaders(),
+    });
+    return handleResponse(res);
+};
+
+export const markNotificationRead = async (notificationId) => {
+    const res = await fetch(`${BASE_URL}/notifications/${notificationId}/read`, {
+        method: 'PUT',
+        headers: await getHeaders(),
+    });
+    return handleResponse(res);
+};
+
+export const markAllNotificationsRead = async () => {
+    const res = await fetch(`${BASE_URL}/notifications/read-all`, {
+        method: 'PUT',
+        headers: await getHeaders(),
+    });
+    return handleResponse(res);
+};
+
+// Export getHeaders for use in other components
+export { getHeaders };

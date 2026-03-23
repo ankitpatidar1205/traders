@@ -12,9 +12,13 @@ const {
     smartSearch,
     executeVoiceCommand,
     voiceExecute,
+    chatWithAI,
+    transcribeVoice,
 } = require('../controllers/aiController');
 const voiceRecCtrl = require('../controllers/voiceRecordingController');
 const { authMiddleware } = require('../middleware/auth');
+const multer = require('multer');
+const upload = multer({ storage: multer.memoryStorage() });
 
 // ─────────────────────────────────────────────────────────────────────────────
 // NEW SMART AI ENDPOINTS
