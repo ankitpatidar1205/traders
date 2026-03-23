@@ -10,12 +10,22 @@
     --color-text-dim: #a0aec0;
 }
 
+:root {
+    --bg-color: #0f172a;
+    --sidebar-color: #1e293b;
+    --card-bg: rgba(30, 41, 59, 0.5);
+    --primary-color: #22c55e;
+}
+
 body {
     margin: 0;
-    font-family: Roboto, Helvetica, Arial, sans-serif;
-    background-color: var(--bg-color, var(--color-main-bg, #1a2035));
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background: radial-gradient(circle at top right, #1e293b, #0f172a);
     color: white;
     font-size: 14px;
+    min-height: 100vh;
 }
 
 /* Theme background override — direct page containers inside <main> use the
@@ -849,3 +859,132 @@ html, body {
 main, aside, .overflow-y-auto {
     -webkit-overflow-scrolling: touch;
 }
+
+/* ═══════════════════════════════════════════════════
+   PREMIUM TOPBAR STYLES
+   ═══════════════════════════════════════════════════ */
+
+.topbar-premium {
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    background: rgba(26, 32, 53, 0.7);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+}
+
+.topbar-stat-card {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 6px 14px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.topbar-stat-card:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(255, 255, 255, 0.12);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.ai-search-container {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(8px);
+}
+
+.ai-search-container:focus-within {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(74, 222, 128, 0.3) !important;
+    box-shadow: 0 0 20px rgba(74, 222, 128, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+}
+
+.glass-dropdown {
+    background: rgba(24, 31, 55, 0.95);
+    backdrop-filter: blur(25px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    border-radius: 16px;
+    overflow: hidden;
+    animation: topbar-slide-down 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes topbarSlideDown {
+    from { opacity: 0; transform: translateY(-10px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.badge-glow-safe {
+    background: rgba(34, 197, 94, 0.15) !important;
+    color: #4ade80 !important;
+    box-shadow: 0 0 15px rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.2) !important;
+}
+
+.badge-glow-danger {
+    background: rgba(239, 68, 68, 0.2) !important;
+    color: #f87171 !important;
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
+    border: 1px solid rgba(239, 68, 68, 0.3) !important;
+    animation: pulse-danger 2s infinite;
+}
+
+@keyframes pulse-danger {
+    0% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.2); }
+    50% { box-shadow: 0 0 25px rgba(239, 68, 68, 0.4); }
+    100% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.2); }
+}
+
+/* -- Premium UI System -- */
+.premium-card {
+    background: rgba(30, 41, 59, 0.4);
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 1.5rem;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.premium-card:hover {
+    background: rgba(30, 41, 59, 0.55);
+    border-color: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 12px 48px 0 rgba(0, 0, 0, 0.4);
+    transform: translateY(-2px);
+}
+
+.premium-glow {
+    position: relative;
+    z-index: 10;
+}
+
+.premium-glow::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    background: linear-gradient(45deg, #10b981, #3b82f6, #10b981);
+    background-size: 200% 200%;
+    border-radius: inherit;
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    animation: premium-glow-flow 8s linear infinite;
+}
+
+.premium-glow:hover::before {
+    opacity: 0.35;
+}
+
+@keyframes premium-glow-flow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+

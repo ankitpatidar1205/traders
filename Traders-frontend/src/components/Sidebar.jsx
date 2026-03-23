@@ -8,7 +8,7 @@ const ALL_MENU_ITEMS = [
     { id: 'voice-modulation', label: 'Voice Modulation', icon: 'fa-microphone' },
     { id: 'market-watch', label: 'Market Watch', icon: 'fa-arrow-trend-up' },
     { id: 'notifications', label: 'Notifications', icon: 'fa-bell' },
-    { id: 'user-notifications', label: 'User Notification', icon: 'fa-bell' },
+    { id: 'user-notifications', label: 'Sent Message', icon: 'fa-paper-plane' },
     { id: 'action-ledger', label: 'Action Ledger', icon: 'fa-podcast' },
     { id: 'active-positions', label: 'Active Positions', icon: 'fa-certificate' },
     { id: 'closed-positions', label: 'Closed Positions', icon: 'fa-certificate' },
@@ -34,7 +34,6 @@ const ALL_MENU_ITEMS = [
     { id: 'deposit-requests', label: 'Deposit Requests', icon: 'fa-gear' },
     { id: 'negative-balance', label: 'Negative Balance Txns', icon: 'fa-bell' },
     { id: 'support', label: 'Raise Ticket', icon: 'fa-ticket' },
-    { id: 'voice-modulation', label: 'Voice Modulation', icon: 'fa-microphone' },
     { id: 'expiry-rules', label: 'Expiry Rules', icon: 'fa-calendar-xmark' },
     { id: 'change-password', label: 'Change Login Password', icon: 'fa-user' },
     { id: 'change-transaction-password', label: 'Change Transaction Pwd', icon: 'fa-gear' },
@@ -48,9 +47,9 @@ const Sidebar = React.memo(({ onLogout, currentView, isOpen, onClose }) => {
 
     const roleBadge = {
         SUPERADMIN: { label: 'SUPER ADMIN', color: '#f59e0b' },
-        ADMIN:      { label: 'ADMIN',       color: '#4caf50' },
-        BROKER:     { label: 'BROKER',      color: '#3b82f6' },
-        TRADER:     { label: 'CLIENT',      color: '#8b5cf6' },
+        ADMIN: { label: 'ADMIN', color: '#4caf50' },
+        BROKER: { label: 'BROKER', color: '#3b82f6' },
+        TRADER: { label: 'CLIENT', color: '#8b5cf6' },
     };
     const badge = roleBadge[userRole] || roleBadge['ADMIN'];
 
@@ -66,13 +65,13 @@ const Sidebar = React.memo(({ onLogout, currentView, isOpen, onClose }) => {
     })();
 
     return (
-        <aside 
+        <aside
             className={`
                 fixed inset-y-0 left-0 z-50 w-[260px] text-white 
                 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-auto
                 ${isOpen ? 'translate-x-0' : '-translate-x-full'}
                 flex-shrink-0 border-r border-white/5 shadow-2xl
-            `} 
+            `}
             style={{ backgroundColor: 'var(--sidebar-color, #1a2035)' }}
         >
             <div className="flex flex-col h-full overflow-hidden">
@@ -96,8 +95,12 @@ const Sidebar = React.memo(({ onLogout, currentView, isOpen, onClose }) => {
                     </div>
                 </div>
 
-                {/* Navigation Items */}
-                <nav className="flex-1 py-4 overflow-y-auto custom-scrollbar scroll-smooth">
+                {/* Navigation Items - Scrollable but Hidden Scrollbar */}
+                <nav className="flex-1 py-4 overflow-y-auto no-scrollbar scroll-smooth">
+                    <style>{`
+                        .no-scrollbar::-webkit-scrollbar { display: none; }
+                        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+                    `}</style>
                     <div className="px-3 space-y-1">
                         {menuItems.map((item) => {
                             const isActive = activeView === item.id;

@@ -633,7 +633,7 @@ const GlobalUpdationPage = () => {
                                     <div className="space-y-1 text-right">
                                         <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest">New Node Value</p>
                                         <p className="text-[#01B4EA] font-black text-2xl tracking-tighter">{selection.newValue}</p>
-                                    </div>
+                                    </div>   
                                 </div>
                                 <div className="pt-6 border-t border-white/5 space-y-4">
                                     <div className="flex justify-between text-[10px] font-black">

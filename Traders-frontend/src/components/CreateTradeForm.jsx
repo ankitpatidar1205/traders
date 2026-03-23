@@ -45,6 +45,24 @@ const CreateTradeForm = ({ onSave, onBack, onLogout, onNavigate }) => {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const profileRef = useRef(null);
 
+  const [scrips, setScrips] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [selectedScripData, setSelectedScripData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  // Form State
+  const [formData, setFormData] = useState({
+    scrip: '',
+    category: 'Mega',
+    userId: '',
+    lots: '',
+    buyRate: '',
+    sellRate: '',
+    type: 'BUY',
+    transactionPassword: ''
+  });
+
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date().toLocaleTimeString()), 1000);
     return () => clearInterval(timer);
@@ -60,11 +78,8 @@ const CreateTradeForm = ({ onSave, onBack, onLogout, onNavigate }) => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-  const [scrips, setScrips] = useState([]);
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
 
+  // Fetch scrips and users
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -84,28 +99,50 @@ const CreateTradeForm = ({ onSave, onBack, onLogout, onNavigate }) => {
     fetchData();
   }, []);
 
-  const [formData, setFormData] = useState({
-    scrip: '',
-    category: 'Mega',
-    userId: '',
-    lots: '',
-    buyRate: '',
-    sellRate: '',
-    type: 'BUY',
-    transactionPassword: ''
-  });
+  // Auto-fill price when scrip changes
+  useEffect(() => {
+    if (formData.scrip) {
+      const scrip = scrips.find(s => s.symbol === formData.scrip);
+      if (scrip) {
+          setSelectedScripData(scrip);
+          // Pre-fill rates with LTP if they are empty
+          const ltp = scrip.ltp || '0.00';
+          setFormData(prev => ({
+              ...prev,
+              buyRate: prev.buyRate || ltp,
+              sellRate: prev.sellRate || ltp
+          }));
+      }
+    }
+  }, [formData.scrip, scrips]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleSetMarketPrice = () => {
+      if (selectedScripData) {
+          const ltp = selectedScripData.ltp || '0.00';
+          setFormData(prev => ({
+              ...prev,
+              buyRate: ltp,
+              sellRate: ltp
+          }));
+      }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.scrip || !formData.userId || !formData.lots || !formData.transactionPassword) {
-      alert('Please fill all required fields');
-      return;
-    }
+    
+    // Validation
+    const activeRate = formData.type === 'BUY' ? formData.buyRate : formData.sellRate;
+    
+    if (!formData.scrip) return alert('Please select a scrip');
+    if (!formData.userId) return alert('Please select a user');
+    if (!formData.lots || parseInt(formData.lots) <= 0) return alert('Please enter a valid quantity/lots');
+    if (!activeRate || parseFloat(activeRate) <= 0) return alert(`Please enter a valid ${formData.type} rate`);
+    if (!formData.transactionPassword) return alert('Please enter your transaction password');
 
     setSubmitting(true);
     try {
@@ -113,7 +150,7 @@ const CreateTradeForm = ({ onSave, onBack, onLogout, onNavigate }) => {
         symbol: formData.scrip,
         userId: formData.userId,
         qty: parseInt(formData.lots),
-        price: formData.type === 'BUY' ? parseFloat(formData.buyRate) : parseFloat(formData.sellRate),
+        price: parseFloat(activeRate),
         type: formData.type,
         order_type: 'MARKET',
         transactionPassword: formData.transactionPassword
@@ -123,7 +160,8 @@ const CreateTradeForm = ({ onSave, onBack, onLogout, onNavigate }) => {
         await onSave(payload);
       }
     } catch (err) {
-      console.error(err);
+      console.error('Form Submit Error:', err);
+      // alert(err.message || 'Failed to place trade'); // App.jsx handleToast will show this
     } finally {
       setSubmitting(false);
     }
@@ -301,20 +339,41 @@ const CreateTradeForm = ({ onSave, onBack, onLogout, onNavigate }) => {
                   />
 
                   {/* Row 2: Buy Rate + Sell Rate */}
-                  <InputField
-                    label="Buy Rate"
-                    name="buyRate"
-                    value={formData.buyRate}
-                    onChange={handleChange}
-                    placeholder=""
-                  />
-                  <InputField
-                    label="Sell Rate"
-                    name="sellRate"
-                    value={formData.sellRate}
-                    onChange={handleChange}
-                    placeholder=""
-                  />
+                  <div className="flex flex-col gap-2">
+                    <InputField
+                      label="Buy Rate"
+                      name="buyRate"
+                      type="number"
+                      step="0.05"
+                      value={formData.buyRate}
+                      onChange={handleChange}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleSetMarketPrice}
+                      className="text-[10px] text-[#4caf50] uppercase font-bold hover:underline self-start mt-1"
+                    >
+                      Use Market Price
+                    </button>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <InputField
+                      label="Sell Rate"
+                      name="sellRate"
+                      type="number"
+                      step="0.05"
+                      value={formData.sellRate}
+                      onChange={handleChange}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleSetMarketPrice}
+                      className="text-[10px] text-[#4caf50] uppercase font-bold hover:underline self-start mt-1"
+                    >
+                      Use Market Price
+                    </button>
+                  </div>
+
 
                   {/* Row 3: Lots/Units + Type */}
                   <InputField
@@ -322,7 +381,6 @@ const CreateTradeForm = ({ onSave, onBack, onLogout, onNavigate }) => {
                     name="lots"
                     value={formData.lots}
                     onChange={handleChange}
-                    placeholder=""
                   />
                   <WhiteSelectField
                     label="Type"
@@ -334,13 +392,13 @@ const CreateTradeForm = ({ onSave, onBack, onLogout, onNavigate }) => {
 
                   {/* Row 4: Transaction Password */}
                   <InputField
-                    label="Transaction Password"
+                    label="Transaction Password (Required)"
                     name="transactionPassword"
                     type="password"
                     value={formData.transactionPassword}
                     onChange={handleChange}
-                    placeholder=""
                   />
+
                 </div>
 
                 {/* Submit Button */}

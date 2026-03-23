@@ -129,7 +129,7 @@ const parseWithRules = (rawText) => {
         };
     }
 
-    // 5. ADD_FUND
+    // 5. ADD_FUND (flexible parsing - works with various formats)
     if (isAddWord) {
         const userIdMatch = extractIdAfter(tl, /(?:user\s*id|user|id)/);
         const textWithoutId = userIdMatch ? tl.replace(userIdMatch.fullMatch, '') : tl;
@@ -141,6 +141,20 @@ const parseWithRules = (rawText) => {
                 userId: userIdMatch.value,
                 amount,
             };
+        }
+
+        // Fallback: if original logic didn't work, try extracting any numbers
+        const allNumbers = [...tl.matchAll(/\b(\d+)\b/g)].map(m => parseInt(m[1], 10));
+        if (allNumbers.length >= 2 && userIdMatch) {
+            const userId = userIdMatch.value;
+            const otherNum = allNumbers.find(n => n !== userId);
+            if (otherNum) {
+                return {
+                    action: 'ADD_FUND',
+                    userId,
+                    amount: otherNum,
+                };
+            }
         }
     }
 

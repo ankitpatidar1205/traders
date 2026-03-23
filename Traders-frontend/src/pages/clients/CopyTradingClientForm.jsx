@@ -135,7 +135,7 @@ const CopyTradingClientForm = ({ client, onClose, onSave, onLogout }) => {
     };
 
     return (
-        <div className="fixed inset-0 bg-[#0b111e] z-[60] flex flex-col overflow-hidden animate-in fade-in duration-300">
+        <div className="fixed inset-0 bg-[#1a2035] z-[60] flex flex-col overflow-hidden animate-in fade-in duration-300">
             {/* Header / Top Bar */}
             <div className="bg-[#4caf50] h-14 flex items-center justify-between px-4 shrink-0">
                 <div className="flex items-center gap-2">
@@ -184,7 +184,7 @@ const CopyTradingClientForm = ({ client, onClose, onSave, onLogout }) => {
                 </div>
 
                 {/* Form Content */}
-                <div className="flex-1 overflow-y-auto px-10 py-8 bg-[#0b111e] custom-scrollbar">
+                <div className="flex-1 overflow-y-auto px-10 py-8 bg-[#1a2035] custom-scrollbar">
                     <div className="max-w-5xl mx-auto">
                         <div className="flex justify-end mb-4">
                             <button onClick={onClose} className="text-white/40 hover:text-white transition-colors">

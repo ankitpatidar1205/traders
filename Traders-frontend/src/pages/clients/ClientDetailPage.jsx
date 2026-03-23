@@ -4,6 +4,7 @@ import { X, User, ChevronDown, Settings, Lock, Key, Eye, FileText } from 'lucide
 import DashboardFilters from '../../components/DashboardFilters';
 import { useAuth } from '../../context/AuthContext';
 import * as api from '../../services/api';
+import TradeDetailPage from '../trades/TradeDetailPage';
 
 const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, onDuplicate, onChangePassword, onDelete, onLogout, onNavigate }) => {
     const navigate = useNavigate();
@@ -27,6 +28,7 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
     const [loading, setLoading] = useState(true);
     const [pendingTab, setPendingTab] = useState('MCX');
     const [completedTab, setCompletedTab] = useState('MCX');
+    const [activeTradeId, setActiveTradeId] = useState(null);
 
     // Fetch all client data on mount
     useEffect(() => {
@@ -187,7 +189,7 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
             `}</style>
 
             {/* Top Bar - Solid Green */}
-            <div className="bg-[#4caf50] h-14 flex items-center justify-between px-4 shadow-md shrink-0">
+            <div className="bg-[#4caf50] h-14 flex items-center justify-between px-4 shadow-md shrink-0 relative">
                 <div className="flex items-center gap-2">
                     <button
                         onClick={onClose}
@@ -197,7 +199,18 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
                         <span className="text-[14px] font-bold uppercase tracking-tight">Back</span>
                     </button>
                 </div>
-                <div className="flex items-center gap-4 text-white">
+                
+                {/* Exit Button - Lucide X Icon */}
+                <div className="absolute right-3 flex items-center gap-2">
+                    <button 
+                        onClick={onClose} 
+                        className="p-2.5 flex items-center justify-center rounded-full hover:bg-black/20 text-slate-400 hover:text-white transition-all cursor-pointer group"
+                        title="Close (Exit)"
+                    >
+                        <X className="w-5 h-5 group-hover:scale-110 transition-transform" strokeWidth={2.5} />
+                    </button>
+                </div>
+                <div className="flex items-center gap-4 text-white mr-10">
                     <button className="hover:bg-black/10 p-2 rounded-full transition-colors">
                         <Settings className="w-5 h-5 flex items-center justify-center" />
                     </button>
@@ -440,7 +453,7 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
                                             {loading ? 'Loading...' : `Showing ${fundsData.length} of ${fundsData.length} items.`}
                                         </p>
                                         <div className="w-full h-[1px] bg-white/5 mb-4"></div>
-                                        
+
                                         <div className="overflow-x-auto">
                                             <table className="w-full text-left">
                                                 <thead>
@@ -475,39 +488,40 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
 
                             {/* Active Trades Section */}
                             {isAdmin() && (
-                                    <div className="bg-[#1a2035] rounded shadow-xl overflow-hidden">
-                                        <div className="p-6">
-                                            <h3 className="text-white text-[19px] font-medium mb-1">Active Trades</h3>
-                                            <p className="text-slate-400 text-[13px] mb-2 font-light italic opacity-70">
-                                                {loading ? 'Loading...' : `Showing ${activeTrades.length} items.`}
-                                            </p>
-                                            <div className="overflow-x-auto custom-scrollbar rounded">
-                                                <table className="w-full border-collapse" style={{ minWidth: '1500px' }}>
-                                                    <thead className="bg-[#202940]/30 border-b border-white/10 text-white text-[13px] font-medium tracking-tight">
-                                                        <tr>
-                                                            <th className="px-3 py-4 text-left uppercase tracking-wider w-8">X</th>
-                                                            <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">ID <span className="text-[10px]">↑↓</span></th>
-                                                            <th className="px-3 py-4 text-left uppercase tracking-wider">Scrip</th>
-                                                            <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">Buy Rate</th>
-                                                            <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">Sell Rate</th>
-                                                            <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">Lots / Units</th>
-                                                            <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">Buy Turnover</th>
-                                                            <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">Sell Turnover</th>
-                                                            <th className="px-3 py-4 text-left uppercase tracking-wider">CMP</th>
-                                                            <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">Active P/L</th>
-                                                            <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">Margin Used</th>
-                                                            <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">Bought at</th>
-                                                            <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">Sold at</th>
-                                                            <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">Buy Ip</th>
-                                                            <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">Sell Ip</th>
-                                                        </tr>
-                                                    </thead>
+                                <div className="bg-[#1a2035] rounded shadow-xl overflow-hidden">
+                                    <div className="p-6">
+                                        <h3 className="text-white text-[19px] font-medium mb-1">Active Trades</h3>
+                                        <p className="text-slate-400 text-[13px] mb-2 font-light italic opacity-70">
+                                            {loading ? 'Loading...' : `Showing ${activeTrades.length} items.`}
+                                        </p>
+                                        <div className="overflow-x-auto custom-scrollbar rounded">
+                                            <table className="w-full border-collapse" style={{ minWidth: '1500px' }}>
+                                                <thead className="bg-[#202940]/30 border-b border-white/10 text-white text-[13px] font-medium tracking-tight">
+                                                    <tr>
+                                                        <th className="px-3 py-4 text-left uppercase tracking-wider w-8">X</th>
+                                                        <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">ID <span className="text-[10px]">↑↓</span></th>
+                                                        <th className="px-3 py-4 text-left uppercase tracking-wider">Type</th>
+                                                        <th className="px-3 py-4 text-left uppercase tracking-wider">Scrip</th>
+                                                        <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">Buy Rate</th>
+                                                        <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">Sell Rate</th>
+                                                        <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">Lots / Units</th>
+                                                        <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">Buy Turnover</th>
+                                                        <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">Sell Turnover</th>
+                                                        <th className="px-3 py-4 text-left uppercase tracking-wider">CMP</th>
+                                                        <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">Active P/L</th>
+                                                        <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">Margin Used</th>
+                                                        <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">Bought at</th>
+                                                        <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">Sold at</th>
+                                                        <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">Buy Ip</th>
+                                                        <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">Sell Ip</th>
+                                                    </tr>
+                                                </thead>
                                                 <tbody className="text-[13px] text-slate-300">
                                                     {activeTrades.length === 0 ? (
-                                                        <tr><td colSpan="15" className="px-4 py-8 text-slate-500 font-light text-center">{loading ? 'Loading...' : 'No records found'}</td></tr>
+                                                        <tr><td colSpan="16" className="px-4 py-8 text-slate-500 font-light text-center">{loading ? 'Loading...' : 'No records found'}</td></tr>
                                                     ) : activeTrades.map((trade) => (
                                                         <tr key={trade.id} className="hover:bg-white/[0.03] transition-colors border-b border-white/5">
-                                                            <td className="px-3 py-3 font-bold text-white flex items-center gap-1.5">
+                                                            <td className="px-3 py-3 font-bold text-white text-center">
                                                                 <span
                                                                     onClick={async (e) => {
                                                                         e.stopPropagation();
@@ -520,12 +534,23 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
                                                                             setClosedTrades(Array.isArray(res2) ? res2 : res2?.data || []);
                                                                         } catch (err) { alert('Failed to close: ' + err.message); }
                                                                     }}
-                                                                    className="text-red-400 hover:text-red-300 cursor-pointer font-bold px-1"
+                                                                    className="text-white hover:text-white/80 cursor-pointer font-bold px-1"
+
                                                                     title="Close Trade"
                                                                 >
                                                                     X
                                                                 </span>
+                                                            </td>
+                                                            <td 
+                                                                className="px-3 py-3 font-bold text-white hover:underline cursor-pointer"
+                                                                onClick={() => setActiveTradeId(trade.id)}
+                                                            >
                                                                 {trade.id}
+                                                            </td>
+                                                            <td className="px-3 py-3">
+                                                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${trade.type === 'BUY' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                                                                    {trade.type}
+                                                                </span>
                                                             </td>
                                                             <td className="px-3 py-3 font-bold text-white uppercase">{trade.symbol}</td>
                                                             <td className="px-3 py-3 font-mono">{trade.type === 'BUY' ? trade.entry_price : '-'}</td>
@@ -543,6 +568,7 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
                                                             <td className="px-3 py-3 text-[11px] font-mono text-slate-500 italic">{trade.type === 'BUY' ? showIp(trade.trade_ip) : '-'}</td>
                                                             <td className="px-3 py-3 text-[11px] font-mono text-slate-500 italic">{trade.type === 'SELL' ? showIp(trade.trade_ip) : '-'}</td>
                                                         </tr>
+
                                                     ))}
                                                 </tbody>
                                             </table>
@@ -552,219 +578,240 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
                             )}
 
                             {/* Closed Trades Section */}
-                                        <div className="bg-[#1a2035] rounded shadow-xl overflow-hidden mt-6">
-                                            <div className="p-6">
-                                                <h3 className="text-white text-[19px] font-medium mb-1">Closed Trades</h3>
-                                                <p className="text-slate-400 text-[13px] mb-2 font-light italic opacity-70">
-                                                    {loading ? 'Loading...' : `Showing ${closedTrades.length} items.`}
-                                                </p>
-                                                <div className="overflow-x-auto custom-scrollbar rounded">
-                                                    <table className="w-full border-collapse" style={{ minWidth: '1500px' }}>
-                                                        <thead className="bg-[#202940]/30 border-b border-white/10 text-white text-[13px] font-medium tracking-tight">
-                                                            <tr>
-                                                                <th className="px-3 py-4 text-left uppercase tracking-wider">ID <span className="text-[10px]">↑↓</span></th>
-                                                                <th className="px-3 py-4 text-left uppercase tracking-wider">Scrip</th>
-                                                                <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">Buy Rate</th>
-                                                                <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">Sell Rate</th>
-                                                                <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">Lots / Units</th>
-                                                                <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">Buy Turnover</th>
-                                                                <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">Sell Turnover</th>
-                                                                <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">Profit / Loss</th>
-                                                                <th className="px-3 py-4 text-left uppercase tracking-wider">Brokerage</th>
-                                                                <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">Bought at</th>
-                                                                <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">Sold at</th>
-                                                                <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">Buy Ip</th>
-                                                                <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">Sell Ip</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody className="text-[13px] text-slate-300">
-                                                            {closedTrades.length === 0 ? (
-                                                                <tr><td colSpan="13" className="px-4 py-8 text-slate-500 font-light text-center">{loading ? 'Loading...' : 'No records found'}</td></tr>
-                                                            ) : closedTrades.map((trade) => (
-                                                                <tr key={trade.id} className="hover:bg-white/[0.03] transition-colors border-b border-white/5">
-                                                                    <td className="px-3 py-3 font-bold">{trade.id}</td>
-                                                                    <td className="px-3 py-3 font-bold text-white uppercase">{trade.symbol}</td>
-                                                                    <td className="px-3 py-3 font-mono">{trade.type === 'BUY' ? trade.entry_price : trade.exit_price}</td>
-                                                                    <td className="px-3 py-3 font-mono">{trade.type === 'SELL' ? trade.entry_price : trade.exit_price}</td>
-                                                                    <td className="px-3 py-3">{trade.qty}</td>
-                                                                    <td className="px-3 py-3 font-mono">{(trade.qty * (trade.type === 'BUY' ? trade.entry_price : trade.exit_price)).toFixed(2)}</td>
-                                                                    <td className="px-3 py-3 font-mono">{(trade.qty * (trade.type === 'SELL' ? trade.entry_price : trade.exit_price)).toFixed(2)}</td>
-                                                                    <td className={`px-3 py-4 font-mono font-bold ${(trade.pnl || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                                                        {trade.pnl || '0'}
-                                                                    </td>
-                                                                    <td className="px-3 py-3 font-mono text-slate-400">{trade.brokerage || '0'}</td>
-                                                                    <td className="px-3 py-3 text-[11px] whitespace-nowrap">{trade.type === 'BUY' ? fmtTime(trade.entry_time) : fmtTime(trade.exit_time)}</td>
-                                                                    <td className="px-3 py-3 text-[11px] whitespace-nowrap">{trade.type === 'SELL' ? fmtTime(trade.entry_time) : fmtTime(trade.exit_time)}</td>
-                                                                    <td className="px-3 py-3 text-[11px] font-mono text-slate-500 italic">{trade.type === 'BUY' ? showIp(trade.trade_ip) : showIp(trade.exit_ip)}</td>
-                                                                    <td className="px-3 py-3 text-[11px] font-mono text-slate-500 italic">{trade.type === 'SELL' ? showIp(trade.trade_ip) : showIp(trade.exit_ip)}</td>
-                                                                </tr>
-                                                            ))}
-                                                        </tbody>
-                                            </table>
-                                        </div>
+                            <div className="bg-[#1a2035] rounded shadow-xl overflow-hidden mt-6">
+                                <div className="p-6">
+                                    <h3 className="text-white text-[19px] font-medium mb-1">Closed Trades</h3>
+                                    <p className="text-slate-400 text-[13px] mb-2 font-light italic opacity-70">
+                                        {loading ? 'Loading...' : `Showing ${closedTrades.length} items.`}
+                                    </p>
+                                    <div className="overflow-x-auto custom-scrollbar rounded">
+                                        <table className="w-full border-collapse" style={{ minWidth: '1500px' }}>
+                                            <thead className="bg-[#202940]/30 border-b border-white/10 text-white text-[13px] font-medium tracking-tight">
+                                                <tr>
+                                                    <th className="px-3 py-4 text-left uppercase tracking-wider">ID <span className="text-[10px]">↑↓</span></th>
+                                                    <th className="px-3 py-4 text-left uppercase tracking-wider">Type</th>
+                                                    <th className="px-3 py-4 text-left uppercase tracking-wider">Scrip</th>
+                                                    <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">Buy Rate</th>
+                                                    <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">Sell Rate</th>
+                                                    <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">Lots / Units</th>
+                                                    <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">Buy Turnover</th>
+                                                    <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">Sell Turnover</th>
+                                                    <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">Profit / Loss</th>
+                                                    <th className="px-3 py-4 text-left uppercase tracking-wider">Brokerage</th>
+                                                    <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">Bought at</th>
+                                                    <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">Sold at</th>
+                                                    <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">Buy Ip</th>
+                                                    <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">Sell Ip</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="text-[13px] text-slate-300">
+                                                {closedTrades.length === 0 ? (
+                                                    <tr><td colSpan="14" className="px-4 py-8 text-slate-500 font-light text-center">{loading ? 'Loading...' : 'No records found'}</td></tr>
+                                                ) : closedTrades.map((trade) => (
+                                                    <tr key={trade.id} className="hover:bg-white/[0.03] transition-colors border-b border-white/5">
+                                                        <td 
+                                                            className="px-3 py-3 font-bold text-white hover:underline cursor-pointer"
+                                                            onClick={() => setActiveTradeId(trade.id)}
+                                                        >
+                                                            {trade.id}
+                                                        </td>
+                                                        <td className="px-3 py-3">
+                                                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${trade.type === 'BUY' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                                                                {trade.type}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-3 py-3 font-bold text-white uppercase">{trade.symbol}</td>
+                                                        <td className="px-3 py-3 font-mono">{trade.type === 'BUY' ? trade.entry_price : trade.exit_price}</td>
+                                                        <td className="px-3 py-3 font-mono">{trade.type === 'SELL' ? trade.entry_price : trade.exit_price}</td>
+                                                        <td className="px-3 py-3">{trade.qty}</td>
+                                                        <td className="px-3 py-3 font-mono">{(trade.qty * (trade.type === 'BUY' ? trade.entry_price : trade.exit_price)).toFixed(2)}</td>
+                                                        <td className="px-3 py-3 font-mono">{(trade.qty * (trade.type === 'SELL' ? trade.entry_price : trade.exit_price)).toFixed(2)}</td>
+                                                        <td className={`px-3 py-4 font-mono font-bold ${(trade.pnl || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                                            {trade.pnl || '0'}
+                                                        </td>
+                                                        <td className="px-3 py-3 font-mono text-slate-400">{trade.brokerage || '0'}</td>
+                                                        <td className="px-3 py-3 text-[11px] whitespace-nowrap">{trade.type === 'BUY' ? fmtTime(trade.entry_time) : fmtTime(trade.exit_time)}</td>
+                                                        <td className="px-3 py-3 text-[11px] whitespace-nowrap">{trade.type === 'SELL' ? fmtTime(trade.entry_time) : fmtTime(trade.exit_time)}</td>
+                                                        <td className="px-3 py-3 text-[11px] font-mono text-slate-500 italic">{trade.type === 'BUY' ? showIp(trade.trade_ip) : showIp(trade.exit_ip)}</td>
+                                                        <td className="px-3 py-3 text-[11px] font-mono text-slate-500 italic">{trade.type === 'SELL' ? showIp(trade.trade_ip) : showIp(trade.exit_ip)}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </div>
+                            </div>
 
                             {/* Pending Orders Section */}
                             {isAdmin() && (
-                                    <div className="bg-[#1a2035] rounded shadow-xl overflow-hidden">
-                                        <div className="p-6">
-                                            <h3 className="text-white text-[19px] font-medium mb-6">Pending Orders</h3>
-                                            <div className="flex border-b border-white/10 mb-6">
-                                                {['MCX', 'EQUITY', 'COMEX', 'FOREX', 'CRYPTO'].map((t) => (
-                                                    <button
-                                                        key={t}
-                                                        onClick={() => setPendingTab(t)}
-                                                        className={`px-6 py-2 text-[12px] font-bold transition-all uppercase tracking-widest ${pendingTab === t ? 'text-[#4caf50] border-b-2 border-[#4caf50]' : 'text-slate-500 hover:text-slate-300'}`}
-                                                    >
-                                                        {t}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                            {(() => {
-                                                const mcxSymbols = ['GOLD', 'SILVER', 'CRUDEOIL', 'COPPER', 'NICKEL', 'ZINC', 'LEAD', 'ALUMINIUM', 'ALUMINI', 'NATURALGAS', 'MENTHAOIL', 'COTTON', 'GOLDM', 'SILVERM', 'BULLDEX'];
-                                                const filtered = pendingOrders.filter(o => {
-                                                    const mType = (o.market_type || '').toUpperCase();
-                                                    if (mType === pendingTab) return true;
-                                                    if (pendingTab === 'MCX') return mType === 'MCX' || (mcxSymbols.some(s => (o.symbol || '').toUpperCase().includes(s)) && !mType);
-                                                    if (pendingTab === 'EQUITY') return mType === 'EQUITY' || (!mcxSymbols.some(s => (o.symbol || '').toUpperCase().includes(s)) && !mType);
-                                                    const sym = (o.symbol || '').toUpperCase();
-                                                    if (pendingTab === 'FOREX') return sym.includes('/') || ['EURUSD', 'GBPUSD', 'USDJPY'].some(f => sym.includes(f));
-                                                    if (pendingTab === 'CRYPTO') return ['BTC', 'ETH', 'SOL', 'USDT'].some(c => sym.includes(c));
-                                                    if (pendingTab === 'COMEX') return ['GC', 'SI', 'HG', 'CL'].some(c => sym.startsWith(c));
-                                                    return false;
-                                                });
-    
-                                                return (
-                                                    <>
-                                                        <p className="text-slate-400 text-[12px] mb-4 font-light italic opacity-60">
-                                                            Showing {filtered.length} items.
-                                                        </p>
-                                                        <div className="overflow-x-auto custom-scrollbar">
-                                                            <table className="w-full border-collapse">
-                                                                <thead>
-                                                                    <tr className="text-slate-400 text-[12px] font-bold border-b border-white/10">
-                                                                        <th className="px-3 py-4 text-left">ID</th>
-                                                                        <th className="px-3 py-4 text-left">Type</th>
-                                                                        <th className="px-3 py-4 text-left">Lots</th>
-                                                                        <th className="px-3 py-4 text-left">Commodity</th>
-                                                                        <th className="px-3 py-4 text-left">Condition</th>
-                                                                        <th className="px-3 py-4 text-left">Rate</th>
-                                                                        <th className="px-3 py-4 text-left">Buy Time</th>
-                                                                        <th className="px-3 py-4 text-left">Buy IP</th>
-                                                                    </tr>
-                                                                </thead>
-                                                                <tbody className="text-[13px] text-slate-300">
-                                                                    {filtered.length === 0 ? (
-                                                                        <tr><td colSpan="8" className="px-4 py-12 text-slate-500 font-light text-center">No records found</td></tr>
-                                                                    ) : filtered.map((order) => (
-                                                                        <tr key={order.id} className="hover:bg-white/[0.02] transition-colors border-b border-white/5">
-                                                                            <td className="px-3 py-4 font-bold">{order.id}</td>
-                                                                            <td className="px-3 py-4">
-                                                                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${order.type === 'BUY' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
-                                                                                    {order.type}
-                                                                                </span>
-                                                                            </td>
-                                                                            <td className="px-3 py-4 font-mono">{order.qty}</td>
-                                                                            <td className="px-3 py-4 font-bold text-white uppercase">{order.symbol}</td>
-                                                                            <td className="px-3 py-4 font-medium opacity-70">{order.order_type || 'LIMIT'}</td>
-                                                                            <td className="px-3 py-4 font-mono text-[#26c6da]">{order.entry_price}</td>
-                                                                            <td className="px-3 py-4 text-[11px] whitespace-nowrap opacity-70">{new Date(order.entry_time || order.created_at).toLocaleString()}</td>
-                                                                            <td className="px-3 py-4 text-[11px] font-mono text-slate-500 italic">{showIp(order.trade_ip)}</td>
-                                                                        </tr>
-                                                                    ))}
-                                                                </tbody>
-                                                            </table>
-                                                        </div>
-                                                    </>
-                                                );
-                                            })()}
+                                <div className="bg-[#1a2035] rounded shadow-xl overflow-hidden">
+                                    <div className="p-6">
+                                        <h3 className="text-white text-[19px] font-medium mb-6">Pending Orders</h3>
+                                        <div className="flex border-b border-white/10 mb-6">
+                                            {['MCX', 'EQUITY', 'COMEX', 'FOREX', 'CRYPTO'].map((t) => (
+                                                <button
+                                                    key={t}
+                                                    onClick={() => setPendingTab(t)}
+                                                    className={`px-6 py-2 text-[12px] font-bold transition-all uppercase tracking-widest ${pendingTab === t ? 'text-[#4caf50] border-b-2 border-[#4caf50]' : 'text-slate-500 hover:text-slate-300'}`}
+                                                >
+                                                    {t}
+                                                </button>
+                                            ))}
                                         </div>
+                                        {(() => {
+                                            const mcxSymbols = ['GOLD', 'SILVER', 'CRUDEOIL', 'COPPER', 'NICKEL', 'ZINC', 'LEAD', 'ALUMINIUM', 'ALUMINI', 'NATURALGAS', 'MENTHAOIL', 'COTTON', 'GOLDM', 'SILVERM', 'BULLDEX'];
+                                            const filtered = pendingOrders.filter(o => {
+                                                const mType = (o.market_type || '').toUpperCase();
+                                                if (mType === pendingTab) return true;
+                                                if (pendingTab === 'MCX') return mType === 'MCX' || (mcxSymbols.some(s => (o.symbol || '').toUpperCase().includes(s)) && !mType);
+                                                if (pendingTab === 'EQUITY') return mType === 'EQUITY' || (!mcxSymbols.some(s => (o.symbol || '').toUpperCase().includes(s)) && !mType);
+                                                const sym = (o.symbol || '').toUpperCase();
+                                                if (pendingTab === 'FOREX') return sym.includes('/') || ['EURUSD', 'GBPUSD', 'USDJPY'].some(f => sym.includes(f));
+                                                if (pendingTab === 'CRYPTO') return ['BTC', 'ETH', 'SOL', 'USDT'].some(c => sym.includes(c));
+                                                if (pendingTab === 'COMEX') return ['GC', 'SI', 'HG', 'CL'].some(c => sym.startsWith(c));
+                                                return false;
+                                            });
+
+                                            return (
+                                                <>
+                                                    <p className="text-slate-400 text-[12px] mb-4 font-light italic opacity-60">
+                                                        Showing {filtered.length} items.
+                                                    </p>
+                                                    <div className="overflow-x-auto custom-scrollbar">
+                                                        <table className="w-full border-collapse">
+                                                            <thead>
+                                                                <tr className="text-slate-400 text-[12px] font-bold border-b border-white/10">
+                                                                    <th className="px-3 py-4 text-left">ID</th>
+                                                                    <th className="px-3 py-4 text-left">Type</th>
+                                                                    <th className="px-3 py-4 text-left">Lots</th>
+                                                                    <th className="px-3 py-4 text-left">Commodity</th>
+                                                                    <th className="px-3 py-4 text-left">Condition</th>
+                                                                    <th className="px-3 py-4 text-left">Rate</th>
+                                                                    <th className="px-3 py-4 text-left">Buy Time</th>
+                                                                    <th className="px-3 py-4 text-left">Buy IP</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody className="text-[13px] text-slate-300">
+                                                                {filtered.length === 0 ? (
+                                                                    <tr><td colSpan="8" className="px-4 py-12 text-slate-500 font-light text-center">No records found</td></tr>
+                                                                ) : filtered.map((order) => (
+                                                                        <tr key={order.id} className="hover:bg-white/[0.02] transition-colors border-b border-white/5">
+                                                                            <td 
+                                                                                className="px-3 py-4 font-bold text-white hover:underline cursor-pointer"
+                                                                                onClick={() => setActiveTradeId(order.id)}
+                                                                            >
+                                                                                {order.id}
+                                                                            </td>
+                                                                        <td className="px-3 py-4">
+                                                                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${order.type === 'BUY' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                                                                                {order.type}
+                                                                            </span>
+                                                                        </td>
+                                                                        <td className="px-3 py-4 font-mono">{order.qty}</td>
+                                                                        <td className="px-3 py-4 font-bold text-white uppercase">{order.symbol}</td>
+                                                                        <td className="px-3 py-4 font-medium opacity-70">{order.order_type || 'LIMIT'}</td>
+                                                                        <td className="px-3 py-4 font-mono text-[#26c6da]">{order.entry_price}</td>
+                                                                        <td className="px-3 py-4 text-[11px] whitespace-nowrap opacity-70">{new Date(order.entry_time || order.created_at).toLocaleString()}</td>
+                                                                        <td className="px-3 py-4 text-[11px] font-mono text-slate-500 italic">{showIp(order.trade_ip)}</td>
+                                                                    </tr>
+                                                                ))}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </>
+                                            );
+                                        })()}
                                     </div>
+                                </div>
                             )}
 
                             {/* Completed Orders Section */}
                             {isAdmin() && (
-                                        <div className="bg-[#1a2035] rounded shadow-xl overflow-hidden mt-6">
-                                            <div className="p-6">
-                                                <h3 className="text-white text-[19px] font-medium mb-6">Completed Orders</h3>
-                                                <div className="flex border-b border-white/10 mb-6">
-                                                    {['MCX', 'EQUITY', 'COMEX', 'FOREX', 'CRYPTO'].map((t) => (
-                                                        <button
-                                                            key={t}
-                                                            onClick={() => setCompletedTab(t)}
-                                                            className={`px-6 py-2 text-[12px] font-bold transition-all uppercase tracking-widest ${completedTab === t ? 'text-[#2196f3] border-b-2 border-[#2196f3]' : 'text-slate-500 hover:text-slate-300'}`}
-                                                        >
-                                                            {t}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                                {(() => {
-                                                    const mcxSymbols = ['GOLD', 'SILVER', 'CRUDEOIL', 'COPPER', 'NICKEL', 'ZINC', 'LEAD', 'ALUMINIUM', 'ALUMINI', 'NATURALGAS', 'MENTHAOIL', 'COTTON', 'GOLDM', 'SILVERM', 'BULLDEX'];
-                                                    const filtered = completedOrders.filter(o => {
-                                                        const mType = (o.market_type || '').toUpperCase();
-                                                        if (mType === completedTab) return true;
-                                                        if (completedTab === 'MCX') return mType === 'MCX' || (mcxSymbols.some(s => (o.symbol || '').toUpperCase().includes(s)) && !mType);
-                                                        if (completedTab === 'EQUITY') return mType === 'EQUITY' || (!mcxSymbols.some(s => (o.symbol || '').toUpperCase().includes(s)) && !mType);
-                                                        const sym = (o.symbol || '').toUpperCase();
-                                                        if (completedTab === 'FOREX') return sym.includes('/') || ['EURUSD', 'GBPUSD', 'USDJPY', 'XAUUSD'].some(f => sym.includes(f));
-                                                        if (completedTab === 'CRYPTO') return ['BTC', 'ETH', 'SOL', 'USDT'].some(c => sym.includes(c));
-                                                        if (completedTab === 'COMEX') return ['GC', 'SI', 'HG', 'CL'].some(c => sym.startsWith(c));
-                                                        return false;
-                                                    });
-    
-                                                    return (
-                                                        <>
-                                                            <p className="text-slate-400 text-[12px] mb-4 font-light italic opacity-60">
-                                                                Showing {filtered.length} items.
-                                                            </p>
-                                                            <div className="overflow-x-auto custom-scrollbar">
-                                                                <table className="w-full border-collapse">
-                                                                    <thead>
-                                                                        <tr className="text-slate-400 text-[12px] font-bold border-b border-white/10 uppercase tracking-wider">
-                                                                            <th className="px-3 py-4 text-left">ID</th>
-                                                                            <th className="px-3 py-4 text-left">Scrip</th>
-                                                                            <th className="px-3 py-4 text-left">Type</th>
-                                                                            <th className="px-3 py-4 text-left whitespace-nowrap">Buy Rate</th>
-                                                                            <th className="px-3 py-4 text-left whitespace-nowrap">Sell Rate</th>
-                                                                            <th className="px-3 py-4 text-left whitespace-nowrap">Qty / Lots</th>
-                                                                            <th className="px-3 py-4 text-left whitespace-nowrap">Profit / Loss</th>
-                                                                            <th className="px-3 py-4 text-left">Brokerage</th>
-                                                                            <th className="px-3 py-4 text-left">Buy Time</th>
-                                                                            <th className="px-3 py-4 text-left">Sell Time</th>
-                                                                        </tr>
-                                                                    </thead>
-                                                                    <tbody className="text-[13px] text-slate-300">
-                                                                        {filtered.length === 0 ? (
-                                                                            <tr><td colSpan="10" className="px-4 py-12 text-slate-500 font-light text-center">No records found</td></tr>
-                                                                        ) : filtered.map((trade) => (
-                                                                            <tr key={trade.id} className="hover:bg-white/[0.02] transition-colors border-b border-white/5">
-                                                                                <td className="px-3 py-4 font-bold">{trade.id}</td>
-                                                                                <td className="px-3 py-4 font-bold text-white uppercase">{trade.symbol}</td>
-                                                                                <td className="px-3 py-4 text-center">
-                                                                                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${trade.type === 'BUY' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
-                                                                                        {trade.type}
-                                                                                    </span>
-                                                                                </td>
-                                                                                <td className="px-3 py-4 font-mono">{trade.type === 'BUY' ? trade.entry_price : (trade.exit_price || '-')}</td>
-                                                                                <td className="px-3 py-4 font-mono">{trade.type === 'SELL' ? trade.entry_price : (trade.exit_price || '-')}</td>
-                                                                                <td className="px-3 py-4 font-mono">{trade.qty}</td>
-                                                                                <td className={`px-3 py-4 font-mono font-bold ${(trade.pnl || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                                                                    {trade.pnl || '0'}
-                                                                                </td>
-                                                                                <td className="px-3 py-4 font-mono text-slate-400">{trade.brokerage || '-'}</td>
-                                                                                <td className="px-3 py-4 text-[11px] whitespace-nowrap opacity-70">{new Date(trade.entry_time).toLocaleString()}</td>
-                                                                                <td className="px-3 py-4 text-[11px] whitespace-nowrap opacity-70">{new Date(trade.exit_time).toLocaleString()}</td>
-                                                                            </tr>
-                                                                        ))}
-                                                                    </tbody>
-                                                                </table>
-                                                            </div>
-                                                        </>
-                                                    );
-                                                })()}
-                                            </div>
+                                <div className="bg-[#1a2035] rounded shadow-xl overflow-hidden mt-6">
+                                    <div className="p-6">
+                                        <h3 className="text-white text-[19px] font-medium mb-6">Completed Orders</h3>
+                                        <div className="flex border-b border-white/10 mb-6">
+                                            {['MCX', 'EQUITY', 'COMEX', 'FOREX', 'CRYPTO'].map((t) => (
+                                                <button
+                                                    key={t}
+                                                    onClick={() => setCompletedTab(t)}
+                                                    className={`px-6 py-2 text-[12px] font-bold transition-all uppercase tracking-widest ${completedTab === t ? 'text-[#2196f3] border-b-2 border-[#2196f3]' : 'text-slate-500 hover:text-slate-300'}`}
+                                                >
+                                                    {t}
+                                                </button>
+                                            ))}
                                         </div>
+                                        {(() => {
+                                            const mcxSymbols = ['GOLD', 'SILVER', 'CRUDEOIL', 'COPPER', 'NICKEL', 'ZINC', 'LEAD', 'ALUMINIUM', 'ALUMINI', 'NATURALGAS', 'MENTHAOIL', 'COTTON', 'GOLDM', 'SILVERM', 'BULLDEX'];
+                                            const filtered = completedOrders.filter(o => {
+                                                const mType = (o.market_type || '').toUpperCase();
+                                                if (mType === completedTab) return true;
+                                                if (completedTab === 'MCX') return mType === 'MCX' || (mcxSymbols.some(s => (o.symbol || '').toUpperCase().includes(s)) && !mType);
+                                                if (completedTab === 'EQUITY') return mType === 'EQUITY' || (!mcxSymbols.some(s => (o.symbol || '').toUpperCase().includes(s)) && !mType);
+                                                const sym = (o.symbol || '').toUpperCase();
+                                                if (completedTab === 'FOREX') return sym.includes('/') || ['EURUSD', 'GBPUSD', 'USDJPY', 'XAUUSD'].some(f => sym.includes(f));
+                                                if (completedTab === 'CRYPTO') return ['BTC', 'ETH', 'SOL', 'USDT'].some(c => sym.includes(c));
+                                                if (completedTab === 'COMEX') return ['GC', 'SI', 'HG', 'CL'].some(c => sym.startsWith(c));
+                                                return false;
+                                            });
+
+                                            return (
+                                                <>
+                                                    <p className="text-slate-400 text-[12px] mb-4 font-light italic opacity-60">
+                                                        Showing {filtered.length} items.
+                                                    </p>
+                                                    <div className="overflow-x-auto custom-scrollbar">
+                                                        <table className="w-full border-collapse">
+                                                            <thead>
+                                                                <tr className="text-slate-400 text-[12px] font-bold border-b border-white/10 uppercase tracking-wider">
+                                                                    <th className="px-3 py-4 text-left">ID</th>
+                                                                    <th className="px-3 py-4 text-left">Scrip</th>
+                                                                    <th className="px-3 py-4 text-left">Type</th>
+                                                                    <th className="px-3 py-4 text-left whitespace-nowrap">Buy Rate</th>
+                                                                    <th className="px-3 py-4 text-left whitespace-nowrap">Sell Rate</th>
+                                                                    <th className="px-3 py-4 text-left whitespace-nowrap">Qty / Lots</th>
+                                                                    <th className="px-3 py-4 text-left whitespace-nowrap">Profit / Loss</th>
+                                                                    <th className="px-3 py-4 text-left">Brokerage</th>
+                                                                    <th className="px-3 py-4 text-left">Buy Time</th>
+                                                                    <th className="px-3 py-4 text-left">Sell Time</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody className="text-[13px] text-slate-300">
+                                                                {filtered.length === 0 ? (
+                                                                    <tr><td colSpan="10" className="px-4 py-12 text-slate-500 font-light text-center">No records found</td></tr>
+                                                                ) : filtered.map((trade) => (
+                                                                        <tr key={trade.id} className="hover:bg-white/[0.02] transition-colors border-b border-white/5">
+                                                                            <td 
+                                                                                className="px-3 py-4 font-bold text-white hover:underline cursor-pointer"
+                                                                                onClick={() => setActiveTradeId(trade.id)}
+                                                                            >
+                                                                                {trade.id}
+                                                                            </td>
+                                                                        <td className="px-3 py-4 font-bold text-white uppercase">{trade.symbol}</td>
+                                                                        <td className="px-3 py-4 text-center">
+                                                                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${trade.type === 'BUY' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                                                                                {trade.type}
+                                                                            </span>
+                                                                        </td>
+                                                                        <td className="px-3 py-4 font-mono">{trade.type === 'BUY' ? trade.entry_price : (trade.exit_price || '-')}</td>
+                                                                        <td className="px-3 py-4 font-mono">{trade.type === 'SELL' ? trade.entry_price : (trade.exit_price || '-')}</td>
+                                                                        <td className="px-3 py-4 font-mono">{trade.qty}</td>
+                                                                        <td className={`px-3 py-4 font-mono font-bold ${(trade.pnl || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                                                            {trade.pnl || '0'}
+                                                                        </td>
+                                                                        <td className="px-3 py-4 font-mono text-slate-400">{trade.brokerage || '-'}</td>
+                                                                        <td className="px-3 py-4 text-[11px] whitespace-nowrap opacity-70">{new Date(trade.entry_time).toLocaleString()}</td>
+                                                                        <td className="px-3 py-4 text-[11px] whitespace-nowrap opacity-70">{new Date(trade.exit_time).toLocaleString()}</td>
+                                                                    </tr>
+                                                                ))}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </>
+                                            );
+                                        })()}
+                                    </div>
+                                </div>
                             )}
                         </div>
                     </div>
@@ -791,6 +838,10 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
                         </div>
                     </div>
                 </div>
+            )}
+            {/* TRADE DETAIL MODAL */}
+            {activeTradeId && (
+                <TradeDetailPage tradeId={activeTradeId} onClose={() => setActiveTradeId(null)} />
             )}
         </div>
     );

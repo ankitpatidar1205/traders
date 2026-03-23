@@ -120,7 +120,7 @@ const SimpleAddUserForm = ({ role, onBack, onSave, editMode = false, initialData
     const [logoFile, setLogoFile] = useState(null);
     const [logoPreview, setLogoPreview] = useState(
         initialLogoPath
-            ? (initialLogoPath.startsWith('http') ? initialLogoPath : `http://https://trader-production-e063.up.railway.app${initialLogoPath}`)
+            ? (initialLogoPath.startsWith('http') ? initialLogoPath : `${api.UPLOADS_BASE_URL}${initialLogoPath}`)
             : null
     );
     const [bgImageFile, setBgImageFile] = useState(null);
@@ -129,9 +129,10 @@ const SimpleAddUserForm = ({ role, onBack, onSave, editMode = false, initialData
     const [profileImageFile, setProfileImageFile] = useState(null);
     const [profileImagePreview, setProfileImagePreview] = useState(
         initialProfileImagePath
-            ? (initialProfileImagePath.startsWith('http') ? initialProfileImagePath : `http://https://trader-production-e063.up.railway.app${initialProfileImagePath}`)
+            ? (initialProfileImagePath.startsWith('http') ? initialProfileImagePath : `${api.UPLOADS_BASE_URL}${initialProfileImagePath}`)
             : null
     );
+
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const logoInputRef = useRef(null);

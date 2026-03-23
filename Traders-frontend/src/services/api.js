@@ -12,6 +12,8 @@ const SERVER_IP = 'localhost';
 const PORT = '5000';
 export const BASE_URL = import.meta.env.VITE_API_URL || `http://${SERVER_IP}:${PORT}/api`;
 export const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || `http://${SERVER_IP}:${PORT}`;
+export const UPLOADS_BASE_URL = BASE_URL.replace(/\/api$/, '') + '/uploads';
+
 
 // ─── AUTH ────────────────────────────────────────────
 export const login = async (username, password) => {
@@ -475,6 +477,16 @@ export const getNotificationUsersByRole = async (role) => {
 // ─── KITE API ─────────────────────────────────────────
 export const getKiteLoginURL = async () => {
     const response = await api.get('/kite/login');
+    return response.data;
+};
+
+export const setKiteAccessToken = async (access_token) => {
+    const response = await api.post('/kite/set-token', { access_token });
+    return response.data;
+};
+
+export const getKiteMarketData = async () => {
+    const response = await api.get('/kite/market');
     return response.data;
 };
 

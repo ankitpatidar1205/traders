@@ -110,16 +110,16 @@ const ClosedTradesPage = () => {
                     </div>
 
                     {/* Buttons */}
-                    <div className="flex gap-3 shrink-0">
+                    <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0">
                         <button
                             onClick={handleSearch}
-                            className="bg-[#4CAF50] hover:bg-[#43A047] text-white font-bold py-2.5 px-8 rounded uppercase tracking-wide text-xs transition-all shadow-md"
+                            className="bg-[#4CAF50] hover:bg-[#43A047] text-white font-bold py-3 md:py-2.5 px-8 rounded uppercase tracking-wide text-xs transition-all shadow-md flex-1 md:flex-none"
                         >
                             SEARCH
                         </button>
                         <button
                             onClick={handleReset}
-                            className="bg-[#607d8b] hover:bg-[#546e7a] text-white font-bold py-2.5 px-8 rounded uppercase tracking-wide text-xs transition-all shadow-md"
+                            className="bg-[#607d8b] hover:bg-[#546e7a] text-white font-bold py-3 md:py-2.5 px-8 rounded uppercase tracking-wide text-xs transition-all shadow-md flex-1 md:flex-none"
                         >
                             RESET
                         </button>
@@ -141,7 +141,7 @@ const ClosedTradesPage = () => {
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="text-white text-sm bg-[#151c2c] border-b border-white/10">
-                                <th className="px-4 py-4 w-12">
+                                <th className="px-4 py-4 w-12 sticky left-0 bg-[#151c2c] z-10">
                                     <input
                                         type="checkbox"
                                         onChange={handleSelectAll}
@@ -149,26 +149,26 @@ const ClosedTradesPage = () => {
                                         className="w-5 h-5 rounded bg-slate-700 border-slate-600 cursor-pointer accent-[#2196F3]"
                                     />
                                 </th>
-                                <th className="px-4 py-4 font-bold">ID ↑</th>
-                                <th className="px-4 py-4 font-bold">Scrip</th>
-                                <th className="px-4 py-4 font-bold">Segment</th>
-                                <th className="px-4 py-4 font-bold">User ID</th>
-                                <th className="px-4 py-4 font-bold">Buy Rate</th>
-                                <th className="px-4 py-4 font-bold">Sell Rate</th>
-                                <th className="px-4 py-4 font-bold">Lots / Units</th>
-                                <th className="px-4 py-4 font-bold">Profit/Loss</th>
-                                <th className="px-4 py-4 font-bold">Time Diff</th>
-                                <th className="px-4 py-4 font-bold">Bought at</th>
-                                <th className="px-4 py-4 font-bold">Sold at</th>
-                                <th className="px-4 py-4 font-bold">Buy IP</th>
-                                <th className="px-4 py-4 font-bold">Sell IP</th>
+                                <th className="px-4 py-4 font-bold whitespace-nowrap">ID ↑</th>
+                                <th className="px-4 py-4 font-bold whitespace-nowrap">Scrip</th>
+                                <th className="px-4 py-4 font-bold whitespace-nowrap">Segment</th>
+                                <th className="px-4 py-4 font-bold whitespace-nowrap">User ID</th>
+                                <th className="px-4 py-4 font-bold whitespace-nowrap">Buy Rate</th>
+                                <th className="px-4 py-4 font-bold whitespace-nowrap">Sell Rate</th>
+                                <th className="px-4 py-4 font-bold whitespace-nowrap">Lots / Units</th>
+                                <th className="px-4 py-4 font-bold whitespace-nowrap">Profit/Loss</th>
+                                <th className="px-4 py-4 font-bold whitespace-nowrap">Time Diff</th>
+                                <th className="px-4 py-4 font-bold whitespace-nowrap">Bought at</th>
+                                <th className="px-4 py-4 font-bold whitespace-nowrap">Sold at</th>
+                                <th className="px-4 py-4 font-bold whitespace-nowrap">Buy IP</th>
+                                <th className="px-4 py-4 font-bold whitespace-nowrap">Sell IP</th>
                             </tr>
                         </thead>
                         <tbody className="text-sm text-slate-300">
                             {tradesData.length > 0 ? (
                                 tradesData.map((trade) => (
                                     <tr key={trade.id} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
-                                        <td className="px-4 py-4">
+                                        <td className="px-4 py-4 sticky left-0 bg-[#1f283e] z-10">
                                             <input
                                                 type="checkbox"
                                                 checked={selectedTrades.includes(trade.id)}
@@ -176,21 +176,21 @@ const ClosedTradesPage = () => {
                                                 className="w-5 h-5 rounded bg-slate-700 border-slate-600 cursor-pointer accent-[#2196F3]"
                                             />
                                         </td>
-                                        <td className="px-4 py-4 text-white">{trade.id}</td>
-                                        <td className="px-4 py-4 text-[#00BCD4]">{trade.scrip}</td>
-                                        <td className="px-4 py-4">{trade.segment}</td>
-                                        <td className="px-4 py-4">{trade.userId}</td>
-                                        <td className="px-4 py-4">{trade.buyRate}</td>
-                                        <td className="px-4 py-4">{trade.sellRate}</td>
-                                        <td className="px-4 py-4">{trade.lots}</td>
-                                        <td className={`px-4 py-4 font-bold ${parseFloat(trade.profitLoss || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                        <td className="px-4 py-4 text-white whitespace-nowrap">{trade.id}</td>
+                                        <td className="px-4 py-4 text-[#00BCD4] whitespace-nowrap">{trade.scrip}</td>
+                                        <td className="px-4 py-4 whitespace-nowrap">{trade.segment}</td>
+                                        <td className="px-4 py-4 whitespace-nowrap">{trade.userId}</td>
+                                        <td className="px-4 py-4 whitespace-nowrap font-mono">{trade.buyRate}</td>
+                                        <td className="px-4 py-4 whitespace-nowrap font-mono">{trade.sellRate}</td>
+                                        <td className="px-4 py-4 whitespace-nowrap font-mono">{trade.lots}</td>
+                                        <td className={`px-4 py-4 font-bold whitespace-nowrap ${parseFloat(trade.profitLoss || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                                             {trade.profitLoss || '-'}
                                         </td>
-                                        <td className="px-4 py-4">{trade.timeDiff || '-'}</td>
-                                        <td className="px-4 py-4">{trade.boughtAt}</td>
-                                        <td className="px-4 py-4">{trade.soldAt || '-'}</td>
-                                        <td className="px-4 py-4 text-[11px] font-mono">{trade.buyIp && trade.buyIp !== '::1' ? trade.buyIp : '152.58.28.60'}</td>
-                                        <td className="px-4 py-4 text-[11px] font-mono">{trade.sellIp && trade.sellIp !== '::1' ? trade.sellIp : '152.58.28.60'}</td>
+                                        <td className="px-4 py-4 whitespace-nowrap">{trade.timeDiff || '-'}</td>
+                                        <td className="px-4 py-4 whitespace-nowrap">{trade.boughtAt}</td>
+                                        <td className="px-4 py-4 whitespace-nowrap">{trade.soldAt || '-'}</td>
+                                        <td className="px-4 py-4 text-[11px] font-mono whitespace-nowrap">{trade.buyIp && trade.buyIp !== '::1' ? trade.buyIp : '152.58.28.60'}</td>
+                                        <td className="px-4 py-4 text-[11px] font-mono whitespace-nowrap">{trade.sellIp && trade.sellIp !== '::1' ? trade.sellIp : '152.58.28.60'}</td>
                                     </tr>
                                 ))
                             ) : (
