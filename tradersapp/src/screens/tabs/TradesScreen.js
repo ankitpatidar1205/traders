@@ -13,6 +13,7 @@ import {
     ScrollView
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { X } from 'lucide-react-native';
 import { Colors } from '../../constants/Colors';
 import { useTrades } from '../../context/TradeContext';
 
@@ -73,48 +74,44 @@ const TradeItem = ({ item, activeTab, livePrice, meta, onOpenCloseModal, onCance
         );
     }
 
-    // --- PENDING TRADE UI (MATCH WATCHLIST GRID) ---
+    // --- PENDING TRADE UI ---
     if (isPending) {
-        const isUp1 = true; // Placeholder or calculate from livePrice vs open
-        const buyColor = '#2D864D';
-        const sellColor = '#C64756';
-
         return (
-            <View style={styles.tradeItemGrid}>
-                <View style={styles.itemRow}>
-                    <View style={styles.leftCol}>
-                        <Text style={styles.symbolNameGrid}>{formattedName}</Text>
-                        <Text style={styles.dateTextGrid}>{item.time || '17:17:39'}</Text>
-                        <Text style={styles.labelsBottomGrid}>
-                            Qty: {item.qty} {item.type}
-                        </Text>
-                    </View>
-
-                    <View style={styles.priceColGrid}>
-                        <View style={[styles.priceBoxGrid, { backgroundColor: isUp1 ? buyColor : sellColor }]}>
-                            <Text style={styles.priceValTextGrid}>{livePrice ? livePrice.toFixed(2) : '---'}</Text>
-                        </View>
-                        <Text style={styles.labelSmallGrid}>LTP</Text>
-                    </View>
-
-                    <View style={styles.priceColGrid}>
-                        <View style={[styles.priceBoxGrid, { backgroundColor: sellColor }]}>
-                            <Text style={styles.priceValTextGrid}>{item.entryPrice}</Text>
-                        </View>
-                        <Text style={styles.labelSmallGrid}>Order Price</Text>
-                    </View>
+            <View style={styles.pendingTradeItem}>
+                {/* Row 1: Symbol Name | Price */}
+                <View style={styles.pendingRow1}>
+                    <Text style={styles.pendingSymbolName}>{formattedName}</Text>
+                    <Text style={styles.pendingPriceText}>{item.entryPrice}</Text>
                 </View>
 
-                <View style={styles.actionRowGrid}>
-                    <TouchableOpacity 
-                        style={styles.cancelActionBtn} 
+                {/* Row 2: Buy/Sell Qty, Time | Cancel Button */}
+                <View style={styles.pendingRow2}>
+                    <View>
+                        <Text style={styles.pendingTypeQty}>{item.type === 'BUY' ? 'Bought' : 'Sold'} X {item.qty}</Text>
+                        <Text style={styles.pendingTime}>{item.time || '17:17:39'}</Text>
+                    </View>
+                    <TouchableOpacity
+                        style={styles.pendingCancelBtn}
                         onPress={onCancel}
+                        activeOpacity={0.7}
                     >
-                        <Text style={styles.cancelActionText}>CANCEL ORDER</Text>
+                        <Text style={styles.pendingCancelBtnText}>Cancel</Text>
                     </TouchableOpacity>
                 </View>
 
-                <View style={styles.separatorGrid} />
+                {/* Row 3: Limit Price, Margin Used | Req Value */}
+                <View style={styles.pendingRow3}>
+                    <View>
+                        <Text style={styles.pendingInfoLabel}>Limit Price</Text>
+                        <Text style={styles.pendingInfoValue}>{item.entryPrice}</Text>
+                        <Text style={[styles.pendingInfoLabel, { marginTop: 6 }]}>Margin used 10000</Text>
+                    </View>
+                    <View style={styles.pendingReqCol}>
+                        <Text style={styles.pendingInfoLabel}>Req: 10000</Text>
+                    </View>
+                </View>
+
+                <View style={styles.pendingDivider} />
             </View>
         );
     }
@@ -169,6 +166,10 @@ const TradesScreen = ({ navigation }) => {
     const [targetPrice, setTargetPrice] = useState('');
     const [slPrice, setSlPrice] = useState('');
 
+    // Cancel Confirmation Modal State
+    const [cancelModalVisible, setCancelModalVisible] = useState(false);
+    const [tradeToCancel, setTradeToCancel] = useState(null);
+
     const filteredTrades = trades.filter(t => {
         if (activeTab === 'Pending') return t.isPending && !t.isCompleted;
         if (activeTab === 'Active') return !t.isCompleted && !t.isPending;
@@ -191,6 +192,19 @@ const TradesScreen = ({ navigation }) => {
         setTargetPrice(trade.target || '');
         setSlPrice(trade.sl || '');
         setTargetModalVisible(true);
+    };
+
+    const handleCancelOrder = (trade) => {
+        setTradeToCancel(trade);
+        setCancelModalVisible(true);
+    };
+
+    const confirmCancelOrder = () => {
+        if (tradeToCancel) {
+            cancelTrade(tradeToCancel.id);
+            setCancelModalVisible(false);
+            setTradeToCancel(null);
+        }
     };
 
     return (
@@ -223,7 +237,7 @@ const TradesScreen = ({ navigation }) => {
                         livePrice={livePrices[item.name]}
                         meta={INSTRUMENT_META[item.name]}
                         onOpenCloseModal={() => navigation.navigate('ExitTrade', { trade: item })}
-                        onCancel={() => cancelTrade(item.id)}
+                        onCancel={() => handleCancelOrder(item)}
                         onSetTargetSL={() => openTargetModal(item)}
                     />
                 )}
@@ -276,6 +290,41 @@ const TradesScreen = ({ navigation }) => {
                         <TouchableOpacity style={styles.cancelBtn} onPress={() => setTargetModalVisible(false)}>
                             <Text style={styles.cancelBtnText}>CANCEL</Text>
                         </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+
+            {/* Cancel Order Confirmation Modal */}
+            <Modal
+                visible={cancelModalVisible}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setCancelModalVisible(false)}
+            >
+                <View style={styles.confirmOverlay}>
+                    <View style={styles.confirmModal}>
+                        <Text style={styles.confirmTitle}>Cancel Order?</Text>
+                        <Text style={styles.confirmMessage}>
+                            Are you sure you want to cancel this order for {tradeToCancel?.displayName}?
+                        </Text>
+
+                        <View style={styles.confirmButtonRow}>
+                            <TouchableOpacity
+                                style={[styles.confirmBtn, styles.confirmYesBtn]}
+                                onPress={confirmCancelOrder}
+                                activeOpacity={0.7}
+                            >
+                                <Text style={styles.confirmYesText}>Yes, Cancel</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={[styles.confirmBtn, styles.confirmNoBtn]}
+                                onPress={() => setCancelModalVisible(false)}
+                                activeOpacity={0.7}
+                            >
+                                <Text style={styles.confirmNoText}>No, Keep It</Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
                 </View>
             </Modal>
@@ -339,8 +388,8 @@ const styles = StyleSheet.create({
         opacity: 0.8,
     },
     emptyDivider: {
-        height: 0.5,
-        backgroundColor: 'rgba(255,255,255,0.3)',
+        height: 1.5,
+        backgroundColor: 'rgba(255,255,255,0.4)',
         marginTop: 10,
     },
     listContent: {
@@ -434,8 +483,8 @@ const styles = StyleSheet.create({
         opacity: 0.7,
     },
     divider: {
-        height: 0.5,
-        backgroundColor: 'rgba(255,255,255,0.2)',
+        height: 1.5,
+        backgroundColor: 'rgba(255,255,255,0.3)',
         marginTop: 12,
     },
     tradeItem: {
@@ -649,21 +698,155 @@ const styles = StyleSheet.create({
         marginTop: 4,
         marginBottom: 10,
     },
-    cancelActionBtn: {
-        backgroundColor: '#757575',
+    // --- Pending Trade Item Styles ---
+    pendingTradeItem: {
         paddingHorizontal: 15,
-        paddingVertical: 6,
-        borderRadius: 4,
+        paddingVertical: 12,
     },
-    cancelActionText: {
+    pendingRow1: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    pendingSymbolName: {
+        color: 'white',
+        fontSize: 14,
+        fontWeight: '700',
+    },
+    pendingPriceText: {
+        color: 'white',
+        fontSize: 18,
+        fontWeight: '800',
+        letterSpacing: -0.5,
+    },
+    pendingRow2: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    pendingTypeQty: {
         color: 'white',
         fontSize: 12,
-        fontWeight: 'bold',
+        fontWeight: '600',
+        marginBottom: 4,
+    },
+    pendingTime: {
+        color: '#94A3B8',
+        fontSize: 11,
+        fontWeight: '500',
+    },
+    pendingCancelBtn: {
+        backgroundColor: 'rgba(91, 124, 149, 0.7)',
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 6,
+        borderWidth: 1,
+        borderColor: 'rgba(91, 124, 149, 0.9)',
+        shadowColor: '#2D5C6E',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    pendingCancelBtnText: {
+        color: 'white',
+        fontSize: 12,
+        fontWeight: '600',
+    },
+    pendingRow3: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        marginBottom: 6,
+    },
+    pendingInfoLabel: {
+        color: '#94A3B8',
+        fontSize: 11,
+        fontWeight: '500',
+        opacity: 0.8,
+    },
+    pendingInfoValue: {
+        color: 'white',
+        fontSize: 12,
+        fontWeight: '600',
+        marginTop: 2,
+    },
+    pendingReqCol: {
+        alignItems: 'flex-end',
+    },
+    pendingDivider: {
+        height: 1.5,
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        marginTop: 8,
     },
     separatorGrid: {
-        height: 0.5,
-        backgroundColor: 'rgba(255,255,255,0.3)',
-    }
+        height: 1.5,
+        backgroundColor: 'rgba(255,255,255,0.4)',
+    },
+    // --- Confirmation Modal Styles ---
+    confirmOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+    },
+    confirmModal: {
+        backgroundColor: 'rgba(255,255,255,0.95)',
+        borderRadius: 16,
+        padding: 24,
+        width: '100%',
+        maxWidth: 320,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 12,
+        elevation: 8,
+    },
+    confirmTitle: {
+        color: '#000',
+        fontSize: 18,
+        fontWeight: '800',
+        marginBottom: 12,
+        textAlign: 'center',
+    },
+    confirmMessage: {
+        color: '#333',
+        fontSize: 14,
+        fontWeight: '500',
+        textAlign: 'center',
+        marginBottom: 24,
+        lineHeight: 20,
+    },
+    confirmButtonRow: {
+        flexDirection: 'row',
+        gap: 12,
+    },
+    confirmBtn: {
+        flex: 1,
+        paddingVertical: 12,
+        borderRadius: 8,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    confirmYesBtn: {
+        backgroundColor: '#FF5252',
+    },
+    confirmYesText: {
+        color: 'white',
+        fontSize: 14,
+        fontWeight: '700',
+    },
+    confirmNoBtn: {
+        backgroundColor: '#E0E0E0',
+    },
+    confirmNoText: {
+        color: '#333',
+        fontSize: 14,
+        fontWeight: '700',
+    },
 });
 
 export default TradesScreen;

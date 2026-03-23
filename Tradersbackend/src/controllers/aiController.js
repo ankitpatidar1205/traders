@@ -11,6 +11,7 @@
  */
 
 const db = require('../config/db');
+const openai = require('../config/openai');
 const { parseCommand } = require('../services/aiCommandParser');
 const { generateQuery } = require('../services/aiQueryGenerator');
 const { executeQuery } = require('../services/aiExecutor');
@@ -435,6 +436,149 @@ const voiceExecute = async (req, res) => {
     return smartCommand(req, res);
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /api/ai/chat
+// General AI Chat Endpoint — For conversational queries (not command execution)
+// Uses OpenAI ChatGPT API for natural language responses
+// ─────────────────────────────────────────────────────────────────────────────
+
+const chatWithAI = async (req, res) => {
+    const { message } = req.body;
+    const reqUser = req.user || {};
+
+    console.log('\n═══════════════════════════════════════════════════════════════');
+    console.log('[chat] 💬 Input:', message);
+    console.log('[chat] 👤 User:', reqUser.full_name || reqUser.id || 'anonymous');
+    console.log('═══════════════════════════════════════════════════════════════');
+
+    if (!message || !message.trim()) {
+        return res.status(400).json({
+            success: false,
+            message: 'Message is required',
+        });
+    }
+
+    try {
+        // System prompt for trading app assistant with multilingual support
+        const systemPrompt = `You are an AI Assistant for a stock trading mobile app called VTRKM.
+
+🌍 LANGUAGE SUPPORT:
+- English (English)
+- Hindi (हिंदी)
+- Hinglish (Mix of Hindi + English)
+- Marathi (मराठी)
+
+📱 APP FEATURES:
+- Buy/Sell stocks
+- View portfolio
+- View trades
+- Navigate pages (watchlist, trades, portfolio, account)
+- Real-time market data
+
+🤖 GUIDELINES:
+1. **LANGUAGE DETECTION**: Identify the user's language automatically
+2. **SAME LANGUAGE RESPONSE**: Always reply in the EXACT same language the user used
+   - If they use English → respond in English
+   - If they use Hindi → respond in Hindi (हिंदी)
+   - If they use Hinglish → respond in Hinglish (English words + Hindi script)
+   - If they use Marathi → respond in Marathi (मराठी)
+3. **CONTENT QUALITY**:
+   - Be helpful, concise, and friendly
+   - Answer trading-related questions
+   - Provide market insights and education
+   - Suggest how to use app features
+4. **IMPORTANT DISCLAIMER**:
+   - Never give financial advice
+   - Always remind users to do their own research
+   - No guaranteed predictions
+5. **TONE**: Encouraging, supportive, professional`;
+
+        const response = await openai.chat.completions.create({
+            model: 'gpt-4o-mini',
+            messages: [
+                {
+                    role: 'system',
+                    content: systemPrompt,
+                },
+                {
+                    role: 'user',
+                    content: message.trim(),
+                },
+            ],
+            temperature: 0.7,
+            max_tokens: 500,
+        });
+
+        const aiMessage = response.choices[0]?.message?.content || 'Sorry, I could not generate a response.';
+
+        console.log('[chat] ✅ Response generated');
+        console.log('═══════════════════════════════════════════════════════════════\n');
+
+        return res.json({
+            success: true,
+            message: aiMessage,
+            user: reqUser.full_name || reqUser.id || 'User',
+        });
+
+    } catch (err) {
+        console.error('[chat] ❌ Error:', err.message);
+        return res.status(500).json({
+            success: false,
+            message: err.message || 'Failed to get AI response',
+        });
+    }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /api/ai/transcribe-voice — Convert voice audio to text using Whisper API
+// ─────────────────────────────────────────────────────────────────────────────
+
+const transcribeVoice = async (req, res) => {
+    const reqUser = req.user || {};
+
+    console.log('\n═══════════════════════════════════════════════════════════════');
+    console.log('[transcribe-voice] 🎙️  Transcribing audio...');
+    console.log('[transcribe-voice] 👤 User:', reqUser.full_name || reqUser.id || 'anonymous');
+    console.log('═══════════════════════════════════════════════════════════════');
+
+    if (!req.file) {
+        return res.status(400).json({
+            success: false,
+            message: 'Audio file is required',
+        });
+    }
+
+    try {
+        const audioBuffer = req.file.buffer;
+        const fileName = req.file.originalname || 'audio.wav';
+
+        // Call OpenAI Whisper API to transcribe
+        const transcript = await openai.audio.transcriptions.create({
+            file: new File([audioBuffer], fileName, { type: 'audio/wav' }),
+            model: 'whisper-1',
+            language: 'en', // or auto-detect if needed
+        });
+
+        const transcribedText = transcript.text || '';
+
+        console.log('[transcribe-voice] ✅ Transcript:', transcribedText);
+        console.log('═══════════════════════════════════════════════════════════════\n');
+
+        return res.json({
+            success: true,
+            transcript: transcribedText,
+            language: 'en',
+        });
+
+    } catch (err) {
+        console.error('[transcribe-voice] ❌ Error:', err.message);
+        return res.status(500).json({
+            success: false,
+            message: err.message || 'Failed to transcribe audio',
+        });
+    }
+};
+
 module.exports = {
     smartCommand,
     masterCommand,
@@ -445,4 +589,6 @@ module.exports = {
     aiParse,
     executeVoiceCommand,
     voiceExecute,
+    chatWithAI,
+    transcribeVoice,
 };

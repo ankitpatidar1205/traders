@@ -581,3 +581,9 @@ export const submitVoiceRecording = async (audioBlob, meta = {}) => {
     });
     return response.data;
 };
+
+// ─── AI CHAT ───────────────────────────────────────────
+export const sendAIMessage = async (message) => {
+    const response = await api.post('/ai/chat', { message });
+    return response.data;
+};

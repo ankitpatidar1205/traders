@@ -12,6 +12,7 @@ const LoginPage = ({ onLogin }) => {
         { label: 'Super Admin', user: 'superadmin', pass: 'superadmin123', color: '#f59e0b' },
         { label: 'Admin', user: 'admin', pass: 'admin123', color: '#4caf50' },
         { label: 'Broker', user: 'broker', pass: 'broker123', color: '#3b82f6' },
+        { label: 'Trader', user: 'trader', pass: 'trader123', color: '#8b5cf6' },
     ];
 
     const fillCredentials = (item) => {

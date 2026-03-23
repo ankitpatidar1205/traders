@@ -26,7 +26,7 @@ const OrderDetailScreen = ({ route, navigation }) => {
 
     const displayItemName = name.includes('26FEBFUT') ? name : `${name.toUpperCase()}26FEBFUT`;
     const isNSE = category.includes('NSE'); // Check category from watchlist
-    const quantityLabel = isNSE ? 'Lot' : 'Quantity';
+    const quantityLabel = isNSE ? 'Quantity' : 'Lot';
 
     const [activeTab, setActiveTab] = useState('Market');
     const [orderType, setOrderType] = useState('Mega');

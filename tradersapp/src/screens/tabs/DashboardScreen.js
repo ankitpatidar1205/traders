@@ -26,6 +26,13 @@ const DashboardScreen = ({ navigation }) => {
     const [selectedCategory, setSelectedCategory] = useState('MCX Futures');
     const [showPromo, setShowPromo] = useState(false);
 
+    // Helper function to generate random price with ±1% variance
+    const generateRandomPrice = (basePrice) => {
+        const variance = basePrice * 0.01; // 1% variance
+        const randomPrice = basePrice + (Math.random() - 0.5) * 2 * variance;
+        return Math.max(0, randomPrice).toFixed(2);
+    };
+
     // AI Icon Animation
     const floatAnim = React.useRef(new Animated.Value(0)).current;
 
@@ -75,11 +82,8 @@ const DashboardScreen = ({ navigation }) => {
 
     const renderMarketItem = ({ item }) => {
         const livePrice = livePrices[item.name] || item.ltp;
-        const isUp1 = parseFloat(item.change) >= 0;
-        const isUp2 = parseFloat(item.change) >= 0;
-
-        const buyColor = '#2D864D'; // Green
-        const sellColor = '#C64756'; // Red
+        const isPending = item.status === 'pending';
+        const pendingColor = '#FF9800'; // Orange for pending
 
         return (
             <TouchableOpacity
@@ -89,7 +93,14 @@ const DashboardScreen = ({ navigation }) => {
             >
                 <View style={styles.itemRow}>
                     <View style={styles.leftCol}>
-                        <Text style={styles.symbolName}>{item.name.toUpperCase()}</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                            <Text style={styles.symbolName}>{item.name.toUpperCase()}</Text>
+                            {isPending && (
+                                <View style={{ backgroundColor: pendingColor, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                                    <Text style={{ fontSize: 10, color: 'white', fontWeight: 'bold' }}>PENDING</Text>
+                                </View>
+                            )}
+                        </View>
                         <Text style={styles.dateText}>{item.date || '2026-02-27'}</Text>
                         <Text style={styles.labelsBottom}>
                             Chg:{item.change} H:{item.high}
@@ -97,17 +108,17 @@ const DashboardScreen = ({ navigation }) => {
                     </View>
 
                     <View style={styles.priceCol}>
-                        <View style={[styles.priceBox, { backgroundColor: isUp1 ? buyColor : sellColor }]}>
+                        <View style={styles.priceBox}>
                             <Text style={styles.priceValText}>{livePrice}</Text>
                         </View>
-                        <Text style={styles.labelSmall}>L: {item.low}</Text>
+                        <Text style={styles.labelSmall}>L: {item.low || generateRandomPrice(livePrice * 0.95)}</Text>
                     </View>
 
                     <View style={styles.priceCol}>
-                        <View style={[styles.priceBox, { backgroundColor: isUp2 ? buyColor : sellColor }]}>
-                            <Text style={styles.priceValText}>{item.price2 || item.open}</Text>
+                        <View style={styles.priceBox}>
+                            <Text style={styles.priceValText}>{item.price2 || generateRandomPrice(livePrice)}</Text>
                         </View>
-                        <Text style={styles.labelSmall}>O: {item.open}</Text>
+                        <Text style={styles.labelSmall}>O: {item.open || generateRandomPrice(livePrice * 0.98)}</Text>
                     </View>
                 </View>
                 <View style={styles.separator} />
@@ -181,7 +192,7 @@ const DashboardScreen = ({ navigation }) => {
                     >
                         <Text style={styles.searchPlaceholder}>Search & Add</Text>
                     </TouchableOpacity>
-                    <Filter size={18} color="#9E9E9E" />
+                    <Filter size={18} color="#9E9E9E" fill="#9E9E9E" />
                 </View>
             </View>
 
@@ -390,8 +401,8 @@ const styles = StyleSheet.create({
         marginBottom: 4,
     },
     priceBox: {
-        paddingHorizontal: 8,
-        paddingVertical: 6,
+        paddingHorizontal: 4,
+        paddingVertical: 3,
         borderRadius: 4,
         width: '95%',
         maxWidth: 90,
@@ -409,8 +420,8 @@ const styles = StyleSheet.create({
         opacity: 0.85,
     },
     separator: {
-        height: 0.5,
-        backgroundColor: 'rgba(255,255,255,0.3)',
+        height: 1.5,
+        backgroundColor: 'rgba(255,255,255,0.4)',
         marginTop: 6, // Reduced from 15
     },
     emptyContainer: {

@@ -44,10 +44,15 @@ export const TradeProvider = ({ children }) => {
         // Pending Trades
         { id: '3', name: 'RELIANCE', displayName: 'RELIANCE26FEBFUT', type: 'BUY', qty: '10', entryPrice: '2900.00', time: '09:45:10', isCompleted: false, isPending: true, market: 'NSE' },
         { id: '4', name: 'NATURALGAS', displayName: 'NATURALGAS26FEBFUT', type: 'SELL', qty: '1', entryPrice: '320.00', time: '10:05:45', isCompleted: false, isPending: true, market: 'MCX' },
+        { id: '7', name: 'TCS', displayName: 'TCS26FEBFUT', type: 'BUY', qty: '5', entryPrice: '4155.00', time: '10:30:15', isCompleted: false, isPending: true, market: 'NSE' },
+        { id: '8', name: 'SBIN', displayName: 'SBIN26FEBFUT', type: 'SELL', qty: '2', entryPrice: '785.50', time: '10:45:30', isCompleted: false, isPending: true, market: 'NSE' },
+        { id: '9', name: 'SILVER', displayName: 'SILVER26FEBFUT', type: 'BUY', qty: '3', entryPrice: '23.00', time: '11:00:45', isCompleted: false, isPending: true, market: 'MCX' },
+        { id: '10', name: 'INFY', displayName: 'INFY26FEBFUT', type: 'BUY', qty: '7', entryPrice: '1650.00', time: '10:15:20', isCompleted: false, isPending: true, market: 'NSE' },
+        { id: '11', name: 'HDFCBANK', displayName: 'HDFCBANK26FEBFUT', type: 'SELL', qty: '4', entryPrice: '1460.00', time: '11:20:35', isCompleted: false, isPending: true, market: 'NSE' },
 
         // Closed Trades
         { id: '5', name: 'ALUMINIUM', displayName: 'ALUMINIUM26FEBFUT', type: 'BUY', qty: '1', entryPrice: '305.50', exitPrice: '308.15', time: '09:15:00', exitTime: '2026-02-25 09:45:30', isCompleted: true, isPending: false, market: 'MCX' },
-        { id: '6', name: 'TCS', displayName: 'TCS26FEBFUT', type: 'SELL', qty: '5', entryPrice: '4150.00', exitPrice: '4135.50', time: '10:00:10', exitTime: '2026-02-25 10:20:15', isCompleted: true, isPending: false, market: 'NSE' },
+        { id: '6', name: 'COPPER', displayName: 'COPPER26FEBFUT', type: 'SELL', qty: '5', entryPrice: '4150.00', exitPrice: '4135.50', time: '10:00:10', exitTime: '2026-02-25 10:20:15', isCompleted: true, isPending: false, market: 'MCX' },
     ]);
 
     const [livePrices, setLivePrices] = useState(INITIAL_MARKET_STATE);
@@ -61,27 +66,73 @@ export const TradeProvider = ({ children }) => {
 
     // Live Price Socket Integration
     useEffect(() => {
-        const socket = io(SOCKET_URL);
+        const socket = io(SOCKET_URL, {
+            reconnection: true,
+            reconnectionDelay: 1000,
+            reconnectionDelayMax: 5000,
+            reconnectionAttempts: 5
+        });
 
         socket.on('connect', () => {
-            console.log('Mobile connected to Market Socket');
+            console.log('✅ Mobile connected to Market Socket');
+            // Send join event with user info to subscribe to personalized updates
+            const user = api.getSessionUser();
+            socket.emit('join', {
+                userId: user?.id || 'mobile-user',
+                role: user?.role || 'TRADER',
+                username: user?.username || 'anonymous'
+            });
+        });
+
+        socket.on('connected', (data) => {
+            console.log('📡 Server response:', data);
+        });
+
+        socket.on('joined', (data) => {
+            console.log('✅ Successfully joined socket rooms:', data);
         });
 
         socket.on('price_update', (newPrices) => {
             setLivePrices(prev => {
                 const updatedPrices = { ...prev, ...newPrices };
-                const nextHistory = { ...priceHistory };
+                setPriceHistory(prevHistory => {
+                    const nextHistory = { ...prevHistory };
 
-                Object.keys(newPrices).forEach(symbol => {
-                    if (!nextHistory[symbol]) nextHistory[symbol] = [];
-                    const updatedHistory = [...nextHistory[symbol], newPrices[symbol]];
-                    if (updatedHistory.length > 20) updatedHistory.shift();
-                    nextHistory[symbol] = updatedHistory;
+                    Object.keys(newPrices).forEach(symbol => {
+                        if (!nextHistory[symbol]) nextHistory[symbol] = [];
+                        const updatedHistory = [...nextHistory[symbol], newPrices[symbol]];
+                        if (updatedHistory.length > 20) updatedHistory.shift();
+                        nextHistory[symbol] = updatedHistory;
+                    });
+
+                    return nextHistory;
                 });
-
-                setPriceHistory(nextHistory);
                 return updatedPrices;
             });
+        });
+
+        socket.on('disconnect', (reason) => {
+            console.log('❌ Disconnected from socket:', reason);
+        });
+
+        // Listen for admin notifications (from web dashboard)
+        socket.on('notification', (notif) => {
+            console.log('📢 New notification received:', notif);
+            // Add to adminNotifications (displays in "Admin Messages" tab)
+            addAdminNotification({
+                id: notif.id?.toString() || `notif-${Date.now()}`,
+                title: notif.title || 'Notification',
+                message: notif.message || '',
+                type: notif.type || 'info',
+                time: notif.created_at ? new Date(notif.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now',
+                acknowledged: notif.is_read ? true : false,
+                createdAt: new Date(notif.created_at || Date.now())
+            });
+        });
+
+        // Listen for notification deletion
+        socket.on('notification_deleted', (data) => {
+            console.log('🗑️ Notification deleted:', data.id);
         });
 
         return () => socket.disconnect();
@@ -96,20 +147,29 @@ export const TradeProvider = ({ children }) => {
         if (!api.hasSession()) return;
         try {
             // Fetch all trades (Open, Pending, etc.)
-            const allTrades = await api.getTrades(''); 
-            setTrades(allTrades.map(t => ({
-                id: t.id.toString(),
-                name: t.symbol,
-                displayName: t.symbol,
-                type: t.type,
-                qty: t.qty.toString(),
-                entryPrice: t.entry_price.toString(),
-                time: new Date(t.entry_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                isCompleted: t.status === 'CLOSED',
-                isPending: t.status === 'PENDING',
-                market: 'MCX'
-            })));
-            
+            const allTrades = await api.getTrades('');
+            // Only update if API returns data with substantial trades, otherwise keep mock data
+            if (allTrades && allTrades.length > 0) {
+                const newTrades = allTrades.map(t => ({
+                    id: t.id.toString(),
+                    name: t.symbol,
+                    displayName: t.symbol,
+                    type: t.type,
+                    qty: t.qty.toString(),
+                    entryPrice: t.entry_price.toString(),
+                    time: new Date(t.entry_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    isCompleted: t.status === 'CLOSED',
+                    isPending: t.status === 'PENDING',
+                    market: 'MCX'
+                }));
+                // Merge with existing mock data to preserve pending trades
+                setTrades(prev => {
+                    const mockPending = prev.filter(t => t.isPending);
+                    const apiNonPending = newTrades.filter(t => !t.isPending);
+                    return [...apiNonPending, ...mockPending];
+                });
+            }
+
             const idx = await api.getIndices();
             setIndices(idx);
 
@@ -118,6 +178,26 @@ export const TradeProvider = ({ children }) => {
 
             const wds = await api.getWithdrawals();
             setWithdrawalRequests(wds);
+
+            // Fetch admin notifications from backend
+            try {
+                const notifs = await api.getNotifications();
+                if (notifs && Array.isArray(notifs)) {
+                    const adminNotifs = notifs.map(n => ({
+                        id: n.id?.toString() || `notif-${Date.now()}`,
+                        title: n.title || 'Notification',
+                        message: n.message || '',
+                        type: n.type || 'info',
+                        time: n.created_at ? new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now',
+                        acknowledged: n.is_read ? true : false,
+                        createdAt: new Date(n.created_at || Date.now())
+                    }));
+                    setAdminNotifications(adminNotifs);
+                    console.log('✅ Loaded', adminNotifs.length, 'notifications from backend');
+                }
+            } catch (notifErr) {
+                console.log('ℹ️ Could not fetch notifications:', notifErr.message);
+            }
 
             // Fetch balance etc.
         } catch (err) {
@@ -173,7 +253,7 @@ export const TradeProvider = ({ children }) => {
         setTrades(prev => prev.filter(t => t.id !== id));
     };
 
-    const [ledgerBalance, setLedgerBalance] = useState(500000000);
+    const [ledgerBalance, setLedgerBalance] = useState(5000000); // 50 Lakh
 
     // Calculate Active P/L and Margin
     const activeTrades = trades.filter(t => !t.isCompleted && !t.isPending);
@@ -184,23 +264,31 @@ export const TradeProvider = ({ children }) => {
         return acc + pl;
     }, 0);
 
-    const marginUsed = activeTrades.length * 10000; // Simplified margin calculation
-    const marginAvailable = ledgerBalance - marginUsed + activePL;
+    const marginUsed = activeTrades.length * 50000; // Realistic margin calculation
+    const marginAvailable = ledgerBalance - marginUsed; // More realistic calculation
+
+    // Helper function to generate random price near base price
+    const generateRandomPrice = (basePrice) => {
+        const base = parseFloat(basePrice);
+        const variance = base * 0.01; // 1% variance
+        const random = base + (Math.random() - 0.5) * variance * 2;
+        return random.toFixed(2);
+    };
 
     const [watchlist, setWatchlist] = useState([
         // MCX Futures
-        { id: '1', name: 'ALUMINIUM', category: 'MCX Futures', ltp: '307.75', price2: '307.85', change: '-0.45', high: '308.5', low: '306.5', open: '308.2', date: '2026-02-27' },
-        { id: '2', name: 'COPPER', category: 'MCX Futures', ltp: '725.40', price2: '725.60', change: '3.40', high: '730.00', low: '720.50', open: '722.00', date: '2026-02-27' },
-        { id: '3', name: 'CRUDEOIL', category: 'MCX Futures', ltp: '5770', price2: '5771', change: '6.00', high: '5796', low: '5763', open: '5764', date: '2026-02-19' },
+        { id: '1', name: 'ALUMINIUM', category: 'MCX Futures', ltp: '307.75', price2: generateRandomPrice('307.75'), change: '-0.45', high: '308.5', low: '306.5', open: '308.2', date: '2026-02-27', status: 'active' },
+        { id: '2', name: 'COPPER', category: 'MCX Futures', ltp: '725.40', price2: generateRandomPrice('725.40'), change: '3.40', high: '730.00', low: '720.50', open: '722.00', date: '2026-02-27', status: 'pending' },
+        { id: '3', name: 'CRUDEOIL', category: 'MCX Futures', ltp: '5770', price2: generateRandomPrice('5770'), change: '6.00', high: '5796', low: '5763', open: '5764', date: '2026-02-19', status: 'active' },
 
         // NSE Futures
-        { id: '4', name: 'RELIANCE', category: 'NSE Futures', ltp: '2950.00', price2: '2952.00', change: '10.00', high: '2965.00', low: '2930.00', open: '2940.00', date: '2026-02-27' },
-        { id: '5', name: 'TCS', category: 'NSE Futures', ltp: '4135.50', price2: '4138.00', change: '-19.50', high: '4160.00', low: '4120.00', open: '4155.00', date: '2026-03-27' },
-        { id: '6', name: 'HDFCBANK', category: 'NSE Futures', ltp: '1455.00', price2: '1456.50', change: '5.00', high: '1462.00', low: '1448.00', open: '1450.00', date: '2026-02-27' },
+        { id: '4', name: 'RELIANCE', category: 'NSE Futures', ltp: '2950.00', price2: generateRandomPrice('2950.00'), change: '10.00', high: '2965.00', low: '2930.00', open: '2940.00', date: '2026-02-27', status: 'pending' },
+        { id: '5', name: 'TCS', category: 'NSE Futures', ltp: '4135.50', price2: generateRandomPrice('4135.50'), change: '-19.50', high: '4160.00', low: '4120.00', open: '4155.00', date: '2026-03-27', status: 'active' },
+        { id: '6', name: 'HDFCBANK', category: 'NSE Futures', ltp: '1455.00', price2: generateRandomPrice('1455.00'), change: '5.00', high: '1462.00', low: '1448.00', open: '1450.00', date: '2026-02-27', status: 'active' },
 
         // Options
-        { id: '7', name: 'NIFTY 22000 CE', category: 'Options', ltp: '180.45', price2: '181.20', change: '45.20', high: '195.00', low: '140.00', open: '150.00', date: '2026-02-26' },
-        { id: '8', name: 'BANKNIFTY 46000 PE', category: 'Options', ltp: '210.30', price2: '211.50', change: '-80.40', high: '290.00', low: '180.50', open: '285.00', date: '2026-02-26' },
+        { id: '7', name: 'NIFTY 22000 CE', category: 'Options', ltp: '180.45', price2: generateRandomPrice('180.45'), change: '45.20', high: '195.00', low: '140.00', open: '150.00', date: '2026-02-26', status: 'pending' },
+        { id: '8', name: 'BANKNIFTY 46000 PE', category: 'Options', ltp: '210.30', price2: generateRandomPrice('210.30'), change: '-80.40', high: '290.00', low: '180.50', open: '285.00', date: '2026-02-26', status: 'active' },
     ]);
 
     const [indices, setIndices] = useState([

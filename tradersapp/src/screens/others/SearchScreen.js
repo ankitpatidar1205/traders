@@ -39,8 +39,6 @@ const SearchScreen = ({ navigation }) => {
 
     const renderItem = ({ item }) => {
         const added = isAdded(item.name);
-        const isNegative = parseFloat(item.change || '0') < 0;
-        const boxColor = isNegative ? '#C64756' : '#2D864D';
 
         return (
             <View key={item.id}>
@@ -58,14 +56,14 @@ const SearchScreen = ({ navigation }) => {
                     </View>
 
                     <View style={styles.priceCol}>
-                        <View style={[styles.priceBox, { backgroundColor: boxColor }]}>
+                        <View style={styles.priceBox}>
                             <Text style={styles.priceValText}>{item.ltp}</Text>
                         </View>
                         <Text style={styles.labelValueText}>L: {item.low || '0.00'}</Text>
                     </View>
 
                     <View style={styles.priceCol}>
-                        <View style={[styles.priceBox, { backgroundColor: boxColor }]}>
+                        <View style={styles.priceBox}>
                             <Text style={styles.priceValText}>{item.price2 || item.open}</Text>
                         </View>
                         <Text style={styles.labelValueText}>O: {item.open || '0.00'}</Text>
@@ -188,22 +186,22 @@ const styles = StyleSheet.create({
     },
     labelValueText: {
         color: 'white',
-        fontSize: 11,
-        opacity: 0.8,
+        fontSize: 10,
+        opacity: 0.75,
         fontWeight: '500',
     },
     priceBox: {
         paddingHorizontal: 0,
-        paddingVertical: 8,
+        paddingVertical: 4,
         borderRadius: 6,
         width: '90%',
         maxWidth: 100,
         alignItems: 'center',
-        marginBottom: 6,
+        marginBottom: 3,
     },
     priceValText: {
         color: 'white',
-        fontSize: 13,
+        fontSize: 11,
         fontWeight: '700',
     },
     checkSquare: {
@@ -214,8 +212,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     divider: {
-        height: 1,
-        backgroundColor: 'rgba(255,255,255,0.3)',
+        height: 1.5,
+        backgroundColor: 'rgba(255,255,255,0.35)',
         marginHorizontal: 15,
     }
 });
