@@ -47,9 +47,9 @@ const Sidebar = React.memo(({ onLogout, currentView, isOpen, onClose }) => {
 
     const roleBadge = {
         SUPERADMIN: { label: 'SUPER ADMIN', color: '#f59e0b' },
-        ADMIN:      { label: 'ADMIN',       color: '#4caf50' },
-        BROKER:     { label: 'BROKER',      color: '#3b82f6' },
-        TRADER:     { label: 'CLIENT',      color: '#8b5cf6' },
+        ADMIN: { label: 'ADMIN', color: '#4caf50' },
+        BROKER: { label: 'BROKER', color: '#3b82f6' },
+        TRADER: { label: 'CLIENT', color: '#8b5cf6' },
     };
     const badge = roleBadge[userRole] || roleBadge['ADMIN'];
 
@@ -65,13 +65,13 @@ const Sidebar = React.memo(({ onLogout, currentView, isOpen, onClose }) => {
     })();
 
     return (
-        <aside 
+        <aside
             className={`
                 fixed inset-y-0 left-0 z-50 w-[260px] text-white 
                 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-auto
                 ${isOpen ? 'translate-x-0' : '-translate-x-full'}
                 flex-shrink-0 border-r border-white/5 shadow-2xl
-            `} 
+            `}
             style={{ backgroundColor: 'var(--sidebar-color, #1a2035)' }}
         >
             <div className="flex flex-col h-full overflow-hidden">
