@@ -73,8 +73,9 @@ const ThemeSettingsPage = () => {
     };
 
     const resolvedLogo = logoPath
-        ? (logoPath.startsWith('http') ? logoPath : `http://https://trader-production-e063.up.railway.app${logoPath}`)
+        ? (logoPath.startsWith('http') ? logoPath : `${api.UPLOADS_BASE_URL}${logoPath}`)
         : null;
+
 
     // Live CSS variable preview
     const previewStyle = {

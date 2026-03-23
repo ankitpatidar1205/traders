@@ -4,7 +4,7 @@ require('dotenv').config();
 const dbConfig = {
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 'tradersdb',
+  database: process.env.DB_NAME || 'traderdb',
   waitForConnections: true,
   connectionLimit: 10,
   connectTimeout: 30000,

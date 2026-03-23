@@ -9,7 +9,8 @@ const CreateFundForm = ({ onSave, onBack, mode = 'deposit', initialUser }) => {
     userId: initialUser?.id || '',
     notes: '',
     amount: '',
-    transactionPassword: ''
+    transactionPassword: '',
+    transactionType: mode || 'deposit'
   });
   
   const [users, setUsers] = useState([]);
@@ -55,7 +56,7 @@ const CreateFundForm = ({ onSave, onBack, mode = 'deposit', initialUser }) => {
     try {
       await api.createFund({
         ...formData,
-        mode
+        mode: formData.transactionType
       });
       showToast('Fund processed successfully!', 'success');
       setTimeout(() => onSave?.(formData), 1500);
@@ -87,7 +88,7 @@ const CreateFundForm = ({ onSave, onBack, mode = 'deposit', initialUser }) => {
             style={{ background: 'linear-gradient(60deg, #66bb6a, #43a047)' }}
           >
             <h4 className="text-white text-[18px] font-bold m-0 tracking-wide">
-              Add/Withdraw Funds
+              {formData.transactionType === 'withdraw' ? 'Withdraw Funds (WD)' : 'Deposit Funds (AD)'}
             </h4>
           </div>
           {/* The 3D fold decorator */}
@@ -126,9 +127,31 @@ const CreateFundForm = ({ onSave, onBack, mode = 'deposit', initialUser }) => {
                 </div>
               </div>
 
-              {/* Notes */}
+              {/* Transaction Type */}
               <div>
                 <label className="block text-[#bcc0cf] text-[15px] font-normal mb-1">
+                  Transaction Type
+                </label>
+                <div className="relative pt-3">
+                  <select
+                    name="transactionType"
+                    value={formData.transactionType}
+                    onChange={handleChange}
+                    className="w-full bg-white text-black font-bold px-4 py-2 text-[15px] border border-gray-300 rounded-sm appearance-none cursor-pointer outline-none shadow-sm"
+                    disabled={submitting}
+                  >
+                    <option value="deposit" className="font-bold">DEPOSIT (AD)</option>
+                    <option value="withdraw" className="font-bold">WITHDRAW (WD)</option>
+                  </select>
+                  <div className="absolute right-3 top-[34px] pointer-events-none text-black">
+                     <ChevronDown className="w-4 h-4" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Notes */}
+              <div className="md:col-span-1">
+                <label className="block text-[#bcc0cf] text-[15px] font-normal mb-1 ml-1">
                   Notes
                 </label>
                 <div className="pt-3">
@@ -138,8 +161,8 @@ const CreateFundForm = ({ onSave, onBack, mode = 'deposit', initialUser }) => {
                     value={formData.notes}
                     onChange={handleChange}
                     disabled={submitting}
-                    className="w-full bg-transparent text-white text-[15px] py-1 border-0 border-b border-[#4f5361] focus:outline-none focus:border-white/40 transition-all opacity-90"
-                    placeholder=""
+                    className="w-full bg-transparent text-white text-[17px] py-1 border-0 border-b border-[#4f5361] focus:outline-none focus:border-white/40 transition-all font-medium"
+                    placeholder="Enter transaction details..."
                   />
                 </div>
               </div>
