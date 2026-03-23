@@ -171,7 +171,7 @@ export const deleteIpLogin = async (id) => {
 };
 
 export const getTradeIpTracking = async () => {
-    const response = await api.get('/security/trade-ip');
+    const response = await api.get('/security/trade-audit');
     return response.data;
 };
 
