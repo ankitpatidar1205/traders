@@ -40,15 +40,15 @@ const TradeDetailPage = ({ tradeId, onClose }) => {
     // Remove loading check to avoid transition lag
     const isFetching = loading && !trade;
 
-    const fmtTime = (t) => { 
-        if (!t) return '(not set)'; 
-        try { 
-            return new Date(t).toLocaleString('en-IN', { 
-                day: '2-digit', month: '2-digit', year: 'numeric', 
-                hour: '2-digit', minute: '2-digit', second: '2-digit', 
-                hour12: false 
-            }).replace(/\//g, '-'); 
-        } catch { return t; } 
+    const fmtTime = (t) => {
+        if (!t) return '(not set)';
+        try {
+            return new Date(t).toLocaleString('en-IN', {
+                day: '2-digit', month: '2-digit', year: 'numeric',
+                hour: '2-digit', minute: '2-digit', second: '2-digit',
+                hour12: false
+            }).replace(/\//g, '-');
+        } catch { return t; }
     };
 
     const details = trade ? [
@@ -88,16 +88,6 @@ const TradeDetailPage = ({ tradeId, onClose }) => {
                     </button>
                 </div>
 
-                {/* Exit Button - Lucide X Icon */}
-                <div className="absolute right-3 flex items-center gap-2">
-                    <button 
-                        onClick={onClose} 
-                        className="p-2.5 flex items-center justify-center rounded-full hover:bg-black/20 text-slate-400 hover:text-white transition-all cursor-pointer group"
-                        title="Close (Exit)"
-                    >
-                        <X className="w-5 h-5 group-hover:scale-110 transition-transform" strokeWidth={2.5} />
-                    </button>
-                </div>
 
                 <div className="flex items-center gap-4 text-white mr-10">
                     <button className="hover:bg-black/10 p-2 rounded-full transition-colors">
@@ -142,12 +132,24 @@ const TradeDetailPage = ({ tradeId, onClose }) => {
                 </div>
 
                 {/* Main Content Area */}
-                <div className="flex-1 overflow-y-auto custom-scrollbar px-2 py-8 bg-[#1a2035]">
+                <div className="flex-1 overflow-y-auto custom-scrollbar px-2 py-8 bg-[#1a2035] relative">
                     <div className="ml-4 space-y-8 max-w-5xl">
+                        {/* Styled Exit Button - Aligned lower */}
+                        <div className="absolute top-6 right-8">
+                            <button
+                                onClick={onClose}
+                                className="text-white/40 hover:text-white transition-colors active:scale-95"
+                                title="Exit"
+                            >
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+
                         {/* Action Buttons */}
-                        <div className="space-y-3">
+                        <div className="space-y-4 pt-4">
+
                             <div className="flex gap-3">
-                                <button 
+                                <button
                                     onClick={() => setShowUpdate(true)}
                                     className="bg-[#ab47bc] hover:bg-[#9c27b0] text-white font-bold py-2 px-8 rounded transition-all text-[13px] shadow-lg active:scale-95 min-w-[120px]"
                                 >
@@ -160,7 +162,7 @@ const TradeDetailPage = ({ tradeId, onClose }) => {
                                     DELETE
                                 </button>
                             </div>
-                            <button 
+                            <button
                                 onClick={() => setShowRestore(true)}
                                 className="bg-[#5cb85c] hover:bg-[#4cae4c] text-white font-bold py-2 px-6 rounded transition-all text-[13px] shadow-lg active:scale-95 min-w-[140px]"
                             >
@@ -198,7 +200,7 @@ const TradeDetailPage = ({ tradeId, onClose }) => {
                     </div>
                 </div>
             </div>
-            
+
             <style jsx>{`
                 .custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
                 .custom-scrollbar::-webkit-scrollbar-track { background: #1a2035; }
@@ -206,9 +208,9 @@ const TradeDetailPage = ({ tradeId, onClose }) => {
             `}</style>
             {/* UPDATE TRADE MODAL */}
             {showUpdate && (
-                <UpdateTradePage 
-                    trade={trade} 
-                    onClose={() => setShowUpdate(false)} 
+                <UpdateTradePage
+                    trade={trade}
+                    onClose={() => setShowUpdate(false)}
                     onUpdate={() => {
                         api.getTrades({ id: tradeId }).then(data => {
                             const found = Array.isArray(data) ? data.find(t => t.id === tradeId) : (data?.data?.find(t => t.id === tradeId) || data);

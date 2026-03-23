@@ -8,7 +8,7 @@ const ALL_MENU_ITEMS = [
     { id: 'voice-modulation', label: 'Voice Modulation', icon: 'fa-microphone' },
     { id: 'market-watch', label: 'Market Watch', icon: 'fa-arrow-trend-up' },
     { id: 'notifications', label: 'Notifications', icon: 'fa-bell' },
-    { id: 'user-notifications', label: 'User Notification', icon: 'fa-bell' },
+    // { id: 'user-notifications', label: 'User Notification', icon: 'fa-bell' },
     { id: 'action-ledger', label: 'Action Ledger', icon: 'fa-podcast' },
     { id: 'active-positions', label: 'Active Positions', icon: 'fa-certificate' },
     { id: 'closed-positions', label: 'Closed Positions', icon: 'fa-certificate' },

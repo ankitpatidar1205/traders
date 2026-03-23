@@ -42,16 +42,7 @@ const UpdateTradePage = ({ trade, onClose, onUpdate }) => {
                         <span className="text-[14px] font-bold uppercase tracking-tight">Back</span>
                     </button>
                 </div>
-                
-                {/* Exit Button - Circular & Hoverable */}
-                <div className="absolute right-3 flex items-center gap-2">
-                    <button 
-                        onClick={onClose} 
-                        className="p-2.5 flex items-center justify-center rounded-full hover:bg-black/20 text-white/50 hover:text-white transition-all cursor-pointer group hover:bg-red-500/80 active:scale-95 shadow-lg"
-                    >
-                        <X className="w-5 h-5" />
-                    </button>
-                </div>
+
             </div>
 
             {/* Main Content with Sidebar */}
@@ -87,17 +78,28 @@ const UpdateTradePage = ({ trade, onClose, onUpdate }) => {
                 </div>
 
                 {/* Content Area */}
-                <div className="flex-1 flex flex-col items-start bg-[#1a2035] pt-12 pl-[20px] pr-[20px] overflow-hidden">
+                <div className="flex-1 flex flex-col items-start bg-[#1a2035] pt-12 pl-[20px] pr-[20px] overflow-hidden relative">
+
                     <div className="w-full relative">
-                        {/* Title Overlapping Area (now borderless) */}
+                        {/* Title Badge */}
                         <div className="absolute -top-7 left-6 z-20">
                             <span className="bg-gradient-to-br from-[#43a047] to-[#66bb6a] text-white px-7 py-3 rounded-lg text-[18px] font-bold inline-block shadow-[0_10px_20px_-5px_rgba(76,175,80,0.4)] tracking-wide border border-white/10">
                                 Update Trades
                             </span>
                         </div>
 
-                        {/* Borderless Form Box */}
-                        <div className="pt-10 pb-8 px-8 bg-[#1e283e]/30 shadow-2xl">
+                        {/* Content Box */}
+                        <div className="pt-16 pb-12 px-10 bg-[#1e283e]/30 shadow-2xl rounded text-slate-200 border-none w-full relative">
+                            {/* Minimal Exit Button - Top Right of Content */}
+                            <div className="absolute top-4 right-6">
+                                <button
+                                    onClick={onClose}
+                                    className="text-white/40 hover:text-white transition-colors active:scale-95"
+                                    title="Exit"
+                                >
+                                    <X className="w-6 h-6" />
+                                </button>
+                            </div>
                             <style>{`
                                 input:-webkit-autofill,
                                 input:-webkit-autofill:hover, 
@@ -112,17 +114,17 @@ const UpdateTradePage = ({ trade, onClose, onUpdate }) => {
                                 <div className="space-y-3">
                                     <label className="block text-slate-400 text-[13px] font-medium tracking-wide uppercase opacity-70">Scrip</label>
                                     <div className="space-y-0.5">
-                                        <select 
+                                        <select
                                             className="w-full bg-white text-black font-bold py-2 px-3 rounded-t border-b border-gray-200 focus:outline-none text-[14px]"
                                             value={formData.symbol}
-                                            onChange={(e) => setFormData({...formData, symbol: e.target.value})}
+                                            onChange={(e) => setFormData({ ...formData, symbol: e.target.value })}
                                         >
                                             <option value={formData.symbol}>{formData.symbol}</option>
                                         </select>
-                                        <select 
+                                        <select
                                             className="w-full bg-white text-black font-bold py-2 px-3 rounded-b focus:outline-none text-[14px]"
                                             value={formData.scripType}
-                                            onChange={(e) => setFormData({...formData, scripType: e.target.value})}
+                                            onChange={(e) => setFormData({ ...formData, scripType: e.target.value })}
                                         >
                                             <option value="Mega">Mega</option>
                                             <option value="Mini">Mini</option>
@@ -134,10 +136,10 @@ const UpdateTradePage = ({ trade, onClose, onUpdate }) => {
                                 {/* User ID Section */}
                                 <div className="space-y-3">
                                     <label className="block text-slate-400 text-[13px] font-medium tracking-wide uppercase opacity-70">User ID</label>
-                                    <select 
+                                    <select
                                         className="w-full bg-white text-black font-bold py-2 px-3 rounded focus:outline-none border-none text-[14px]"
                                         value={formData.userId}
-                                        onChange={(e) => setFormData({...formData, userId: e.target.value})}
+                                        onChange={(e) => setFormData({ ...formData, userId: e.target.value })}
                                     >
                                         <option value={formData.userId}>3705377 : Demo0174 (Demo ji)</option>
                                     </select>
@@ -146,55 +148,55 @@ const UpdateTradePage = ({ trade, onClose, onUpdate }) => {
                                 {/* Lots / Units */}
                                 <div className="space-y-1.5">
                                     <label className="block text-slate-400 text-[13px] font-medium tracking-wide uppercase opacity-70">Lots / Units</label>
-                                    <input 
+                                    <input
                                         type="text"
                                         autoComplete="off"
                                         className="w-full bg-transparent border-b border-white/20 text-white font-mono text-[15px] py-1 focus:outline-none focus:border-[#4caf50] transition-colors"
                                         value={formData.qty}
-                                        onChange={(e) => setFormData({...formData, qty: e.target.value})}
+                                        onChange={(e) => setFormData({ ...formData, qty: e.target.value })}
                                     />
                                 </div>
 
                                 {/* Buy Rate */}
                                 <div className="space-y-1.5">
                                     <label className="block text-slate-400 text-[13px] font-medium tracking-wide uppercase opacity-70">Buy Rate</label>
-                                    <input 
+                                    <input
                                         type="text"
                                         autoComplete="off"
                                         className="w-full bg-transparent border-b border-white/20 text-white font-mono text-[15px] py-1 focus:outline-none focus:border-[#4caf50] transition-colors"
                                         value={formData.entry_price}
-                                        onChange={(e) => setFormData({...formData, entry_price: e.target.value})}
+                                        onChange={(e) => setFormData({ ...formData, entry_price: e.target.value })}
                                     />
                                 </div>
 
                                 {/* Sell Rate */}
                                 <div className="space-y-1.5">
                                     <label className="block text-slate-400 text-[13px] font-medium tracking-wide uppercase opacity-70">Sell Rate</label>
-                                    <input 
+                                    <input
                                         type="text"
                                         autoComplete="off"
                                         className="w-full bg-transparent border-b border-white/20 text-white font-mono text-[15px] py-1 focus:outline-none focus:border-[#4caf50] transition-colors"
                                         value={formData.exit_price}
-                                        onChange={(e) => setFormData({...formData, exit_price: e.target.value})}
+                                        onChange={(e) => setFormData({ ...formData, exit_price: e.target.value })}
                                     />
                                 </div>
 
                                 {/* Transaction Password */}
                                 <div className="space-y-1.5">
                                     <label className="block text-slate-400 text-[13px] font-medium tracking-wide uppercase opacity-70">Transaction Password</label>
-                                    <input 
+                                    <input
                                         type="password"
                                         autoComplete="new-password"
                                         className="w-full bg-transparent border-b border-white/20 text-white font-mono text-[15px] py-1 focus:outline-none focus:border-[#4caf50] transition-colors"
                                         value={formData.transactionPassword}
-                                        onChange={(e) => setFormData({...formData, transactionPassword: e.target.value})}
+                                        onChange={(e) => setFormData({ ...formData, transactionPassword: e.target.value })}
                                         placeholder=""
                                     />
                                 </div>
 
                                 {/* Save Button */}
                                 <div className="col-span-full pt-4">
-                                    <button 
+                                    <button
                                         type="submit"
                                         disabled={loading}
                                         className="bg-[#5cb85c] hover:bg-[#4cae4c] text-white font-bold py-2 px-8 rounded transition-all text-[14px] shadow-lg active:scale-95 disabled:opacity-50 uppercase tracking-widest"

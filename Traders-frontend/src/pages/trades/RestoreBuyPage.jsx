@@ -38,15 +38,6 @@ const RestoreBuyPage = ({ trade, onClose, onRestore }) => {
                     </button>
                 </div>
                 
-                {/* Exit Button - Circular & Hoverable */}
-                <div className="absolute right-3 flex items-center gap-2">
-                    <button 
-                        onClick={onClose} 
-                        className="p-2.5 flex items-center justify-center rounded-full hover:bg-black/20 text-white/50 hover:text-white transition-all cursor-pointer group hover:bg-red-500/80 active:scale-95 shadow-lg"
-                    >
-                        <X className="w-5 h-5" />
-                    </button>
-                </div>
             </div>
 
             {/* Main Content with Sidebar */}
@@ -91,7 +82,17 @@ const RestoreBuyPage = ({ trade, onClose, onRestore }) => {
                         </div>
 
                         {/* Content Box */}
-                        <div className="pt-16 pb-12 px-10 bg-[#1e283e]/30 shadow-2xl rounded text-slate-200 border-none w-full">
+                        <div className="pt-16 pb-12 px-10 bg-[#1e283e]/30 shadow-2xl rounded text-slate-200 border-none w-full relative">
+                            {/* Minimal Exit Button - Top Right of Content */}
+                            <div className="absolute top-4 right-6">
+                                <button
+                                    onClick={onClose}
+                                    className="text-white/40 hover:text-white transition-colors active:scale-95"
+                                    title="Exit"
+                                >
+                                    <X className="w-6 h-6" />
+                                </button>
+                            </div>
                             <p className="text-[15px] leading-relaxed mb-12 opacity-90 max-w-5xl">
                                 You are about to restore buy of <span className="text-white font-bold">{trade?.qty || '0.000000'}</span> lots of <span className="text-white font-bold">{trade?.symbol || 'SCRIP'}</span> of <span className="text-white font-bold">{trade?.user_id || 'User'}</span>. Brokerage and Profit/Loss of the SELL Trade will be refunded to the client and the SELL Trade will be removed. Enter Transaction Password to continue.
                             </p>
