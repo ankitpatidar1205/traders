@@ -132,6 +132,10 @@ const MCX_SYMBOLS = [
     'MCX:ZINC26APRFUT',
     'MCX:LEAD26APRFUT',
     'MCX:NATURALGAS26APRFUT',
+    'MCX:NICKEL26APRFUT',
+    'MCX:GOLDGUINEA26APRFUT',
+    'MCX:GOLDPETAL26APRFUT',
+    'MCX:SILVERMIC26APRFUT',
 ];
 
 router.get('/market', authMiddleware, asyncHandler(async (req, res) => {
@@ -139,9 +143,34 @@ router.get('/market', authMiddleware, asyncHandler(async (req, res) => {
         return res.status(401).json({ error: 'Kite not connected. Re-login required.' });
     }
     try {
-        const quotes = await kiteService.getQuote(MCX_SYMBOLS.join(','));
-        console.log('📊 MCX Market Data fetched:', Object.keys(quotes).length, 'symbols');
-        res.json(quotes);
+        const quotes = await kiteService.getQuote(MCX_SYMBOLS);
+        console.log('MCX Market Data fetched:', Object.keys(quotes).length, 'symbols');
+
+        // Parse response like Java service — extract bid, ask, ohlc, depth
+        const parsed = {};
+        for (const [symbol, quote] of Object.entries(quotes)) {
+            parsed[symbol] = {
+                symbol,
+                last_price: quote.last_price,
+                volume: quote.volume,
+                oi: quote.oi,
+                change: quote.net_change,
+                change_percent: quote.ohlc?.close ? (((quote.last_price - quote.ohlc.close) / quote.ohlc.close) * 100).toFixed(2) : 0,
+                ohlc: quote.ohlc || {},
+                high: quote.ohlc?.high || 0,
+                low: quote.ohlc?.low || 0,
+                open: quote.ohlc?.open || 0,
+                close: quote.ohlc?.close || 0,
+                bid: quote.depth?.buy?.[0]?.price || 0,
+                ask: quote.depth?.sell?.[0]?.price || 0,
+                bid_qty: quote.depth?.buy?.[0]?.quantity || 0,
+                ask_qty: quote.depth?.sell?.[0]?.quantity || 0,
+                timestamp: quote.timestamp || null,
+                depth: quote.depth || {},
+            };
+        }
+
+        res.json(parsed);
     } catch (err) {
         if (err.message?.includes('expired') || err.message?.includes('403')) {
             return res.status(401).json({ error: 'Token expired. Re-login required.' });

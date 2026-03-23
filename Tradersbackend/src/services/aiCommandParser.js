@@ -214,6 +214,12 @@ const extractIds = (text) => {
     const patterns = [
         /(?:id|user|user_id|userId)\s*[:#=]?\s*(\d+)/gi,
         /#(\d+)/g,
+        // Reversed: "16 number ID", "16 no ID", "16 id", "16 wale user"
+        /(\d+)\s*(?:number|no\.?|number|wale?|wali)?\s*(?:id|user|ID)\b/gi,
+        // Hindi: "ID number 16", "id no 16"
+        /(?:id|user)\s*(?:number|no\.?|number)\s*(\d+)/gi,
+        // "ID per", "ID par", "ID pe" (Hindi postpositions)
+        /(\d+)\s*(?:number|no\.?)?\s*(?:id|user)\s*(?:pe|per|par|me|mein|ko|ka|ki|se)\b/gi,
     ];
 
     for (const pat of patterns) {
@@ -231,6 +237,8 @@ const extractAmount = (text) => {
     // Remove ID references to avoid treating IDs as amounts
     let cleaned = text.replace(/(?:id|user|user_id)\s*[:#=]?\s*\d+/gi, '');
     cleaned = cleaned.replace(/#\d+/g, '');
+    // Remove reversed ID refs: "16 number ID per", "16 id pe"
+    cleaned = cleaned.replace(/\d+\s*(?:number|no\.?)?\s*(?:id|user)\s*(?:pe|per|par|me|mein|ko|ka|ki|se)?\b/gi, '');
 
     // "5k" → 5000, "10k" → 10000
     const kMatch = cleaned.match(/(\d+)\s*k\b/i);
@@ -690,7 +698,7 @@ const parseWithOpenAI = async (text) => {
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
     const completion = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4o',  // Latest & most powerful model
         messages: [
             { role: 'system', content: OPENAI_SYSTEM_PROMPT },
             { role: 'user', content: text },

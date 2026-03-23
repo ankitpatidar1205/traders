@@ -182,11 +182,12 @@ const EditMCXFutureSection = ({ formData, handleChange, handleNestedChange, glob
             {formData.mcxExposureType === 'per_lot' && (
                 <div className="mt-8">
                     <h4 className="text-[17px] font-normal mb-10 px-4 border-l-2 border-[#4caf50] text-[#bcc0cf]" style={{ letterSpacing: '0.2px' }}>MCX Exposure Lot wise:</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 px-2">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 px-2">
                         {exposureScrips.map(scrip => (
                             <React.Fragment key={scrip}>
-                                <ScripField label={`${scrip} INTRADAY`} value={formData.mcxLotMargins[scrip]?.INTRADAY || '0'} onChange={(e) => handleNestedChange('mcxLotMargins', scrip, e.target.value, 'INTRADAY')} />
-                                <ScripField label={`${scrip} HOLDING`} value={formData.mcxLotMargins[scrip]?.HOLDING || '0'} onChange={(e) => handleNestedChange('mcxLotMargins', scrip, e.target.value, 'HOLDING')} />
+                                <ScripField label={`${scrip} SELL RATE`} value={formData.mcxLotMargins[scrip]?.INTRADAY || '0'} onChange={(e) => handleNestedChange('mcxLotMargins', scrip, e.target.value, 'INTRADAY')} />
+                                <ScripField label={`${scrip} BUY RATE`} value={formData.mcxLotMargins[scrip]?.HOLDING || '0'} onChange={(e) => handleNestedChange('mcxLotMargins', scrip, e.target.value, 'HOLDING')} />
+                                <ScripField label={`${scrip} LOT`} value={formData.mcxLotMargins[scrip]?.LOT || '1'} onChange={(e) => handleNestedChange('mcxLotMargins', scrip, e.target.value, 'LOT')} />
                             </React.Fragment>
                         ))}
                     </div>

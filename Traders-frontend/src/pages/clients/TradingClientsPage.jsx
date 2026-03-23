@@ -64,6 +64,10 @@ const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavig
         const clientDate = new Date(client.created_at);
         const from = fromDate ? new Date(fromDate) : null;
         const to = toDate ? new Date(toDate) : null;
+        
+        // Ensure to Date includes the end of the day
+        if (from) from.setHours(0, 0, 0, 0);
+        if (to) to.setHours(23, 59, 59, 999);
 
         const matchesDate = (!from || clientDate >= from) && (!to || clientDate <= to);
 
@@ -89,6 +93,7 @@ const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavig
 
     const handleEdit = (client) => {
         setSelectedClient(client);
+        setCreateFromDetail(false);
         setShowUpdatePage(true);
     };
 
@@ -345,16 +350,19 @@ const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavig
                     onUpdate={(client) => {
                         setShowDetailPage(false);
                         setSelectedClient(client);
+                        setCreateFromDetail(true);
                         setShowUpdatePage(true);
                     }}
                     onReset={(client) => {
                         setShowDetailPage(false);
                         setSelectedClient(client);
+                        setCreateFromDetail(true);
                         setShowResetPage(true);
                     }}
                     onRecalculate={(client) => {
                         setShowDetailPage(false);
                         setSelectedClient(client);
+                        setCreateFromDetail(true);
                         setShowRecalculatePage(true);
                     }}
                     onDuplicate={(client) => {
@@ -366,11 +374,13 @@ const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavig
                     onChangePassword={(client) => {
                         setShowDetailPage(false);
                         setSelectedClient(client);
+                        setCreateFromDetail(true);
                         setShowChangePasswordPage(true);
                     }}
                     onDelete={(client) => {
                         setShowDetailPage(false);
                         setSelectedClient(client);
+                        setCreateFromDetail(true);
                         setShowDeletePage(true);
                     }}
                 />
@@ -382,12 +392,12 @@ const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavig
                     client={selectedClient}
                     onClose={() => {
                         setShowResetPage(false);
-                        setShowDetailPage(true);
+                        if (createFromDetail) setShowDetailPage(true);
                     }}
                     onResetConfirm={(password) => {
                         setToast({ message: 'Account reset successful', type: 'success' });
                         setShowResetPage(false);
-                        setShowDetailPage(true);
+                        if (createFromDetail) setShowDetailPage(true);
                     }}
                 />
             )}
@@ -398,12 +408,12 @@ const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavig
                     client={selectedClient}
                     onClose={() => {
                         setShowRecalculatePage(false);
-                        setShowDetailPage(true);
+                        if (createFromDetail) setShowDetailPage(true);
                     }}
                     onRecalculate={(client, password) => {
                         setToast({ message: 'Brokerage recalculated successfully', type: 'success' });
                         setShowRecalculatePage(false);
-                        setShowDetailPage(true);
+                        if (createFromDetail) setShowDetailPage(true);
                     }}
                 />
             )}
@@ -416,12 +426,12 @@ const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavig
                     onNavigate={onNavigate}
                     onClose={() => {
                         setShowUpdatePage(false);
-                        setShowDetailPage(true);
+                        if (createFromDetail) setShowDetailPage(true);
                     }}
                     onSave={(updatedData) => {
                         setToast({ message: 'Client updated successfully!', type: 'success' });
                         setShowUpdatePage(false);
-                        setShowDetailPage(true);
+                        if (createFromDetail) setShowDetailPage(true);
                     }}
                 />
             )}
@@ -485,12 +495,12 @@ const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavig
                     client={selectedClient}
                     onClose={() => {
                         setShowChangePasswordPage(false);
-                        setShowDetailPage(true);
+                        if (createFromDetail) setShowDetailPage(true);
                     }}
                     onChangePasswordConfirm={(newPass, transPass) => {
                         setToast({ message: 'Password updated successfully!', type: 'success' });
                         setShowChangePasswordPage(false);
-                        setShowDetailPage(true);
+                        if (createFromDetail) setShowDetailPage(true);
                     }}
                 />
             )}
@@ -515,7 +525,7 @@ const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavig
                     client={selectedClient}
                     onClose={() => {
                         setShowDeletePage(false);
-                        setShowDetailPage(true);
+                        if (createFromDetail) setShowDetailPage(true);
                     }}
                     onDeleteConfirm={async (password) => {
                         try {

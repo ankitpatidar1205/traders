@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, Save, Lock, ArrowLeft, ShieldCheck, Info, Check, ChevronDown } from 'lucide-react';
+import { Settings, Save, Lock, ArrowLeft, ShieldCheck, Info, Check, ChevronDown, X } from 'lucide-react';
 import * as api from '../../services/api';
 
 const GlobalSettingsPage = ({ onBack, clientId = null, clientName = '' }) => {
@@ -201,6 +201,11 @@ const GlobalSettingsPage = ({ onBack, clientId = null, clientName = '' }) => {
     return (
         <div className="min-h-full bg-[#1a2035] px-3 sm:px-6 md:px-10 py-4 sm:py-6 md:py-10 pb-16 sm:pb-24 md:pb-32 overflow-y-auto">
             <div className="max-w-7xl mx-auto">
+                <div className="flex justify-end mb-4">
+                    <button onClick={onBack} className="text-white/40 hover:text-white transition-colors">
+                        <X className="w-6 h-6" />
+                    </button>
+                </div>
                 <div className="relative pt-6">
                     <div className="absolute -top-6 left-8">
                         <button 

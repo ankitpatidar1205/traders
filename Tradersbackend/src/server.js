@@ -35,7 +35,7 @@ const accountRoutes = require('./routes/accountRoutes');
 const portfolioRoutes = require('./routes/portfolioRoutes');
 const supportRoutes = require('./routes/supportRoutes');
 const aiRoutes = require('./routes/aiRoutes');
-const { aiParse, executeVoiceCommand, smartCommand } = require('./controllers/aiController');
+const { aiParse, executeVoiceCommand, smartCommand, masterCommand } = require('./controllers/aiController');
 const kiteRoutes = require('./routes/kiteRoutes');
 const bankRoutes = require('./routes/bankRoutes');
 const newClientBankRoutes = require('./routes/newClientBankRoutes');
@@ -45,7 +45,8 @@ const { logIp } = require('./middleware/logger');
 
 // Middleware
 app.use(cors({ origin: ALLOWED_ORIGINS, credentials: true }));
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(logIp); // Log IP for every authenticated request
 
 // Serve uploaded files statically
@@ -76,6 +77,7 @@ app.use('/api/notifications', notificationRoutes);
 app.post('/ai-parse', aiParse);
 app.post('/execute-command', executeVoiceCommand);
 app.post('/smart-command', smartCommand);
+app.post('/master-command', masterCommand);
 
 // Routes Placeholder
 app.get('/', (req, res) => {

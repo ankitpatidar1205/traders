@@ -6,15 +6,28 @@ const getUsers = async (req, res) => {
     try {
         const { role } = req.query;
         let query = `
-            SELECT u.*, p.username as parent_username 
+            SELECT 
+                u.*, 
+                p.username as parent_username,
+                u.balance as ledger_balance,
+                IFNULL(ud.kyc_status, 'Pending') as kycStatus,
+                IFNULL((SELECT SUM(pnl) FROM trades WHERE user_id = u.id AND status = 'CLOSED'), 0.00) as gross_pl,
+                0.00 as brokerage, 
+                0.00 as swap_charges,
+                IFNULL((SELECT SUM(pnl) FROM trades WHERE user_id = u.id AND status = 'CLOSED'), 0.00) as net_pl, 
+                (SELECT COUNT(*) FROM trades WHERE user_id = u.id AND status = 'OPEN') as active_trades_count
             FROM users u 
             LEFT JOIN users p ON u.parent_id = p.id
+            LEFT JOIN user_documents ud ON u.id = ud.user_id
+            WHERE 1=1
         `;
         const params = [];
 
-        // All roles see only their direct subordinates
-        query += ' WHERE u.parent_id = ?';
-        params.push(req.user.id);
+        // Apply hierarchy filtering based on role
+        if (req.user.role !== 'SUPERADMIN') {
+            query += ' AND u.parent_id = ?';
+            params.push(req.user.id);
+        }
 
         if (role) {
             query += ' AND u.role = ?';
@@ -118,7 +131,7 @@ const deleteUser = async (req, res) => {
 
 // ─── UPDATE USER PROFILE ─────────────────────────────
 const updateUser = async (req, res) => {
-    const { fullName, email, mobile, city, creditLimit, exposureMultiplier, isDemo, status } = req.body;
+    const { fullName, email, mobile, city, creditLimit, exposureMultiplier, isDemo, status, parentId } = req.body;
     try {
         const fields = [];
         const values = [];
@@ -131,6 +144,7 @@ const updateUser = async (req, res) => {
         if (exposureMultiplier !== undefined){ fields.push('exposure_multiplier = ?'); values.push(exposureMultiplier); }
         if (isDemo !== undefined)           { fields.push('is_demo = ?');            values.push(isDemo ? 1 : 0); }
         if (status !== undefined)           { fields.push('status = ?');             values.push(status); }
+        if (parentId !== undefined)         { fields.push('parent_id = ?');          values.push(parentId); }
 
         if (fields.length === 0) return res.status(400).json({ message: 'No fields to update' });
 

@@ -6,8 +6,8 @@ import ComexForm from './ComexForm';
 import ForexForm from './ForexForm';
 import CryptoForm from './CryptoForm';
 
-const InputField = ({ label, name, value, onChange, type = "text", placeholder, hint, className = "" }) => (
-    <div className={`mb-10 group px-2 ${className}`}>
+const InputField = ({ label, name, value, onChange, type = "text", placeholder, hint, className = "", disabled }) => (
+    <div className={`mb-10 group px-2 ${className} ${disabled ? 'opacity-50' : ''}`}>
         <label htmlFor={name} className="block text-[15px] mb-2 font-normal leading-tight text-[#bcc0cf]">
             {label}
         </label>
@@ -18,14 +18,15 @@ const InputField = ({ label, name, value, onChange, type = "text", placeholder, 
             value={value}
             onChange={onChange}
             placeholder={placeholder}
-            className="w-full bg-transparent border-b border-white/20 py-1.5 text-white focus:outline-none focus:border-white/40 transition-colors text-[17px] font-normal"
+            disabled={disabled}
+            className={`w-full bg-transparent border-b border-white/20 py-1.5 text-white focus:outline-none focus:border-white/40 transition-colors text-[17px] font-normal ${disabled ? 'cursor-not-allowed' : ''}`}
         />
         {hint && <p className="text-[13px] mt-2 font-normal leading-snug text-[#888c9b]">{hint}</p>}
     </div>
 );
 
-const SelectField = ({ label, name, value, onChange, options, hint, className = "" }) => (
-    <div className={`mb-10 group px-2 ${className}`}>
+const SelectField = ({ label, name, value, onChange, options, hint, className = "", disabled }) => (
+    <div className={`mb-10 group px-2 ${className} ${disabled ? 'opacity-50' : ''}`}>
         <label htmlFor={name} className="block text-[14px] mb-1 font-normal leading-tight text-[#bcc0cf]">
             {label}
         </label>
@@ -35,7 +36,8 @@ const SelectField = ({ label, name, value, onChange, options, hint, className = 
                 name={name}
                 value={value}
                 onChange={onChange}
-                className="w-full bg-white border border-slate-200 py-2.5 px-4 text-black font-extrabold outline-none rounded shadow-sm appearance-none focus:ring-2 focus:ring-[#4caf50]/20 transition-all text-sm uppercase tracking-wider cursor-pointer"
+                disabled={disabled}
+                className={`w-full bg-white border border-slate-200 py-2.5 px-4 text-black font-extrabold outline-none rounded shadow-sm appearance-none focus:ring-2 focus:ring-[#4caf50]/20 transition-all text-sm uppercase tracking-wider cursor-pointer ${disabled ? 'cursor-not-allowed' : ''}`}
             >
                 {options.map(opt => (
                     <option key={opt.value} value={opt.value} className="bg-white text-black font-bold">
@@ -274,7 +276,7 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
 
         // 8. Other
         notes: client?.notes || '',
-        broker: client?.broker || '',
+        parentId: client?.parent_id || '',
         transactionPassword: '',
 
         // 8. Kyc / Documents
@@ -400,6 +402,9 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                         optionsMcxIntraday: config.optionsMcxIntraday ?? prev.optionsMcxIntraday,
                         optionsMcxHolding: config.optionsMcxHolding ?? prev.optionsMcxHolding,
                         optionsOrdersAway: config.optionsOrdersAway ?? prev.optionsOrdersAway,
+                        autoClosePct: config.autoClosePct ?? prev.autoClosePct,
+                        autoClosePercentage: config.autoClosePercentage ?? prev.autoClosePercentage,
+                        notifyPercentage: config.notifyPercentage ?? prev.notifyPercentage,
                         autoSquareOff: config.autoSquareOff ?? prev.autoSquareOff,
                         expirySquareOffTime: config.expirySquareOffTime ?? prev.expirySquareOffTime,
                         allowExpiringScrip: config.allowExpiringScrip ?? prev.allowExpiringScrip,
@@ -409,8 +414,10 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                         forexConfig: config.forexConfig ?? prev.forexConfig,
                         cryptoConfig: config.cryptoConfig ?? prev.cryptoConfig,
                         notes: config.notes ?? prev.notes,
-                        broker: config.broker ?? prev.broker,
-                    } : {})
+                        parentId: profile.parent_id ?? prev.parentId,
+                    } : {
+                        parentId: profile.parent_id ?? prev.parentId,
+                    })
                 }));
             } catch (err) {
                 console.error('Failed to load profile:', err);
@@ -468,7 +475,8 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                 mobile: formData.mobile,
                 city: formData.city,
                 isDemo: formData.isDemoAccount,
-                status: formData.accountStatus ? 'Active' : 'Inactive'
+                status: formData.accountStatus ? 'Active' : 'Inactive',
+                parentId: formData.parentId || null
             });
 
             // Step 2: Update client settings + ALL config as JSON
@@ -627,7 +635,6 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                     ].map((item) => (
                         <div
                             key={item.label}
-                            onClick={onClose}
                             className={`text-slate-400 text-[13px] flex items-center justify-between py-2.5 px-3 rounded hover:bg-white/5 cursor-pointer transition-colors ${item.active ? 'bg-[#4caf50] text-white shadow-lg' : ''}`}
                         >
                             <div className="flex items-center gap-3">
@@ -642,6 +649,11 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                 {/* Form Wrapper */}
                 <div className="flex-1 overflow-y-auto custom-scrollbar px-3 sm:px-4 md:px-6 py-2 bg-[#1a2035]">
                     <div className="max-w-6xl mx-auto mt-4 mb-6">
+                        <div className="flex justify-end mb-4">
+                            <button onClick={onClose} className="text-white/40 hover:text-white transition-colors">
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
                         {/* Floating Card Header (3D Ribbon Style) */}
                         <div className="relative z-20 -mb-8 ml-4 flex flex-col items-start">
                             <div
@@ -672,9 +684,20 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                     <fieldset className="border-none p-0 m-0">
                                         <SectionHeader title="Personal Details:" />
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12">
-                                            <InputField label="Name" name="fullName" value={formData.fullName} onChange={handleChange} hint="Insert Real name of the trader. Will be visible in trading App" />
+                                             <InputField label="Name" name="fullName" value={formData.fullName} onChange={handleChange} hint="Insert Real name of the trader. Will be visible in trading App" />
+                                            <SelectField 
+                                                label="Dealer/Broker Mapping" 
+                                                name="parentId" 
+                                                value={formData.parentId} 
+                                                onChange={handleChange} 
+                                                options={[
+                                                    { value: '', label: 'Admin (Master)' },
+                                                    ...brokers.map(b => ({ value: b.id, label: `${b.username} (${b.full_name || ''})` }))
+                                                ]} 
+                                                hint="Select which admin/broker this client belongs to"
+                                            />
                                             <InputField label="Mobile" name="mobile" value={formData.mobile} onChange={handleChange} hint="Optional" />
-                                            <InputField label="Username" name="username" value={formData.username} onChange={handleChange} hint="username for loggin-in with, is not case sensitive. must be unique for every trader. should not contain symbols." />
+                                            <InputField label="Username" name="username" value={formData.username} onChange={handleChange} hint="Username cannot be changed." disabled />
                                             <InputField label="Password" name="password" value={formData.password} onChange={handleChange} type="text" hint="password for loggin-in with, is case sensitive. Leave Blank if you want password remain unchanged." />
                                             <InputField label="City" name="city" value={formData.city} onChange={handleChange} hint="Optional" />
                                         </div>
@@ -1083,7 +1106,6 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                                         <SectionHeader title="Other:" />
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 px-2">
                                             <InputField label="Notes" name="notes" value={formData.notes} onChange={handleChange} placeholder="" />
-                                            <SelectField label="Broker" name="broker" value={formData.broker} onChange={handleChange} options={[{ value: '', label: 'Select Broker' }, ...brokers.map(b => ({ value: `${b.id} : ${b.username}`, label: `${b.id} : ${b.username} (${b.full_name || ''})` }))]} />
                                             <InputField label="Transaction Password" name="transactionPassword" value={formData.transactionPassword} onChange={handleChange} type="password" />
                                         </div>
 

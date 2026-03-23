@@ -198,13 +198,15 @@ class KiteService {
     async getTrades() { return this.makeRequest('/trades'); }
 
     async getQuote(instruments) {
-        const query = Array.isArray(instruments) ? instruments.join(',') : instruments;
-        return this.makeRequest(`/quote?i=${query}`);
+        const arr = Array.isArray(instruments) ? instruments : instruments.split(',');
+        const query = arr.map(i => `i=${encodeURIComponent(i.trim())}`).join('&');
+        return this.makeRequest(`/quote?${query}`);
     }
 
     async getLTP(instruments) {
-        const query = Array.isArray(instruments) ? instruments.join(',') : instruments;
-        return this.makeRequest(`/quote/ltp?i=${query}`);
+        const arr = Array.isArray(instruments) ? instruments : instruments.split(',');
+        const query = arr.map(i => `i=${encodeURIComponent(i.trim())}`).join('&');
+        return this.makeRequest(`/quote/ltp?${query}`);
     }
 
     async getInstruments() { return this.makeRequest('/instruments'); }

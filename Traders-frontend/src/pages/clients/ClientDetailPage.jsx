@@ -487,6 +487,7 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
                                                         <tr>
                                                             <th className="px-3 py-4 text-left uppercase tracking-wider w-8">X</th>
                                                             <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">ID <span className="text-[10px]">↑↓</span></th>
+                                                            <th className="px-3 py-4 text-left uppercase tracking-wider">Type</th>
                                                             <th className="px-3 py-4 text-left uppercase tracking-wider">Scrip</th>
                                                             <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">Buy Rate</th>
                                                             <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">Sell Rate</th>
@@ -504,7 +505,7 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
                                                     </thead>
                                                 <tbody className="text-[13px] text-slate-300">
                                                     {activeTrades.length === 0 ? (
-                                                        <tr><td colSpan="15" className="px-4 py-8 text-slate-500 font-light text-center">{loading ? 'Loading...' : 'No records found'}</td></tr>
+                                                        <tr><td colSpan="16" className="px-4 py-8 text-slate-500 font-light text-center">{loading ? 'Loading...' : 'No records found'}</td></tr>
                                                     ) : activeTrades.map((trade) => (
                                                         <tr key={trade.id} className="hover:bg-white/[0.03] transition-colors border-b border-white/5">
                                                             <td className="px-3 py-3 font-bold text-white flex items-center gap-1.5">
@@ -526,6 +527,11 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
                                                                     X
                                                                 </span>
                                                                 {trade.id}
+                                                            </td>
+                                                            <td className="px-3 py-3">
+                                                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${trade.type === 'BUY' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                                                                    {trade.type}
+                                                                </span>
                                                             </td>
                                                             <td className="px-3 py-3 font-bold text-white uppercase">{trade.symbol}</td>
                                                             <td className="px-3 py-3 font-mono">{trade.type === 'BUY' ? trade.entry_price : '-'}</td>
@@ -563,6 +569,7 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
                                                         <thead className="bg-[#202940]/30 border-b border-white/10 text-white text-[13px] font-medium tracking-tight">
                                                             <tr>
                                                                 <th className="px-3 py-4 text-left uppercase tracking-wider">ID <span className="text-[10px]">↑↓</span></th>
+                                                                <th className="px-3 py-4 text-left uppercase tracking-wider">Type</th>
                                                                 <th className="px-3 py-4 text-left uppercase tracking-wider">Scrip</th>
                                                                 <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">Buy Rate</th>
                                                                 <th className="px-3 py-4 text-left uppercase tracking-wider whitespace-nowrap">Sell Rate</th>
@@ -579,10 +586,15 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
                                                         </thead>
                                                         <tbody className="text-[13px] text-slate-300">
                                                             {closedTrades.length === 0 ? (
-                                                                <tr><td colSpan="13" className="px-4 py-8 text-slate-500 font-light text-center">{loading ? 'Loading...' : 'No records found'}</td></tr>
+                                                                <tr><td colSpan="14" className="px-4 py-8 text-slate-500 font-light text-center">{loading ? 'Loading...' : 'No records found'}</td></tr>
                                                             ) : closedTrades.map((trade) => (
                                                                 <tr key={trade.id} className="hover:bg-white/[0.03] transition-colors border-b border-white/5">
                                                                     <td className="px-3 py-3 font-bold">{trade.id}</td>
+                                                                    <td className="px-3 py-3">
+                                                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${trade.type === 'BUY' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                                                                            {trade.type}
+                                                                        </span>
+                                                                    </td>
                                                                     <td className="px-3 py-3 font-bold text-white uppercase">{trade.symbol}</td>
                                                                     <td className="px-3 py-3 font-mono">{trade.type === 'BUY' ? trade.entry_price : trade.exit_price}</td>
                                                                     <td className="px-3 py-3 font-mono">{trade.type === 'SELL' ? trade.entry_price : trade.exit_price}</td>

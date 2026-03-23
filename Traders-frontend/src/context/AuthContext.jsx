@@ -23,6 +23,8 @@ export const ROLE_MENU_ACCESS = {
         'deposit-requests', 'negative-balance', 'admins',
         'learning', 'support', 'voice-modulation', 'signal-admin', 'signals',
         'global-settings', 'expiry-rules',
+        'global-settings', 'expiry-rules', 'user-notifications',
+
     ],
     ADMIN: [
         'live-m2m', 'kite-dashboard', 'market-watch', 'notifications', 'user-notifications',
