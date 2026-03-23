@@ -11,7 +11,9 @@ import useNotifications from '../hooks/useNotifications';
 import { useSearch } from '../hooks/useSearch';
 import { useVoiceSearch } from '../hooks/useVoiceSearch';
 import SearchResultsModal from './SearchResultsModal';
+import * as api from '../services/api';
 import defaultLogo from '../assets/shrishreenathjitraders.in.png';
+
 
 function timeAgo(dateStr) {
     const then = new Date(dateStr.replace(' ', 'T'));
@@ -81,13 +83,14 @@ const TopBar = ({ currentViewLabel, onLogout, onNavigate }) => {
 
     // Admins see their uploaded logo; SuperAdmin always sees the default bundled logo
     const resolvedLogo = (userRole === 'ADMIN' && logoPath)
-        ? (logoPath.startsWith('http') ? logoPath : `http://https://trader-production-e063.up.railway.app${logoPath}`)
+        ? (logoPath.startsWith('http') ? logoPath : `${api.UPLOADS_BASE_URL}${logoPath}`)
         : defaultLogo;
 
     // Profile image for right side
     const resolvedProfileImage = (userRole === 'ADMIN' && profileImagePath)
-        ? (profileImagePath.startsWith('http') ? profileImagePath : `http://https://trader-production-e063.up.railway.app${profileImagePath}`)
+        ? (profileImagePath.startsWith('http') ? profileImagePath : `${api.UPLOADS_BASE_URL}${profileImagePath}`)
         : null;
+
 
     const onSwitchSegment = (seg) => {
         switchSegment(seg);

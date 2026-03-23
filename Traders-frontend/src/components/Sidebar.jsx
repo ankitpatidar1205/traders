@@ -95,8 +95,12 @@ const Sidebar = React.memo(({ onLogout, currentView, isOpen, onClose }) => {
                     </div>
                 </div>
 
-                {/* Navigation Items */}
-                <nav className="flex-1 py-4 overflow-y-auto custom-scrollbar scroll-smooth">
+                {/* Navigation Items - Scrollable but Hidden Scrollbar */}
+                <nav className="flex-1 py-4 overflow-y-auto no-scrollbar scroll-smooth">
+                    <style>{`
+                        .no-scrollbar::-webkit-scrollbar { display: none; }
+                        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+                    `}</style>
                     <div className="px-3 space-y-1">
                         {menuItems.map((item) => {
                             const isActive = activeView === item.id;

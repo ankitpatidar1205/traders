@@ -1,5 +1,11 @@
 const OpenAI = require("openai");
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+let openai = null;
+if (process.env.OPENAI_API_KEY) {
+    openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+} else {
+    console.warn("⚠️  OPENAI_API_KEY missing in .env — AI commands will use rule-based fallback.");
+}
 
 const DB_SCHEMA = `
 MySQL Database Tables:
@@ -79,6 +85,10 @@ JSON format:
 }`;
 
   try {
+    if (!openai) {
+        throw new Error("OpenAI API key missing");
+    }
+
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       max_tokens: 400,

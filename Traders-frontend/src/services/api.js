@@ -12,6 +12,8 @@ const SERVER_IP = 'localhost';
 const PORT = '5000';
 export const BASE_URL = import.meta.env.VITE_API_URL || `http://${SERVER_IP}:${PORT}/api`;
 export const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || `http://${SERVER_IP}:${PORT}`;
+export const UPLOADS_BASE_URL = BASE_URL.replace(/\/api$/, '') + '/uploads';
+
 
 // ─── AUTH ────────────────────────────────────────────
 export const login = async (username, password) => {

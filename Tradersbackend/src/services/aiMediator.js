@@ -1,7 +1,13 @@
 const OpenAI = require('openai');
 const db = require('../config/db');
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+let openai = null;
+if (process.env.OPENAI_API_KEY) {
+    openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+} else {
+    console.warn("⚠️  OPENAI_API_KEY missing in .env — Universal AI Mediator feature will be disabled.");
+}
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SCHEMA FOR FUNCTION CALLING
@@ -272,7 +278,11 @@ EXAMPLES:
     console.log(`[Mediator] 🔄 Iteration ${iteration}`);
 
     try {
+      if (!openai) {
+          throw new Error("OpenAI API key missing. AI features are disabled.");
+      }
       response = await openai.chat.completions.create({
+
         model: 'gpt-4o-mini',
         messages,
         tools,

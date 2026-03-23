@@ -4,6 +4,7 @@ import TopBar from './TopBar';
 import Sidebar from './Sidebar';
 import NotificationPopup from './common/NotificationPopup';
 import { useAuth } from '../context/AuthContext';
+import * as api from '../services/api';
 import logo from '../assets/shrishreenathjitraders.in.png';
 
 const Layout = ({ children, onLogout, onNavigate, currentView }) => {
@@ -14,8 +15,9 @@ const Layout = ({ children, onLogout, onNavigate, currentView }) => {
 
     // Admins see their uploaded logo; SuperAdmin always sees the bundled default logo
     const resolvedLogo = (user?.role === 'ADMIN' && logoPath)
-        ? (logoPath.startsWith('http') ? logoPath : `https://trader-production-e063.up.railway.app${logoPath}`)
+        ? (logoPath.startsWith('http') ? logoPath : `${api.UPLOADS_BASE_URL}${logoPath}`)
         : logo;
+
 
     // Navbar gradient uses theme CSS variables
     const navbarStyle = useMemo(() => ({
