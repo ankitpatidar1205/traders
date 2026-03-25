@@ -79,9 +79,11 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
 
     const handleApproveKYC = async () => {
         try {
-            await api.updateDocuments(client.id, { kycStatus: 'VERIFIED' });
+            const fd = new FormData();
+            fd.append('kycStatus', 'VERIFIED');
+            await api.updateDocuments(client.id, fd);
             setKycStatus('Approved');
-            if (onUpdate) onUpdate({ ...client, kycStatus: 'Approved' });
+            if (onUpdate) onUpdate({ ...client, kycStatus: 'VERIFIED' });
         } catch (e) {
             alert('Failed to approve KYC: ' + e.message);
         }
@@ -89,9 +91,11 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
 
     const handleRejectKYC = async () => {
         try {
-            await api.updateDocuments(client.id, { kycStatus: 'REJECTED' });
+            const fd = new FormData();
+            fd.append('kycStatus', 'REJECTED');
+            await api.updateDocuments(client.id, fd);
             setKycStatus('Rejected');
-            if (onUpdate) onUpdate({ ...client, kycStatus: 'Rejected' });
+            if (onUpdate) onUpdate({ ...client, kycStatus: 'REJECTED' });
         } catch (e) {
             alert('Failed to reject KYC: ' + e.message);
         }
@@ -112,42 +116,94 @@ const ClientDetailPage = ({ client, onClose, onUpdate, onReset, onRecalculate, o
         allowOrdersHighLow: settings.allow_orders_between_hl ? 'Yes' : 'No',
         allowFreshEntry: settings.allow_fresh_entry ? 'Yes' : 'No',
         demoAccount: profile.is_demo ? 'Yes' : 'No',
-        autoCloseLossPercent: settings.auto_close_at_m2m_pct || config.autoCloseLossPercent || '90',
-        notifyLossPercent: settings.notify_at_m2m_pct || config.notifyLossPercent || '70',
-        minLotMCX: config.minLotMCX || '0',
-        maxLotMCX: config.maxLotMCX || '20',
-        minLotEquity: config.minLotEquity || '0',
-        maxLotEquity: config.maxLotEquity || '50',
-        minLotEquityIndex: config.minLotEquityIndex || '0',
-        maxLotEquityIndex: config.maxLotEquityIndex || '20',
-        maxScripMCX: config.maxScripMCX || '50',
-        maxScripEquity: config.maxScripEquity || '100',
-        maxScripEquityIndex: config.maxScripEquityIndex || '100',
-        minLotEquityOptions: config.minLotEquityOptions || '0',
-        maxLotEquityOptions: config.maxLotEquityOptions || '50',
-        minLotEquityIndexOptions: config.minLotEquityIndexOptions || '0',
-        maxLotEquityIndexOptions: config.maxLotEquityIndexOptions || '20',
-        maxScripEquityOptions: config.maxScripEquityOptions || '200',
-        maxScripEquityIndexOptions: config.maxScripEquityIndexOptions || '200',
-        mcxTrading: config.mcxTrading || 'Active',
-        mcxBrokerageType: config.mcxBrokerageType || 'Per Crore Basis',
+        autoCloseLossPercent: settings.auto_close_at_m2m_pct || config.autoClosePercentage || '90',
+        notifyLossPercent: settings.notify_at_m2m_pct || config.notifyPercentage || '70',
+        // MCX fields — match CreateClientPage field names
+        mcxTrading: config.mcxTrading ? 'Active' : 'Disabled',
+        banMcxLimitOrder: config.banMcxLimitOrder ? 'Yes' : 'No',
+        mcxBrokerageType: config.mcxBrokerageType === 'per_crore' ? 'Per Crore Basis' : config.mcxBrokerageType === 'per_lot' ? 'Per Lot Basis' : (config.mcxBrokerageType || 'Per Crore Basis'),
         mcxBrokerage: config.mcxBrokerage || '0',
-        mcxExposureType: config.mcxExposureType || 'Per Turnover Basis',
-        intradayMarginMCX: config.mcxIntradayMargin || config.intradayMarginMCX || '0',
-        holdingMarginMCX: config.mcxHoldingMargin || config.holdingMarginMCX || '0',
-        equityTrading: config.equityTrading || 'Active',
+        mcxExposureType: config.mcxExposureType === 'per_turnover' ? 'Per Turnover Basis' : (config.mcxExposureType || 'Per Turnover Basis'),
+        minLotMCX: config.mcxMinLot || '1',
+        maxLotMCX: config.mcxMaxLot || '100',
+        maxLotScripMCX: config.mcxMaxLotScrip || '1000',
+        maxSizeAllMCX: config.mcxMaxSizeAll || '5000',
+        intradayMarginMCX: config.mcxIntradayMargin || '500',
+        holdingMarginMCX: config.mcxHoldingMargin || '100',
+        mcxMinTimeToBookProfit: config.mcxMinTimeToBookProfit || '120',
+        mcxScalpingStopLoss: config.mcxScalpingStopLoss || 'Disabled',
+        // Equity fields — match CreateClientPage field names
+        equityTrading: config.equityTrading ? 'Active' : 'Disabled',
+        banEquityLimitOrder: config.banEquityLimitOrder ? 'Yes' : 'No',
         equityBrokerage: config.equityBrokerage || '0',
-        intradayMarginEquity: config.intradayMarginEquity || '0',
-        holdingMarginEquity: config.holdingMarginEquity || '0',
-        optionsTrading: config.optionsTrading || 'Active',
-        optionsBrokerage: config.optionsBrokerage || '0',
-        intradayMarginOptions: config.intradayMarginOptions || '0',
-        holdingMarginOptions: config.holdingMarginOptions || '0',
-        ledgerBalance: profile.credit_limit || '0',
+        equitySegmentLimit: config.equitySegmentLimit || '50',
+        minLotEquity: config.equityMinLot || '1',
+        maxLotEquity: config.equityMaxLot || '100',
+        minLotEquityIndex: config.equityMinIndexLot || '1',
+        maxLotEquityIndex: config.equityMaxIndexLot || '100',
+        maxScripEquity: config.equityMaxScrip || '500',
+        maxScripEquityIndex: config.equityMaxIndexScrip || '500',
+        maxSizeAllEquity: config.equityMaxSizeAll || '2000',
+        maxSizeAllEquityIndex: config.equityMaxSizeAllIndex || '2000',
+        intradayMarginEquity: config.equityIntradayMargin || '500',
+        holdingMarginEquity: config.equityHoldingMargin || '100',
+        equityOrdersAway: config.equityOrdersAway || '5',
+        equityMinTimeToBookProfit: config.equityMinTimeToBookProfit || '120',
+        equityScalpingStopLoss: config.equityScalpingStopLoss || 'Disabled',
+        // Options fields — match CreateClientPage field names
+        indexOptionsTrading: config.indexOptionsTrading ? 'Active' : 'Disabled',
+        equityOptionsTrading: config.equityOptionsTrading ? 'Active' : 'Disabled',
+        mcxOptionsTrading: config.mcxOptionsTrading ? 'Active' : 'Disabled',
+        banOptionsLimitOrder: config.banOptionsLimitOrder ? 'Yes' : 'No',
+        optionsIndexBrokerageType: config.optionsIndexBrokerageType === 'per_lot' ? 'Per Lot Basis' : 'Per Crore Basis',
+        optionsIndexBrokerage: config.optionsIndexBrokerage || '20',
+        optionsEquityBrokerageType: config.optionsEquityBrokerageType === 'per_lot' ? 'Per Lot Basis' : 'Per Crore Basis',
+        optionsEquityBrokerage: config.optionsEquityBrokerage || '20',
+        optionsMcxBrokerageType: config.optionsMcxBrokerageType === 'per_lot' ? 'Per Lot Basis' : 'Per Crore Basis',
+        optionsMcxBrokerage: config.optionsMcxBrokerage || '20',
+        optionsMinBidPrice: config.optionsMinBidPrice || '1',
+        optionsIndexShortSelling: config.optionsIndexShortSelling || 'No',
+        optionsEquityShortSelling: config.optionsEquityShortSelling || 'No',
+        optionsMcxShortSelling: config.optionsMcxShortSelling || 'No',
+        optionsEquityMinLot: config.optionsEquityMinLot || '0',
+        optionsEquityMaxLot: config.optionsEquityMaxLot || '50',
+        optionsIndexMinLot: config.optionsIndexMinLot || '0',
+        optionsIndexMaxLot: config.optionsIndexMaxLot || '20',
+        optionsMcxMinLot: config.optionsMcxMinLot || '0',
+        optionsMcxMaxLot: config.optionsMcxMaxLot || '50',
+        optionsEquityMaxScrip: config.optionsEquityMaxScrip || '200',
+        optionsIndexMaxScrip: config.optionsIndexMaxScrip || '200',
+        optionsMcxMaxScrip: config.optionsMcxMaxScrip || '200',
+        optionsMaxEquitySizeAll: config.optionsMaxEquitySizeAll || '200',
+        optionsMaxIndexSizeAll: config.optionsMaxIndexSizeAll || '200',
+        optionsMaxMcxSizeAll: config.optionsMaxMcxSizeAll || '200',
+        optionsIndexIntraday: config.optionsIndexIntraday || '5',
+        optionsIndexHolding: config.optionsIndexHolding || '2',
+        optionsEquityIntraday: config.optionsEquityIntraday || '5',
+        optionsEquityHolding: config.optionsEquityHolding || '2',
+        optionsMcxIntraday: config.optionsMcxIntraday || '5',
+        optionsMcxHolding: config.optionsMcxHolding || '2',
+        optionsOrdersAway: config.optionsOrdersAway || '10',
+        optionsMinTimeToBookProfit: config.optionsMinTimeToBookProfit || '120',
+        optionsScalpingStopLoss: config.optionsScalpingStopLoss || 'Disabled',
+        // General
+        banAllSegmentLimitOrder: config.banAllSegmentLimitOrder ? 'Yes' : 'No',
+        tradeEquityUnits: settings.trade_equity_units ? 'Yes' : 'No',
+        ledgerBalance: profile.balance || '0',
+        creditLimit: profile.credit_limit || '0',
         broker: config.broker || client?.broker || '',
         createdAt: profile.created_at || '',
         notes: config.notes || '',
         kycStatus: kycStatus,
+        // Expiry rules
+        autoSquareOff: config.autoSquareOff || 'No',
+        expirySquareOffTime: config.expirySquareOffTime || '11:30',
+        allowExpiringScrip: config.allowExpiringScrip || 'No',
+        daysBeforeExpiry: config.daysBeforeExpiry || '0',
+        // Bid gaps
+        bidGaps: config.bidGaps || {},
+        mcxLotMargins: config.mcxLotMargins || {},
+        mcxLotBrokerage: config.mcxLotBrokerage || {},
     };
 
     const showIp = (ip) => ip && ip !== '::1' && ip !== '127.0.0.1' ? ip : '152.58.28.60';

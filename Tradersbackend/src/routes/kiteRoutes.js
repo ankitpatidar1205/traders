@@ -140,7 +140,7 @@ const MCX_SYMBOLS = [
 
 router.get('/market', authMiddleware, asyncHandler(async (req, res) => {
     if (!kiteService.isAuthenticated()) {
-        return res.status(401).json({ error: 'Kite not connected. Re-login required.' });
+        return res.status(503).json({ error: 'Kite not connected. Re-login required.', kite_disconnected: true });
     }
     try {
         const quotes = await kiteService.getQuote(MCX_SYMBOLS);
@@ -173,7 +173,7 @@ router.get('/market', authMiddleware, asyncHandler(async (req, res) => {
         res.json(parsed);
     } catch (err) {
         if (err.message?.includes('expired') || err.message?.includes('403')) {
-            return res.status(401).json({ error: 'Token expired. Re-login required.' });
+            return res.status(503).json({ error: 'Kite token expired. Re-login required.', kite_disconnected: true });
         }
         console.error('MCX Market fetch error:', err.message);
         res.status(500).json({ error: 'Failed to fetch market data: ' + err.message });

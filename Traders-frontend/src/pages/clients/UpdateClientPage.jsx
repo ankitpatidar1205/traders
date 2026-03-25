@@ -494,10 +494,11 @@ const UpdateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
                 config: configToSave
             });
 
-            // Step 3: Update password if provided
-            if (formData.password) {
+            // Step 3: Update password / transaction password if provided
+            if (formData.password || formData.transactionPassword) {
                 await api.updateUserPasswords(userId, {
-                    newPassword: formData.password
+                    ...(formData.password ? { newPassword: formData.password } : {}),
+                    ...(formData.transactionPassword ? { transactionPassword: formData.transactionPassword } : {})
                 });
             }
 

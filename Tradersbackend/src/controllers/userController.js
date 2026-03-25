@@ -6,19 +6,23 @@ const getUsers = async (req, res) => {
     try {
         const { role } = req.query;
         let query = `
-            SELECT 
-                u.*, 
+            SELECT
+                u.*,
                 p.username as parent_username,
+                p.full_name as parent_name,
                 u.balance as ledger_balance,
-                IFNULL(ud.kyc_status, 'Pending') as kycStatus,
+                u.credit_limit,
+                IFNULL(ud.kyc_status, 'PENDING') as kycStatus,
                 IFNULL((SELECT SUM(pnl) FROM trades WHERE user_id = u.id AND status = 'CLOSED'), 0.00) as gross_pl,
-                0.00 as brokerage, 
+                0.00 as brokerage,
                 0.00 as swap_charges,
-                IFNULL((SELECT SUM(pnl) FROM trades WHERE user_id = u.id AND status = 'CLOSED'), 0.00) as net_pl, 
-                (SELECT COUNT(*) FROM trades WHERE user_id = u.id AND status = 'OPEN') as active_trades_count
-            FROM users u 
+                IFNULL((SELECT SUM(pnl) FROM trades WHERE user_id = u.id AND status = 'CLOSED'), 0.00) as net_pl,
+                (SELECT COUNT(*) FROM trades WHERE user_id = u.id AND status = 'OPEN') as active_trades_count,
+                cs.config_json
+            FROM users u
             LEFT JOIN users p ON u.parent_id = p.id
             LEFT JOIN user_documents ud ON u.id = ud.user_id
+            LEFT JOIN client_settings cs ON u.id = cs.user_id
             WHERE 1=1
         `;
         const params = [];
@@ -161,7 +165,7 @@ const updateUser = async (req, res) => {
 const updateClientSettings = async (req, res) => {
     const {
         allowFreshEntry, allowOrdersBetweenHL, tradeEquityUnits,
-        autoCloseEnabled,
+        autoCloseEnabled, banAllSegmentLimitOrder,
         autoClosePct, notifyPct, minProfitTime, scalpingSlEnabled,
         config  // full complex config JSON (all segment data)
     } = req.body;
@@ -176,8 +180,8 @@ const updateClientSettings = async (req, res) => {
             INSERT INTO client_settings
                 (user_id, allow_fresh_entry, allow_orders_between_hl, trade_equity_units,
                  auto_close_at_m2m_pct, notify_at_m2m_pct, min_time_to_book_profit,
-                 scalping_sl_enabled, config_json)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 scalping_sl_enabled, ban_all_segment_limit_order, config_json)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE
                 allow_fresh_entry = VALUES(allow_fresh_entry),
                 allow_orders_between_hl = VALUES(allow_orders_between_hl),
@@ -186,6 +190,7 @@ const updateClientSettings = async (req, res) => {
                 notify_at_m2m_pct = VALUES(notify_at_m2m_pct),
                 min_time_to_book_profit = VALUES(min_time_to_book_profit),
                 scalping_sl_enabled = VALUES(scalping_sl_enabled),
+                ban_all_segment_limit_order = VALUES(ban_all_segment_limit_order),
                 config_json = VALUES(config_json)
         `, [
             req.params.id,
@@ -196,6 +201,7 @@ const updateClientSettings = async (req, res) => {
             notifyPct !== undefined ? notifyPct : 70,
             minProfitTime !== undefined ? minProfitTime : 120,
             scalpingSlEnabled !== undefined ? (scalpingSlEnabled === true || scalpingSlEnabled === 'Enabled' ? 1 : 0) : 0,
+            banAllSegmentLimitOrder !== undefined ? (banAllSegmentLimitOrder ? 1 : 0) : 0,
             configJson
         ]);
 

@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const { createFund, getFunds } = require('../controllers/fundController');
-const { authMiddleware, roleMiddleware } = require('../middleware/auth');
+const { authMiddleware, roleMiddleware, brokerPermission } = require('../middleware/auth');
 
-router.post('/', authMiddleware, roleMiddleware(['SUPERADMIN', 'ADMIN']), createFund);
-router.get('/', authMiddleware, roleMiddleware(['SUPERADMIN', 'ADMIN']), getFunds);
+// Broker needs payinAllowed to add funds (payin), payoutAllowed to withdraw (payout)
+router.post('/', authMiddleware, roleMiddleware(['SUPERADMIN', 'ADMIN', 'BROKER']), brokerPermission('payinAllowed'), createFund);
+router.get('/', authMiddleware, roleMiddleware(['SUPERADMIN', 'ADMIN', 'BROKER']), getFunds);
 
 module.exports = router;

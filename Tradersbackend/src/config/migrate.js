@@ -87,6 +87,9 @@ const runMigrations = async () => {
     // Add config_json for tables created before this column existed
     await addColumn('client_settings', 'config_json', 'TEXT DEFAULT NULL');
 
+    // Add ban_all_segment_limit_order column
+    await addColumn('client_settings', 'ban_all_segment_limit_order', 'TINYINT(1) DEFAULT 0');
+
     // ─── 4. BROKER SHARES ──────────────────────────────────────────────────────
 
     await db.execute(`

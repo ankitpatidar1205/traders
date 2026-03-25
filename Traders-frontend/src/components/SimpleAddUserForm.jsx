@@ -8,8 +8,10 @@ const MENU_GROUPS = [
         group: 'Dashboard',
         items: [
             { id: 'live-m2m', label: 'Dashboard (Live M2M)' },
+            { id: 'kite-dashboard', label: 'Kite Dashboard' },
             { id: 'market-watch', label: 'Market Watch' },
             { id: 'notifications', label: 'Notifications' },
+            { id: 'user-notifications', label: 'Sent Message' },
         ],
     },
     {
@@ -67,6 +69,7 @@ const MENU_GROUPS = [
             { id: 'global-updation', label: 'Global Updation' },
             { id: 'change-password', label: 'Change Login Password' },
             { id: 'change-transaction-password', label: 'Change Transaction Password' },
+            { id: 'expiry-rules', label: 'Expiry Rules' },
         ],
     },
     {
@@ -76,6 +79,7 @@ const MENU_GROUPS = [
             { id: 'voice-modulation', label: 'Voice Modulation' },
             { id: 'signals', label: 'Signals' },
             { id: 'signal-admin', label: 'Signal Admin' },
+            { id: 'learning', label: 'Learning' },
         ],
     },
 ];
@@ -195,8 +199,12 @@ const SimpleAddUserForm = ({ role, onBack, onSave, editMode = false, initialData
                     email: formData.email,
                     mobile: formData.mobile,
                 };
-                if (formData.password) payload.password = formData.password;
                 await api.updateUser(adminId, payload);
+
+                // Update password separately via the passwords endpoint (updateUser doesn't handle password)
+                if (formData.password) {
+                    await api.updateUserPasswords(adminId, { newPassword: formData.password });
+                }
 
                 // Save menu permissions
                 if (isAdmin) {
@@ -292,10 +300,10 @@ const SimpleAddUserForm = ({ role, onBack, onSave, editMode = false, initialData
                             </label>
                             <div className="relative">
                                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                <input type="password" name="password" value={formData.password} onChange={handleChange}
+                                <input type="text" name="password" value={formData.password} onChange={handleChange}
                                     required={!editMode}
-                                    autoComplete="new-password"
-                                    placeholder={editMode ? 'Leave blank to keep current' : '••••••••'}
+                                    autoComplete="off"
+                                    placeholder={editMode ? 'Leave blank to keep current' : 'Enter password'}
                                     className="w-full bg-white border border-slate-200 rounded px-10 py-3 text-slate-900 font-bold focus:outline-none focus:ring-2 focus:ring-[#4caf50]/20 focus:border-[#4caf50] transition-all placeholder:font-normal placeholder:text-slate-400" />
                             </div>
                         </div>

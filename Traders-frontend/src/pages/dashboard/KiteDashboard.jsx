@@ -15,9 +15,14 @@ const KiteDashboard = () => {
         try {
             const status = await api.getKiteStatus();
             setKiteStatus(status);
+            setError(null);
             return status.connected;
-        } catch {
+        } catch (err) {
+            // Don't let Kite status check crash the page or trigger logout
             setKiteStatus({ connected: false });
+            if (err.response?.status !== 401) {
+                setError(null); // Not a JWT issue, just Kite disconnected
+            }
             return false;
         }
     }, []);
@@ -47,6 +52,12 @@ const KiteDashboard = () => {
                 setError(null);
             }
         } catch (err) {
+            // Kite disconnected (503) — stop polling, show login screen
+            if (err.response?.status === 503 || err.response?.data?.kite_disconnected) {
+                setKiteStatus({ connected: false });
+                setMarketWatch({});
+                return;
+            }
             console.log('Market data fetch skipped:', err.message);
         }
     }, []);

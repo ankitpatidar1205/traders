@@ -79,6 +79,17 @@ api.interceptors.response.use(
         // ─────────────────────────────────────────────────────────────────────
 
         if (response?.status === 401) {
+            // Skip logout redirect for Kite API errors (Kite token != JWT token)
+            const url = config?.url || '';
+            if (url.includes('/kite/')) {
+                console.log('[API] ⚠️ 401 from Kite API — Kite not connected (not a JWT issue)');
+                return Promise.reject({
+                    ...error,
+                    isKiteError: true,
+                    message: response?.data?.error || 'Kite not connected'
+                });
+            }
+
             console.log('[API] 🔴 401 Unauthorized - Token expired or invalid');
 
             // Clear stored data

@@ -313,11 +313,13 @@ const TradingClientsPage = ({ onDepositClick, onWithdrawClick, onLogout, onNavig
                                             </>
                                         )}
                                         <td className="px-4 py-6">
-                                            <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border ${client.kycStatus === 'Approved' ? 'bg-green-500/10 border-green-500/20 text-green-400' :
-                                                client.kycStatus === 'Rejected' ? 'bg-red-500/10 border-red-500/20 text-red-400' :
+                                            <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border ${
+                                                (client.kycStatus || '').toUpperCase() === 'VERIFIED' ? 'bg-green-500/10 border-green-500/20 text-green-400' :
+                                                (client.kycStatus || '').toUpperCase() === 'REJECTED' ? 'bg-red-500/10 border-red-500/20 text-red-400' :
                                                     'bg-orange-500/10 border-orange-500/20 text-orange-400'
                                                 }`}>
-                                                {client.kycStatus || 'Pending'}
+                                                {(client.kycStatus || '').toUpperCase() === 'VERIFIED' ? 'VERIFIED' :
+                                                 (client.kycStatus || '').toUpperCase() === 'REJECTED' ? 'REJECTED' : 'PENDING'}
                                             </span>
                                         </td>
                                     </tr>

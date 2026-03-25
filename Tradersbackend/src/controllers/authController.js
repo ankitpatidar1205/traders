@@ -110,7 +110,7 @@ const login = async (req, res) => {
 };
 
 const createUser = async (req, res) => {
-    const { username, password, fullName, email, mobile, role, parentId, creditLimit } = req.body;
+    const { username, password, fullName, email, mobile, role, parentId, creditLimit, city } = req.body;
     const creatorRole = req.user.role;
     
     // Enforcement: Hierarchy Check
@@ -137,13 +137,14 @@ const createUser = async (req, res) => {
             role || 'TRADER',
             parentId || req.user.id,
             creditLimit || 0,
+            city || null,
             'Active'
         ];
 
         console.log('Inserting user with params:', params);
 
         const [result] = await db.execute(
-            'INSERT INTO users (username, password, full_name, email, mobile, role, parent_id, credit_limit, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            'INSERT INTO users (username, password, full_name, email, mobile, role, parent_id, credit_limit, city, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
             params
         );
 

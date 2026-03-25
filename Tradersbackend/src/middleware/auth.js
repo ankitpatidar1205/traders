@@ -25,4 +25,41 @@ const roleMiddleware = (allowedRoles) => {
   };
 };
 
-module.exports = { authMiddleware, roleMiddleware };
+// Broker permission middleware — checks broker_shares.permissions_json
+// permissionKey: one of 'subBrokerActions','payinAllowed','payoutAllowed',
+//   'createClientsAllowed','clientTasksAllowed','tradeActivityAllowed',
+//   'notificationsAllowed','canViewBackupData'
+const brokerPermission = (permissionKey) => {
+  return async (req, res, next) => {
+    // SUPERADMIN and ADMIN bypass broker permission checks
+    if (req.user.role === 'SUPERADMIN' || req.user.role === 'ADMIN') {
+      return next();
+    }
+    // Only enforce on BROKER role
+    if (req.user.role !== 'BROKER') {
+      return next();
+    }
+    try {
+      const db = require('../config/db');
+      const [rows] = await db.execute(
+        'SELECT permissions_json FROM broker_shares WHERE user_id = ?',
+        [req.user.id]
+      );
+      if (rows.length === 0) {
+        return res.status(403).json({ message: 'Broker configuration not found' });
+      }
+      const permissions = JSON.parse(rows[0].permissions_json || '{}');
+      if (permissions[permissionKey] !== 'Yes') {
+        return res.status(403).json({
+          message: `Permission denied: ${permissionKey} is not enabled for your account`
+        });
+      }
+      next();
+    } catch (err) {
+      console.error('Broker permission check error:', err);
+      res.status(500).json({ message: 'Permission check failed' });
+    }
+  };
+};
+
+module.exports = { authMiddleware, roleMiddleware, brokerPermission };

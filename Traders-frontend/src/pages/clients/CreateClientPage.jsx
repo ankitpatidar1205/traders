@@ -396,11 +396,17 @@ const CreateClientPage = ({ client, onClose, onSave, onLogout, onNavigate }) => 
             const userId = result.id;
 
             // Step 2: Update user profile with extra fields
-            await api.updateUser(userId, {
+            const updateData = {
                 isDemo: formData.isDemoAccount,
                 status: formData.accountStatus ? 'Active' : 'Inactive',
+                city: formData.city || null,
                 exposureMultiplier: 1
-            });
+            };
+            // Only override parent_id if a broker was explicitly selected
+            if (formData.broker) {
+                updateData.parentId = formData.broker;
+            }
+            await api.updateUser(userId, updateData);
 
             // Step 3: Save client settings + ALL config as JSON (MCX, Equity, Options, Expiry, etc.)
             const configToSave = { ...formData };
