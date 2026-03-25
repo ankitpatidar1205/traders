@@ -13,7 +13,7 @@ app.set('trust proxy', true);
 const server = http.createServer(app);
 const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
-  : ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:3000'];
+  : ['https://trader-production-e063.up.railway.app', 'http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:3000'];
 
 const io = new Server(server, {
   cors: {
